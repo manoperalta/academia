@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Aguardando Aprovação - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <div class="card border-warning">
+            <div class="card-body">
+                <i class="fas fa-clock fa-5x text-warning mb-4"></i>
+                <h2 class="card-title">Cadastro em Análise</h2>
+                <p class="card-text lead">Olá, {{ user.username }}.</p>
+                <p class="card-text">Seu cadastro como professor foi recebido e está em análise pela nossa equipe
+                    administrativa.</p>
+                <p class="card-text">Você receberá acesso ao painel de professor assim que seu cadastro for aprovado.
+                </p>
+                <hr>
+                <p class="small text-muted">Se você acredita que isso é um erro, entre em contato com a administração.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Agenda de Aulas - {{ block.super }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Agenda de Aulas Disponíveis</h1>
+
+<div class="row">
+    {% for painel in paineis %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 {% if painel.vagas_restantes == 0 %}border-danger{% endif %}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold">{{ painel.data_painel|date:"d/m/Y" }}</span>
+                <span class="badge bg-secondary">{{ painel.horario_inicial_painel }} - {{ painel.horario_final_painel
+                    }}</span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Professor: {{ painel.criador.username }}</h5>
+                <p class="card-text">
+                    <strong>Aulas:</strong>
+                <ul class="list-unstyled">
+                    {% for aula in painel.aulas.all %}
+                    <li>- {{ aula.nome }} <span class="badge bg-light text-dark">{{
+                            aula.get_categorias_exercicios_display }}</span></li>
+                    {% endfor %}
+                </ul>
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted">Vagas: {{ painel.vagas_restantes }}/{{ painel.numero_de_user }}</span>
+
+                    {% if painel.inscrito %}
+                    <button class="btn btn-success" disabled>Inscrito</button>
+                    {% elif painel.vagas_restantes > 0 %}
+                    <a href="{% url 'realizar_agendamento' painel.pk %}" class="btn btn-primary">Agendar</a>
+                    {% else %}
+                    <button class="btn btn-danger" disabled>Lotado</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Não há aulas disponíveis para agendamento no momento.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

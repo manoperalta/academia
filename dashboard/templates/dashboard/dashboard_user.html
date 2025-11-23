@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Aluno - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h2 class="card-title">Bem-vindo, Aluno {{ user.username }}!</h2>
+                <p class="card-text">Acompanhe seus treinos e agendamentos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Agendar Aula</h5>
+                <p class="card-text">Veja os horários disponíveis e inscreva-se.</p>
+                <a href="{% url 'agenda_list' %}" class="btn btn-outline-primary">Ver Agenda</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-list-alt fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Meus Agendamentos</h5>
+                <p class="card-text">Consulte suas próximas aulas agendadas.</p>
+                <a href="{% url 'meus_agendamentos' %}" class="btn btn-outline-warning">Meus Agendamentos</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

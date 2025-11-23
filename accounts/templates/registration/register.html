@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Registro - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="auth-container" style="max-width: 500px;">
+    <div class="card">
+        <div class="card-body p-4">
+            <h2 class="text-center mb-4">Criar Conta</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field.errors }}
+                    {% if field.field.widget.input_type == 'select' %}
+                    {{ field }} <!-- Renderiza o select padrão do Django, pode precisar de classe CSS -->
+                    {% else %}
+                    <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}"
+                        id="{{ field.id_for_label }}" class="form-control" {% if field.help_text
+                        %}aria-describedby="{{ field.id_for_label }}_help" {% endif %}>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div id="{{ field.id_for_label }}_help" class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success">Registrar</button>
+                </div>
+            </form>
+            <div class="text-center mt-3">
+                <p>Já tem conta? <a href="{% url 'login' %}">Faça login</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Adicionar classe form-select aos selects renderizados pelo Django
+    document.querySelectorAll('select').forEach(el => el.classList.add('form-select'));
+</script>
+{% endblock %}

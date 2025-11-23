@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Painéis - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Meus Painéis de Agendamento</h1>
+    <a href="{% url 'painel_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Novo Painel</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Capacidade</th>
+                <th>Aulas</th>
+                <th>Inscritos</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for painel in paineis %}
+            <tr>
+                <td>{{ painel.data_painel|date:"d/m/Y" }}</td>
+                <td>{{ painel.horario_inicial_painel }} - {{ painel.horario_final_painel }}</td>
+                <td>{{ painel.numero_de_user }}</td>
+                <td>
+                    <ul class="list-unstyled mb-0">
+                        {% for aula in painel.aulas.all %}
+                        <li><small><i class="fas fa-check-circle text-success"></i> {{ aula.nome }}</small></li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>{{ painel.agendamentos.count }}</td>
+                <td>
+                    <a href="{% url 'painel_update' painel.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">Nenhum painel criado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

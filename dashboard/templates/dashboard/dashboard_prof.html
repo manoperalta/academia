@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Professor - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h2 class="card-title">Bem-vindo, Professor {{ user.username }}!</h2>
+                <p class="card-text">Gerencie suas aulas e horários.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-video fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Minhas Aulas</h5>
+                <p class="card-text">Crie e gerencie suas aulas e exercícios.</p>
+                <a href="{% url 'aulas_list' %}" class="btn btn-outline-success">Acessar Aulas</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Meus Painéis</h5>
+                <p class="card-text">Gerencie sua agenda e horários disponíveis.</p>
+                <a href="{% url 'painel_list' %}" class="btn btn-outline-info">Acessar Agenda</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

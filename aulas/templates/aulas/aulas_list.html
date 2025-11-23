@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Minhas Aulas - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Minhas Aulas</h1>
+    <a href="{% url 'aulas_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Nova Aula</a>
+</div>
+
+<div class="row">
+    {% for aula in aulas %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if aula.file_de_video %}
+            <div class="ratio ratio-16x9">
+                <video controls>
+                    <source src="{{ aula.file_de_video.url }}" type="video/mp4">
+                    Seu navegador não suporta o elemento de vídeo.
+                </video>
+            </div>
+            {% elif aula.imagens.first %}
+            <img src="{{ aula.imagens.first.imagem.url }}" class="card-img-top" alt="{{ aula.nome }}"
+                style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
+                style="height: 200px;">
+                <i class="fas fa-dumbbell fa-3x"></i>
+            </div>
+            {% endif %}
+
+            <div class="card-body">
+                <h5 class="card-title">{{ aula.nome }}</h5>
+                <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
+                <p class="card-text text-truncate">{{ aula.descricao }}</p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'aulas_update' aula.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                    <a href="{% url 'aulas_delete' aula.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Você ainda não cadastrou nenhuma aula. Clique em "Nova Aula" para começar.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
