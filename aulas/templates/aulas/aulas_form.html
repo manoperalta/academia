@@ -5,37 +5,75 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
                 <h4 class="mb-0">{{ title }}</h4>
             </div>
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    {% for field in form %}
+                    <h5 class="mb-3 border-bottom pb-2">Informações da Aula</h5>
+
                     <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field.errors }}
-                        {{ field }}
-                        {% if field.help_text %}
-                        <div class="form-text">{{ field.help_text }}</div>
+                        <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                        {{ form.nome }}
+                        {% if form.nome.errors %}
+                        <div class="text-danger small">{{ form.nome.errors }}</div>
                         {% endif %}
                     </div>
-                    {% endfor %}
 
-                    <hr>
-                    <h5>Imagens da Aula (Até 5)</h5>
-                    {{ formset.management_form }}
-                    {% for form in formset %}
-                    <div class="mb-2 p-2 border rounded">
-                        {{ form.as_p }}
+                    <div class="mb-3">
+                        <label for="{{ form.categorias_exercicios.id_for_label }}" class="form-label">{{
+                            form.categorias_exercicios.label }}</label>
+                        {{ form.categorias_exercicios }}
+                        {% if form.categorias_exercicios.errors %}
+                        <div class="text-danger small">{{ form.categorias_exercicios.errors }}</div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-success">Salvar</button>
-                        <a href="{% url 'aulas_list' %}" class="btn btn-secondary">Cancelar</a>
+                    <div class="mb-3">
+                        <label for="{{ form.descricao.id_for_label }}" class="form-label">{{ form.descricao.label
+                            }}</label>
+                        {{ form.descricao }}
+                        {% if form.descricao.errors %}
+                        <div class="text-danger small">{{ form.descricao.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.file_de_video.id_for_label }}" class="form-label">{{
+                            form.file_de_video.label }}</label>
+                        {{ form.file_de_video }}
+                        <div class="form-text">Formatos aceitos: MP4, WebM, OGG.</div>
+                        {% if form.file_de_video.errors %}
+                        <div class="text-danger small">{{ form.file_de_video.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="mt-4 mb-3 border-bottom pb-2">Imagens Adicionais</h5>
+                    {{ formset.management_form }}
+                    <div id="imagens-form-list">
+                        {% for form_img in formset %}
+                        <div class="row mb-2 image-form">
+                            <div class="col-md-10">
+                                {{ form_img.imagem }}
+                                {% if form_img.instance.pk %}
+                                <div class="form-check mt-1">
+                                    {{ form_img.DELETE }}
+                                    <label class="form-check-label text-danger"
+                                        for="{{ form_img.DELETE.id_for_label }}">Excluir imagem atual</label>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {{ form_img.id }}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'aulas_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Salvar Aula</button>
                     </div>
                 </form>
             </div>

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}
+                            <div class="text-danger small">{{ form.nome.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.data_nasc.id_for_label }}" class="form-label">{{ form.data_nasc.label
+                                }}</label>
+                            {{ form.data_nasc }}
+                            {% if form.data_nasc.errors %}
+                            <div class="text-danger small">{{ form.data_nasc.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cpf_cnpj_prof.id_for_label }}" class="form-label">{{
+                                form.cpf_cnpj_prof.label }}</label>
+                            {{ form.cpf_cnpj_prof }}
+                            {% if form.cpf_cnpj_prof.errors %}
+                            <div class="text-danger small">{{ form.cpf_cnpj_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.endereco_prof.id_for_label }}" class="form-label">{{
+                                form.endereco_prof.label }}</label>
+                            {{ form.endereco_prof }}
+                            {% if form.endereco_prof.errors %}
+                            <div class="text-danger small">{{ form.endereco_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.numero_end_prof.id_for_label }}" class="form-label">{{
+                                form.numero_end_prof.label }}</label>
+                            {{ form.numero_end_prof }}
+                            {% if form.numero_end_prof.errors %}
+                            <div class="text-danger small">{{ form.numero_end_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.bairro_prof.id_for_label }}" class="form-label">{{
+                                form.bairro_prof.label }}</label>
+                            {{ form.bairro_prof }}
+                            {% if form.bairro_prof.errors %}
+                            <div class="text-danger small">{{ form.bairro_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cep_prof.id_for_label }}" class="form-label">{{ form.cep_prof.label
+                                }}</label>
+                            {{ form.cep_prof }}
+                            {% if form.cep_prof.errors %}
+                            <div class="text-danger small">{{ form.cep_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.status_prof.id_for_label }}" class="form-label">{{
+                                form.status_prof.label }}</label>
+                            {{ form.status_prof }}
+                            {% if form.status_prof.errors %}
+                            <div class="text-danger small">{{ form.status_prof.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'professor_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

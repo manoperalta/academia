@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.aula.id_for_label }}" class="form-label">{{ form.aula.label }}</label>
+                        {{ form.aula }}
+                        {% if form.aula.errors %}
+                        <div class="text-danger small">{{ form.aula.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.data.id_for_label }}" class="form-label">{{ form.data.label }}</label>
+                        {{ form.data }}
+                        {% if form.data.errors %}
+                        <div class="text-danger small">{{ form.data.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.hora_inicio.id_for_label }}" class="form-label">{{
+                                form.hora_inicio.label }}</label>
+                            {{ form.hora_inicio }}
+                            {% if form.hora_inicio.errors %}
+                            <div class="text-danger small">{{ form.hora_inicio.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.hora_fim.id_for_label }}" class="form-label">{{ form.hora_fim.label
+                                }}</label>
+                            {{ form.hora_fim }}
+                            {% if form.hora_fim.errors %}
+                            <div class="text-danger small">{{ form.hora_fim.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'painel_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-info text-white">Salvar Agendamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

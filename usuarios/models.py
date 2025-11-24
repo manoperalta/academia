@@ -19,6 +19,7 @@ class Usuario(models.Model):
     cpf_cnpj_user = models.CharField(max_length=20, verbose_name="CPF/CNPJ")
     data_create_user = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_user = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
+    foto_user = models.ImageField(upload_to='usuarios_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")
     status_user = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
 
     def __str__(self):

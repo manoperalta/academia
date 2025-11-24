@@ -21,7 +21,7 @@
                 <i class="fas fa-users fa-3x text-primary mb-3"></i>
                 <h5 class="card-title">Usuários</h5>
                 <p class="card-text">Gerenciar alunos e professores.</p>
-                <a href="/admin/usuarios/usuario/" class="btn btn-outline-primary">Gerenciar</a>
+                <a href="{% url 'usuario_list' %}" class="btn btn-outline-primary">Gerenciar</a>
             </div>
         </div>
     </div>
@@ -32,6 +32,36 @@
                 <h5 class="card-title">Configurações</h5>
                 <p class="card-text">Configurações do site e identidade visual.</p>
                 <a href="/admin/academia/configuracao/" class="btn btn-outline-secondary">Acessar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-chalkboard-teacher fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Professores</h5>
+                <p class="card-text">Gerenciar corpo docente.</p>
+                <a href="{% url 'professor_list' %}" class="btn btn-outline-success">Gerenciar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-video fa-3x text-danger mb-3"></i>
+                <h5 class="card-title">Aulas</h5>
+                <p class="card-text">Gerenciar todas as aulas.</p>
+                <a href="{% url 'aulas_list' %}" class="btn btn-outline-danger">Gerenciar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Painel de Aulas</h5>
+                <p class="card-text">Agendar e gerenciar aulas.</p>
+                <a href="{% url 'painel_list' %}" class="btn btn-outline-info">Gerenciar</a>
             </div>
         </div>
     </div>

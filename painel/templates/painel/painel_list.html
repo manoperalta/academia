@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Painel de Aulas - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Painel de Aulas</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'painel_create' %}" class="btn btn-info text-white">
+            <i class="fas fa-plus"></i> Novo Agendamento
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Aula</th>
+                        <th>Responsável</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in paineis %}
+                    <tr>
+                        <td>{{ item.data|date:"d/m/Y" }}</td>
+                        <td>{{ item.hora_inicio|time:"H:i" }} - {{ item.hora_fim|time:"H:i" }}</td>
+                        <td>
+                            <strong>{{ item.aula.nome }}</strong><br>
+                            <small class="text-muted">{{ item.aula.get_categorias_exercicios_display }}</small>
+                        </td>
+                        <td>{{ item.responsavel.username }}</td>
+                        <td>
+                            {% if user.is_superuser or user == item.responsavel %}
+                            <a href="{% url 'painel_update' pk=item.pk %}" class="btn btn-sm btn-outline-warning"
+                                title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'painel_delete' pk=item.pk %}" class="btn btn-sm btn-outline-danger"
+                                title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                <p>Nenhum agendamento encontrado.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,15 +3,21 @@
 {% block title %}Minhas Aulas - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Minhas Aulas</h1>
-    <a href="{% url 'aulas_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Nova Aula</a>
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Minhas Aulas</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'aulas_create' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nova Aula
+        </a>
+    </div>
 </div>
 
 <div class="row">
     {% for aula in aulas %}
     <div class="col-md-4 mb-4">
-        <div class="card h-100">
+        <div class="card h-100 shadow-sm">
             {% if aula.file_de_video %}
             <div class="ratio ratio-16x9">
                 <video controls>
@@ -19,13 +25,9 @@
                     Seu navegador não suporta o elemento de vídeo.
                 </video>
             </div>
-            {% elif aula.imagens.first %}
-            <img src="{{ aula.imagens.first.imagem.url }}" class="card-img-top" alt="{{ aula.nome }}"
-                style="height: 200px; object-fit: cover;">
             {% else %}
-            <div class="bg-secondary text-white d-flex align-items-center justify-content-center"
-                style="height: 200px;">
-                <i class="fas fa-dumbbell fa-3x"></i>
+            <div class="bg-light text-center py-5">
+                <i class="fas fa-video-slash fa-3x text-muted"></i>
             </div>
             {% endif %}
 
@@ -33,19 +35,28 @@
                 <h5 class="card-title">{{ aula.nome }}</h5>
                 <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
                 <p class="card-text text-truncate">{{ aula.descricao }}</p>
+                <p class="card-text"><small class="text-muted">Criado em {{ aula.data_create_aula|date:"d/m/Y"
+                        }}</small></p>
             </div>
-            <div class="card-footer bg-transparent border-top-0">
+            <div class="card-footer bg-white border-top-0">
                 <div class="d-flex justify-content-between">
-                    <a href="{% url 'aulas_update' aula.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                    <a href="{% url 'aulas_delete' aula.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                    <a href="{% url 'aulas_update' pk=aula.pk %}" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="{% url 'aulas_delete' pk=aula.pk %}" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-trash"></i> Excluir
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     {% empty %}
-    <div class="col-12">
-        <div class="alert alert-info">
-            Você ainda não cadastrou nenhuma aula. Clique em "Nova Aula" para começar.
+    <div class="col-12 text-center py-5">
+        <div class="text-muted">
+            <i class="fas fa-film fa-4x mb-3"></i>
+            <h4>Nenhuma aula cadastrada</h4>
+            <p>Comece criando sua primeira aula agora mesmo!</p>
+            <a href="{% url 'aulas_create' %}" class="btn btn-success mt-2">Criar Aula</a>
         </div>
     </div>
     {% endfor %}

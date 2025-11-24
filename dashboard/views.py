@@ -9,7 +9,12 @@ def dashboard(request):
     elif user.is_professor:
         # Verificar status do professor
         if hasattr(user, 'professor_profile') and user.professor_profile.status_prof == 'Ativo':
-            return render(request, 'dashboard/dashboard_prof.html')
+            from aulas.models import Aulas
+            from painel.models import Painel
+            aulas_count = Aulas.objects.filter(professor=user).count()
+            paineis_count = Painel.objects.filter(responsavel=user).count()
+            context = {'aulas_count': aulas_count, 'paineis_count': paineis_count}
+            return render(request, 'dashboard/dashboard_prof.html', context)
         else:
             return render(request, 'dashboard/aguardando_aprovacao.html')
     elif user.is_student:

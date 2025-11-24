@@ -6,17 +6,16 @@ from .forms import AulasForm, ImagemAulaFormSet
 
 @login_required
 def aulas_list(request):
-    if not request.user.is_professor:
-        return redirect('dashboard')
+    user = request.user
+    if user.is_superuser or user.is_staff:
+        aulas = Aulas.objects.all()
+    else:
+        aulas = Aulas.objects.filter(professor=user)
     
-    aulas = Aulas.objects.filter(professor=request.user)
     return render(request, 'aulas/aulas_list.html', {'aulas': aulas})
 
 @login_required
 def aulas_create(request):
-    if not request.user.is_professor:
-        return redirect('dashboard')
-
     if request.method == 'POST':
         form = AulasForm(request.POST, request.FILES)
         formset = ImagemAulaFormSet(request.POST, request.FILES)
@@ -26,25 +25,33 @@ def aulas_create(request):
             aula.professor = request.user
             aula.save()
             
-            formset.instance = aula
-            formset.save()
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.aula = aula
+                instance.save()
+            formset.save_m2m()
             
             messages.success(request, 'Aula criada com sucesso!')
             return redirect('aulas_list')
     else:
         form = AulasForm()
         formset = ImagemAulaFormSet()
-    
+        
     return render(request, 'aulas/aulas_form.html', {
-        'form': form,
+        'form': form, 
         'formset': formset,
         'title': 'Nova Aula'
     })
 
 @login_required
 def aulas_update(request, pk):
-    aula = get_object_or_404(Aulas, pk=pk, professor=request.user)
+    aula = get_object_or_404(Aulas, pk=pk)
     
+    # Security check: only owner or admin can edit
+    if not (request.user.is_superuser or request.user.is_staff or aula.professor == request.user):
+        messages.error(request, 'Você não tem permissão para editar esta aula.')
+        return redirect('aulas_list')
+
     if request.method == 'POST':
         form = AulasForm(request.POST, request.FILES, instance=aula)
         formset = ImagemAulaFormSet(request.POST, request.FILES, instance=aula)
@@ -57,17 +64,21 @@ def aulas_update(request, pk):
     else:
         form = AulasForm(instance=aula)
         formset = ImagemAulaFormSet(instance=aula)
-    
+        
     return render(request, 'aulas/aulas_form.html', {
-        'form': form,
+        'form': form, 
         'formset': formset,
         'title': 'Editar Aula'
     })
 
 @login_required
 def aulas_delete(request, pk):
-    aula = get_object_or_404(Aulas, pk=pk, professor=request.user)
+    aula = get_object_or_404(Aulas, pk=pk)
     
+    if not (request.user.is_superuser or request.user.is_staff or aula.professor == request.user):
+        messages.error(request, 'Você não tem permissão para excluir esta aula.')
+        return redirect('aulas_list')
+        
     if request.method == 'POST':
         aula.delete()
         messages.success(request, 'Aula excluída com sucesso!')

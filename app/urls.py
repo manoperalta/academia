@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from academia import views as academia_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,5 +24,8 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('aulas/', include('aulas.urls')),
     path('agendamento/', include('agendamento.urls')),
-    path('', include('accounts.urls')), # Redirecionar raiz para accounts/login (via urls do accounts) ou dashboard se logado
+    path('usuarios/', include('usuarios.urls')),
+    path('professores/', include('professores.urls')),
+    path('painel/', include('painel.urls')),
+    path('', academia_views.index, name='index'),
 ]

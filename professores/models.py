@@ -19,6 +19,7 @@ class Professor(models.Model):
     cpf_cnpj_prof = models.CharField(max_length=20, verbose_name="CPF/CNPJ")
     data_create_prof = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_prof = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
+    foto_prof = models.ImageField(upload_to='professores_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")
     status_prof = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
 
     def __str__(self):

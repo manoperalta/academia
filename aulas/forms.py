@@ -7,8 +7,8 @@ class AulasForm(forms.ModelForm):
         model = Aulas
         fields = ['nome', 'descricao', 'file_de_video', 'categorias_exercicios']
         widgets = {
-            'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Título da Aula'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Descreva os detalhes da aula...'}),
             'file_de_video': forms.FileInput(attrs={'class': 'form-control'}),
             'categorias_exercicios': forms.Select(attrs={'class': 'form-select'}),
         }
@@ -18,10 +18,10 @@ class ImagemAulaForm(forms.ModelForm):
         model = ImagemAula
         fields = ['imagem']
         widgets = {
-            'imagem': forms.FileInput(attrs={'class': 'form-control'}),
+            'imagem': forms.FileInput(attrs={'class': 'form-control'})
         }
 
 ImagemAulaFormSet = inlineformset_factory(
     Aulas, ImagemAula, form=ImagemAulaForm,
-    extra=1, max_num=5, can_delete=True
+    extra=1, can_delete=True, max_num=5
 )
