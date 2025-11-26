@@ -41,6 +41,29 @@
     </div>
 </div>
 
+{% if pagamento_vencido %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Pagamento Vencido!</h5>
+            <p>
+                {% if ultimo_pagamento %}
+                Sua assinatura venceu em <strong>{{ ultimo_pagamento.data_fim|date:"d/m/Y" }}</strong>.
+                {% else %}
+                Você não possui nenhum pagamento registrado.
+                {% endif %}
+                Por favor, entre em contato com a administração para regularizar sua situação.
+            </p>
+            <hr>
+            <p class="mb-0">
+                <a href="{% url 'plano_list' %}" class="btn btn-light btn-sm">Ver Planos Disponíveis</a>
+            </p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Stats Cards -->
     <div class="col-md-4 mb-4">

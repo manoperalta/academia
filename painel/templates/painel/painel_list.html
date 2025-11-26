@@ -8,6 +8,9 @@
         <h2>Painel de Aulas</h2>
     </div>
     <div class="col-md-4 text-end">
+        <a href="{% url 'presentation_setup' %}" class="btn btn-primary text-white me-2">
+            <i class="fas fa-desktop"></i> Painel de Apresentação
+        </a>
         <a href="{% url 'painel_create' %}" class="btn btn-info text-white">
             <i class="fas fa-plus"></i> Novo Agendamento
         </a>
@@ -22,7 +25,7 @@
                     <tr>
                         <th>Data</th>
                         <th>Horário</th>
-                        <th>Aula</th>
+                        <th>Painel</th>
                         <th>Responsável</th>
                         <th>Ações</th>
                     </tr>
@@ -33,11 +36,15 @@
                         <td>{{ item.data|date:"d/m/Y" }}</td>
                         <td>{{ item.hora_inicio|time:"H:i" }} - {{ item.hora_fim|time:"H:i" }}</td>
                         <td>
-                            <strong>{{ item.aula.nome }}</strong><br>
-                            <small class="text-muted">{{ item.aula.get_categorias_exercicios_display }}</small>
+                            <strong>{{ item.nome }}</strong><br>
+                            <small class="text-muted">{{ item.itens.count }} exercícios</small>
                         </td>
                         <td>{{ item.responsavel.username }}</td>
                         <td>
+                            <a href="{% url 'presentation_view' %}?painel_id={{ item.pk }}" target="_blank"
+                                class="btn btn-sm btn-success" title="Apresentar">
+                                <i class="fas fa-play"></i>
+                            </a>
                             {% if user.is_superuser or user == item.responsavel %}
                             <a href="{% url 'painel_update' pk=item.pk %}" class="btn btn-sm btn-outline-warning"
                                 title="Editar">

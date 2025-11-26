@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Configurar Apresentação - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Configurar Apresentação de Aulas</h2>
+            <p class="text-muted">Selecione as aulas que deseja exibir no painel secundário.</p>
+        </div>
+    </div>
+
+    <form id="presentationForm" action="{% url 'presentation_view' %}" method="get" target="_blank">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Aulas Disponíveis</h6>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll()">Selecionar
+                    Todas</button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for aula in aulas %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-left-primary shadow-sm aula-card"
+                            onclick="toggleSelection('{{ aula.id }}')">
+                            <div class="card-body">
+                                <div class="form-check">
+                                    <input class="form-check-input aula-checkbox" type="checkbox" value="{{ aula.id }}"
+                                        id="aula_{{ aula.id }}" style="pointer-events: none;">
+                                    <label class="form-check-label font-weight-bold text-dark" for="aula_{{ aula.id }}">
+                                        {{ aula.nome }}
+                                    </label>
+                                </div>
+                                <div class="mt-2 text-muted small">
+                                    {{ aula.get_categorias_exercicios_display }}
+                                </div>
+                                {% if aula.file_de_video %}
+                                <div class="mt-2">
+                                    <span class="badge bg-success"><i class="fas fa-video"></i> Vídeo Disponível</span>
+                                </div>
+                                {% else %}
+                                <div class="mt-2">
+                                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle"></i>
+                                        Sem Vídeo</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Nenhuma aula cadastrada.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <input type="hidden" name="ids" id="selectedIds">
+                <button type="submit" class="btn btn-lg btn-success" onclick="prepareSubmission(event)">
+                    <i class="fas fa-play-circle"></i> Iniciar Apresentação
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .aula-card {
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .aula-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    }
+
+    .aula-card.selected {
+        border: 2px solid #4e73df;
+        background-color: #f8f9fc;
+    }
+</style>
+
+<script>
+    function toggleSelection(id) {
+        const checkbox = document.getElementById('aula_' + id);
+        checkbox.checked = !checkbox.checked;
+        const card = checkbox.closest('.aula-card');
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    }
+
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('.aula-checkbox');
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                toggleSelection(cb.value);
+            }
+        });
+    }
+
+    function prepareSubmission(event) {
+        event.preventDefault();
+        const checkboxes = document.querySelectorAll('.aula-checkbox:checked');
+        if (checkboxes.length === 0) {
+            alert('Por favor, selecione pelo menos uma aula.');
+            return;
+        }
+
+        const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+        document.getElementById('selectedIds').value = ids;
+        document.getElementById('presentationForm').submit();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Pagamentos - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Gerenciar Pagamentos</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.is_superuser or user.is_staff %}
+        <a href="{% url 'pagamento_create' %}" class="btn btn-success text-white">
+            <i class="fas fa-plus"></i> Registrar Pagamento
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Plano</th>
+                        <th>Valor</th>
+                        <th>Data Pagamento</th>
+                        <th>Vigência</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pagamento in pagamentos %}
+                    <tr>
+                        <td>{{ pagamento.usuario.username }}</td>
+                        <td>{{ pagamento.plano.nome }}</td>
+                        <td>R$ {{ pagamento.valor_pago }}</td>
+                        <td>{{ pagamento.data_pagamento|date:"d/m/Y" }}</td>
+                        <td>{{ pagamento.data_inicio|date:"d/m/Y" }} - {{ pagamento.data_fim|date:"d/m/Y" }}</td>
+                        <td>
+                            {% now "Y-m-d" as today %}
+                            {% if pagamento.data_fim|date:"Y-m-d" >= today %}
+                            <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Vencido</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_superuser or user.is_staff %}
+                            <a href="{% url 'pagamento_delete' pk=pagamento.pk %}" class="btn btn-sm btn-outline-danger"
+                                title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
+                                <p>Nenhum pagamento registrado.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

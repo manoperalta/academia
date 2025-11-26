@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Planos Disponíveis - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Planos Disponíveis</h2>
+    </div>
+</div>
+
+<div class="row">
+    {% for plano in planos %}
+    <div class="col-md-3 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white text-center">
+                <h5 class="mb-0">{{ plano.nome }}</h5>
+            </div>
+            <div class="card-body text-center">
+                <h2 class="text-primary">R$ {{ plano.valor }}</h2>
+                <p class="text-muted">{{ plano.get_tipo_display }}</p>
+                {% if plano.descricao %}
+                <p class="small">{{ plano.descricao }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-list fa-3x mb-3 text-muted"></i>
+        <p class="text-muted">Nenhum plano disponível no momento.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

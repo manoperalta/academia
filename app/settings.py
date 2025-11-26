@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'aulas',
     'agendamento',
     'painel',
+    'financeiro',
 ]
 
 MIDDLEWARE = [

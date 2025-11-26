@@ -27,5 +27,6 @@ urlpatterns = [
     path('usuarios/', include('usuarios.urls')),
     path('professores/', include('professores.urls')),
     path('painel/', include('painel.urls')),
+    path('financeiro/', include('financeiro.urls')),
     path('', academia_views.index, name='index'),
 ]

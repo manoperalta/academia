@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Confirmar Exclusão</h4>
+            </div>
+            <div class="card-body">
+                <p>Tem certeza que deseja excluir o pagamento:</p>
+                <ul class="list-unstyled">
+                    <li><strong>Usuário:</strong> {{ pagamento.usuario.username }}</li>
+                    <li><strong>Plano:</strong> {{ pagamento.plano.nome }}</li>
+                    <li><strong>Valor:</strong> R$ {{ pagamento.valor_pago }}</li>
+                    <li><strong>Vigência:</strong> {{ pagamento.data_inicio|date:"d/m/Y" }} - {{
+                        pagamento.data_fim|date:"d/m/Y" }}</li>
+                </ul>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'pagamento_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
