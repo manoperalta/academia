@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Usuario
-from .forms import UsuarioForm
+from .forms import UsuarioForm, UsuarioProfileForm
 
 @login_required
 def usuario_list(request):
@@ -42,3 +42,23 @@ def usuario_delete(request, pk):
         messages.success(request, 'Usuário excluído com sucesso!')
         return redirect('usuario_list')
     return render(request, 'usuarios/usuario_confirm_delete.html', {'usuario': usuario})
+
+@login_required
+def complete_profile(request):
+    # Tenta obter o perfil do usuário logado
+    try:
+        usuario = request.user.usuario_profile
+    except Usuario.DoesNotExist:
+        # Se não existir (o que não deveria acontecer pelo fluxo de registro), cria um
+        usuario = Usuario.objects.create(user=request.user, nome=request.user.username)
+
+    if request.method == 'POST':
+        form = UsuarioProfileForm(request.POST, request.FILES, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Perfil completado com sucesso!')
+            return redirect('dashboard')
+    else:
+        form = UsuarioProfileForm(instance=usuario)
+    
+    return render(request, 'usuarios/complete_profile.html', {'form': form})

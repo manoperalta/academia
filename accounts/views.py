@@ -23,7 +23,10 @@ def register(request):
                 Usuario.objects.create(user=user, nome=user.username)
 
             login(request, user)
-            return redirect('dashboard')
+            if user.is_professor:
+                return redirect('dashboard') # Professores podem ter fluxo diferente ou o mesmo
+            else:
+                return redirect('complete_profile')
     else:
         form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})

@@ -19,7 +19,7 @@ class Aulas(models.Model):
         null=True, 
         blank=True, 
         verbose_name="Arquivo de Vídeo",
-        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm', 'ogg'])]
+        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'webm', 'ogg', 'mkv', 'mov', 'avi'])]
     )
     # Para imagens, utilizaremos um modelo relacionado para permitir múltiplas imagens (até 5)
     professor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Professor/Criador")

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Completar Perfil - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Complete seu Perfil</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Por favor, complete suas informações para ter acesso total ao sistema.</p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">Nome Completo</label>
+                            {{ form.nome }}
+                            {{ form.nome.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.data_nasc.id_for_label }}" class="form-label">Data de Nascimento</label>
+                            {{ form.data_nasc }}
+                            {{ form.data_nasc.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cpf_cnpj_user.id_for_label }}" class="form-label">CPF/CNPJ</label>
+                            {{ form.cpf_cnpj_user }}
+                            {{ form.cpf_cnpj_user.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email_user.id_for_label }}" class="form-label">E-mail</label>
+                            {{ form.email_user }}
+                            {{ form.email_user.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefone_user.id_for_label }}" class="form-label">Telefone</label>
+                            {{ form.telefone_user }}
+                            {{ form.telefone_user.errors }}
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3 border-bottom pb-2">Endereço</h5>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.cep_user.id_for_label }}" class="form-label">CEP</label>
+                            {{ form.cep_user }}
+                            {{ form.cep_user.errors }}
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label for="{{ form.endereco_user.id_for_label }}" class="form-label">Endereço</label>
+                            {{ form.endereco_user }}
+                            {{ form.endereco_user.errors }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="{{ form.numero_end_user.id_for_label }}" class="form-label">Número</label>
+                            {{ form.numero_end_user }}
+                            {{ form.numero_end_user.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.bairro_user.id_for_label }}" class="form-label">Bairro</label>
+                            {{ form.bairro_user }}
+                            {{ form.bairro_user.errors }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.foto_user.id_for_label }}" class="form-label">Foto de Perfil</label>
+                        {{ form.foto_user }}
+                        {{ form.foto_user.errors }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">Salvar e Continuar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

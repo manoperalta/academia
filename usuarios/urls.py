@@ -6,4 +6,5 @@ urlpatterns = [
     path('novo/', views.usuario_create, name='usuario_create'),
     path('editar/<int:pk>/', views.usuario_update, name='usuario_update'),
     path('excluir/<int:pk>/', views.usuario_delete, name='usuario_delete'),
+    path('completar-perfil/', views.complete_profile, name='complete_profile'),
 ]

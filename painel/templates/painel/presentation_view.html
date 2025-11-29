@@ -191,7 +191,8 @@
             Próximo: <span id="next-title">Nome da Aula</span>
         </div>
 
-        <video id="video-player" playsinline>
+        <video id="video-player" playsinline preload="auto" controlsList="nodownload">
+            <source id="video-source" src="" type="">
             Seu navegador não suporta o elemento de vídeo.
         </video>
 
@@ -295,7 +296,25 @@
             videoPlayer.style.display = 'block';
             overlayInfo.style.display = 'block'; // Show overlay initially
 
-            videoPlayer.src = url;
+            // Determine MIME type based on file extension
+            const extension = url.split('.').pop().toLowerCase();
+            const mimeTypes = {
+                'mp4': 'video/mp4',
+                'webm': 'video/webm',
+                'ogg': 'video/ogg',
+                'mkv': 'video/x-matroska',
+                'mov': 'video/quicktime',
+                'avi': 'video/x-msvideo'
+            };
+
+            const mimeType = mimeTypes[extension] || 'video/mp4';
+
+            // Set source element
+            const videoSource = document.getElementById('video-source');
+            videoSource.src = url;
+            videoSource.type = mimeType;
+
+            // Reload video with new source
             videoPlayer.load();
 
             if (isPlaying) {

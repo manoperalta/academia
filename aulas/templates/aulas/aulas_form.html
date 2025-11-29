@@ -24,7 +24,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.categorias_exercicios.id_for_label }}" class="form-label">Categoria de Exercícios</label>
+                        <label for="{{ form.categorias_exercicios.id_for_label }}" class="form-label">Categoria de
+                            Exercícios</label>
                         {{ form.categorias_exercicios }}
                         {% if form.categorias_exercicios.errors %}
                         <div class="text-danger small">{{ form.categorias_exercicios.errors }}</div>
@@ -42,10 +43,36 @@
                     <div class="mb-3">
                         <label for="{{ form.file_de_video.id_for_label }}" class="form-label">Arquivo de Vídeo</label>
                         {{ form.file_de_video }}
-                        <div class="form-text">Formatos aceitos: MP4, WebM, OGG.</div>
+                        <div class="form-text">Formatos aceitos: MP4, WebM, OGG, MKV, MOV, AVI.</div>
                         {% if form.file_de_video.errors %}
                         <div class="text-danger small">{{ form.file_de_video.errors }}</div>
                         {% endif %}
+                    </div>
+
+                    <h5 class="mb-3 border-bottom pb-2 mt-4">Imagens da Aula</h5>
+                    {{ formset.management_form }}
+                    <div id="imagens-formset">
+                        {% for form in formset %}
+                        <div class="mb-3 border p-3 rounded">
+                            {{ form.id }}
+                            <div class="mb-2">
+                                <label class="form-label">Imagem</label>
+                                {{ form.imagem }}
+                            </div>
+                            {% if form.imagem.errors %}
+                            <div class="text-danger small">{{ form.imagem.errors }}</div>
+                            {% endif %}
+
+                            {% if formset.can_delete %}
+                            <div class="form-check mt-2">
+                                {{ form.DELETE }}
+                                <label class="form-check-label" for="{{ form.DELETE.id_for_label }}">
+                                    Remover imagem
+                                </label>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">

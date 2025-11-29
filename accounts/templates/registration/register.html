@@ -17,8 +17,7 @@
                     {{ field }} <!-- Renderiza o select padrão do Django, pode precisar de classe CSS -->
                     {% else %}
                     <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}"
-                        id="{{ field.id_for_label }}" class="form-control" {% if field.help_text
-                        %}aria-describedby="{{ field.id_for_label }}_help" {% endif %}>
+                        id="{{ field.id_for_label }}" class="form-control" {% if field.help_text %}aria-describedby="{{ field.id_for_label }}_help" {% endif %}>
                     {% endif %}
                     {% if field.help_text %}
                     <div id="{{ field.id_for_label }}_help" class="form-text">{{ field.help_text }}</div>
