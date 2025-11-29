@@ -25,9 +25,9 @@
                         <th>Usuário</th>
                         <th>Plano</th>
                         <th>Valor</th>
-                        <th>Data Pagamento</th>
+                        <th>Status Pagamento</th>
                         <th>Vigência</th>
-                        <th>Status</th>
+                        <th>Situação</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -37,23 +37,51 @@
                         <td>{{ pagamento.usuario.username }}</td>
                         <td>{{ pagamento.plano.nome }}</td>
                         <td>R$ {{ pagamento.valor_pago }}</td>
-                        <td>{{ pagamento.data_pagamento|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if pagamento.status == 'pago' %}
+                            <span class="badge bg-success">Pago</span>
+                            {% elif pagamento.status == 'pendente' %}
+                            <span class="badge bg-warning text-dark">Pendente</span>
+                            {% elif pagamento.status == 'cancelado' %}
+                            <span class="badge bg-danger">Cancelado</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ pagamento.get_status_display }}</span>
+                            {% endif %}
+                        </td>
                         <td>{{ pagamento.data_inicio|date:"d/m/Y" }} - {{ pagamento.data_fim|date:"d/m/Y" }}</td>
                         <td>
                             {% now "Y-m-d" as today %}
+                            {% if pagamento.status == 'pago' %}
                             {% if pagamento.data_fim|date:"Y-m-d" >= today %}
                             <span class="badge bg-success">Ativo</span>
                             {% else %}
                             <span class="badge bg-danger">Vencido</span>
                             {% endif %}
+                            {% else %}
+                            <span class="badge bg-secondary">-</span>
+                            {% endif %}
                         </td>
                         <td>
-                            {% if user.is_superuser or user.is_staff %}
-                            <a href="{% url 'pagamento_delete' pk=pagamento.pk %}" class="btn btn-sm btn-outline-danger"
-                                title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                            {% endif %}
+                            <div class="btn-group" role="group">
+                                {% if pagamento.status == 'pendente' %}
+                                <a href="{% url 'pagamento_detalhe' pk=pagamento.pk %}" class="btn btn-sm btn-primary"
+                                    title="Pagar Agora">
+                                    <i class="fas fa-credit-card"></i> Pagar
+                                </a>
+                                {% else %}
+                                <a href="{% url 'pagamento_detalhe' pk=pagamento.pk %}"
+                                    class="btn btn-sm btn-info text-white" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+
+                                {% if user.is_superuser or user.is_staff %}
+                                <a href="{% url 'pagamento_delete' pk=pagamento.pk %}"
+                                    class="btn btn-sm btn-outline-danger ms-1" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

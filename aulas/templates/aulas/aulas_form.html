@@ -16,7 +16,7 @@
                     <h5 class="mb-3 border-bottom pb-2">Informações da Aula</h5>
 
                     <div class="mb-3">
-                        <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                        <label for="{{ form.nome.id_for_label }}" class="form-label">Nome da Aula</label>
                         {{ form.nome }}
                         {% if form.nome.errors %}
                         <div class="text-danger small">{{ form.nome.errors }}</div>
@@ -24,8 +24,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.categorias_exercicios.id_for_label }}" class="form-label">{{
-                            form.categorias_exercicios.label }}</label>
+                        <label for="{{ form.categorias_exercicios.id_for_label }}" class="form-label">Categoria de Exercícios</label>
                         {{ form.categorias_exercicios }}
                         {% if form.categorias_exercicios.errors %}
                         <div class="text-danger small">{{ form.categorias_exercicios.errors }}</div>
@@ -33,8 +32,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.descricao.id_for_label }}" class="form-label">{{ form.descricao.label
-                            }}</label>
+                        <label for="{{ form.descricao.id_for_label }}" class="form-label">Descrição</label>
                         {{ form.descricao }}
                         {% if form.descricao.errors %}
                         <div class="text-danger small">{{ form.descricao.errors }}</div>
@@ -42,8 +40,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.file_de_video.id_for_label }}" class="form-label">{{
-                            form.file_de_video.label }}</label>
+                        <label for="{{ form.file_de_video.id_for_label }}" class="form-label">Arquivo de Vídeo</label>
                         {{ form.file_de_video }}
                         <div class="form-text">Formatos aceitos: MP4, WebM, OGG.</div>
                         {% if form.file_de_video.errors %}
@@ -51,29 +48,9 @@
                         {% endif %}
                     </div>
 
-                    <h5 class="mt-4 mb-3 border-bottom pb-2">Imagens Adicionais</h5>
-                    {{ formset.management_form }}
-                    <div id="imagens-form-list">
-                        {% for form_img in formset %}
-                        <div class="row mb-2 image-form">
-                            <div class="col-md-10">
-                                {{ form_img.imagem }}
-                                {% if form_img.instance.pk %}
-                                <div class="form-check mt-1">
-                                    {{ form_img.DELETE }}
-                                    <label class="form-check-label text-danger"
-                                        for="{{ form_img.DELETE.id_for_label }}">Excluir imagem atual</label>
-                                </div>
-                                {% endif %}
-                            </div>
-                            {{ form_img.id }}
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{% url 'aulas_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-success">Salvar Aula</button>
+                        <button type="submit" class="btn btn-success">Salvar</button>
                     </div>
                 </form>
             </div>

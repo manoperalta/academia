@@ -7,73 +7,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ site_config.titulo|default:"Academia System" }}{% endblock %}</title>
 
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Luxury Theme CSS -->
+    <link rel="stylesheet" href="{% static 'css/luxury-theme.css' %}">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
     {% if site_visual.favicon %}
     <link rel="shortcut icon" href="{{ site_visual.favicon.url }}" type="image/x-icon">
     {% endif %}
+
+    {% block extra_css %}{% endblock %}
 </head>
 
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
+    <!-- Navbar Luxuosa -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
                 {% if site_visual.logotipo %}
-                <img src="{{ site_visual.logotipo.url }}" alt="Logo">
+                <img src="{{ site_visual.logotipo.url }}" alt="Logo" style="height: 40px; margin-right: 12px; border-radius: 8px;">
+                {% else %}
+                <i class="fas fa-dumbbell me-2" style="font-size: 1.5rem;"></i>
                 {% endif %}
-                {{ site_config.titulo|default:"Academia" }}
+                {{ site_config.titulo|default:"FitPro Academia" }}
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="fas fa-chart-line me-2"></i>Dashboard
+                        </a>
                     </li>
+                    
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'usuario' in request.path %}active{% endif %}" href="{% url 'usuario_list' %}">
+                            <i class="fas fa-users me-2"></i>Alunos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'professor' in request.path %}active{% endif %}" href="{% url 'professor_list' %}">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Professores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'pagamento' in request.path %}active{% endif %}" href="{% url 'pagamento_list' %}">
+                            <i class="fas fa-dollar-sign me-2"></i>Financeiro
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'relatorio' in request.path %}active{% endif %}" href="{% url 'relatorio_geral' %}">
+                            <i class="fas fa-file-alt me-2"></i>Relatórios
+                        </a>
+                    </li>
+                    
                     {% if user.is_professor %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'aulas_list' %}">Minhas Aulas</a>
+                        <a class="nav-link {% if 'aulas' in request.path %}active{% endif %}" href="{% url 'aulas_list' %}">
+                            <i class="fas fa-video me-2"></i>Minhas Aulas
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'painel_list' %}">Meus Painéis</a>
+                        <a class="nav-link {% if 'painel' in request.path %}active{% endif %}" href="{% url 'painel_list' %}">
+                            <i class="fas fa-th-large me-2"></i>Meus Painéis
+                        </a>
                     </li>
                     {% endif %}
+                    
                     {% if user.is_student %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'agenda_list' %}">Agendar Aula</a>
+                        <a class="nav-link {% if 'agenda' in request.path %}active{% endif %}" href="{% url 'agenda_list' %}">
+                            <i class="fas fa-calendar-plus me-2"></i>Agendar Aula
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'meus_agendamentos' %}">Meus Agendamentos</a>
+                        <a class="nav-link {% if 'agendamentos' in request.path %}active{% endif %}" href="{% url 'meus_agendamentos' %}">
+                            <i class="fas fa-calendar-check me-2"></i>Meus Agendamentos
+                        </a>
                     </li>
                     {% endif %}
+                    
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-bs-toggle="dropdown">
-                            {{ user.username }}
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span>{{ user.username }}</span>
+                            </div>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end" style="background: var(--bg-card); border: 1px solid var(--border-color);">
+                            {% if user.is_staff or user.is_superuser %}
+                            <li>
+                                <a class="dropdown-item" href="/admin/" target="_blank" style="color: var(--text-primary);">
+                                    <i class="fas fa-cog me-2"></i>Admin
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+                            {% endif %}
                             <li>
                                 <form action="{% url 'logout' %}" method="post">
                                     {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">Sair</button>
+                                    <button type="submit" class="dropdown-item" style="color: var(--accent-danger);">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                    </button>
                                 </form>
                             </li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}">Registrar</a>
+                        <a class="btn btn-primary" href="{% url 'register' %}" style="margin-left: 0.5rem;">
+                            <i class="fas fa-user-plus me-2"></i>Registrar
+                        </a>
                     </li>
                     {% endif %}
                 </ul>
@@ -82,32 +151,98 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content container">
+    <main class="container-fluid fade-in-up">
         {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="row mt-3">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <div class="d-flex align-items-center">
+                        {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle me-3" style="font-size: 1.5rem; color: var(--accent-success);"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="fas fa-exclamation-circle me-3" style="font-size: 1.5rem; color: var(--accent-danger);"></i>
+                        {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: var(--accent-warning);"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle me-3" style="font-size: 1.5rem; color: var(--accent-info);"></i>
+                        {% endif %}
+                        <div class="flex-grow-1">{{ message }}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        {% endfor %}
         {% endif %}
 
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="footer text-center">
+    <!-- Footer Luxuoso -->
+    <footer class="text-center" style="background: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 2rem 0; margin-top: 4rem;">
         <div class="container">
-            <p>&copy; {% now "Y" %} {{ site_config.titulo|default:"Academia System" }}. Todos os direitos reservados.
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <h5 class="text-gradient mb-3">{{ site_config.titulo|default:"FitPro Academia" }}</h5>
+                    {% if site_config.endereco %}
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ site_config.endereco }}, {{ site_config.numero }} - CEP: {{ site_config.cep }}
+                    </p>
+                    {% endif %}
+                    {% if site_config.cnpj %}
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        CNPJ: {{ site_config.cnpj }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 1.5rem 0;">
+            <p class="text-muted small mb-0">
+                &copy; {% now "Y" %} {{ site_config.titulo|default:"FitPro Academia" }}. Todos os direitos reservados.
             </p>
-            {% if site_config.endereco %}
-            <p class="small mb-0">{{ site_config.endereco }}, {{ site_config.numero }} - {{ site_config.cep }}</p>
-            {% endif %}
+            <p class="text-muted small mt-2">
+                <i class="fas fa-code me-1"></i> Desenvolvido com <i class="fas fa-heart text-danger mx-1"></i> usando Django
+            </p>
         </div>
     </footer>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script>
+        // Avatar Circle Style
+        document.addEventListener('DOMContentLoaded', function() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .avatar-circle {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: var(--gradient-primary);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.875rem;
+                }
+                
+                .dropdown-item {
+                    transition: all 0.3s ease;
+                }
+                
+                .dropdown-item:hover {
+                    background: var(--bg-hover) !important;
+                    color: var(--text-primary) !important;
+                    transform: translateX(4px);
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 

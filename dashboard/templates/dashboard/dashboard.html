@@ -14,6 +14,61 @@
     </div>
 </div>
 
+<!-- Seção de Indicadores Financeiros e Aniversariantes -->
+<div class="row mb-4">
+    <!-- Gráfico Financeiro -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Situação Financeira dos Alunos</h5>
+            </div>
+            <div class="card-body text-center">
+                <canvas id="financeiroChart" width="300" height="300"></canvas>
+                <div class="mt-3">
+                    <p class="mb-1"><span class="badge bg-success">Em Dia: {{ usuarios_em_dia }}</span></p>
+                    <p class="mb-1"><span class="badge bg-warning text-dark">Alerta ({{ dias_alerta }} dias): {{ usuarios_alerta }}</span></p>
+                    <p class="mb-1"><span class="badge bg-danger">Atrasados: {{ usuarios_atrasados }}</span></p>
+                    <p class="text-muted small">Total de usuários: {{ total_usuarios }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aniversariantes do Dia -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-birthday-cake"></i> Aniversariantes do Dia</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="display-1 text-warning">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <h2 class="mt-3 mb-3">{{ total_aniversariantes }}</h2>
+                <p class="text-muted">aniversariante(s) hoje</p>
+                
+                {% if total_aniversariantes > 0 %}
+                <div class="list-group mt-3 text-start">
+                    {% for aniversariante in aniversariantes_hoje %}
+                    <div class="list-group-item">
+                        <strong>{{ aniversariante.nome }}</strong>
+                        <br>
+                        <small class="text-muted">{{ aniversariante.email_user }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-warning mt-3" data-bs-toggle="modal" data-bs-target="#aniversariantesModal">
+                    <i class="fas fa-envelope"></i> Enviar Mensagem
+                </button>
+                {% else %}
+                <p class="text-muted mt-3">Nenhum aniversariante hoje.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Gestão -->
 <div class="row">
     <div class="col-md-4 mb-4">
         <div class="card h-100">
@@ -75,5 +130,172 @@
             </div>
         </div>
     </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-envelope fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Notificações</h5>
+                <p class="card-text">Enviar e-mails para usuários.</p>
+                <a href="{% url 'criar_notificacao' %}" class="btn btn-outline-warning">Criar Notificação</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para Envio de Notificação de Atraso -->
+<div class="modal fade" id="atrasadosModal" tabindex="-1" aria-labelledby="atrasadosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="atrasadosModalLabel">
+                    <i class="fas fa-exclamation-triangle"></i> Enviar Notificação de Atraso
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>{{ usuarios_atrasados }}</strong> usuário(s) com pagamento atrasado.
+                </div>
+                
+                <h6>Usuários Atrasados:</h6>
+                <div class="table-responsive mb-3" style="max-height: 200px; overflow-y: auto;">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Dias de Atraso</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios_atrasados_lista %}
+                            <tr>
+                                <td>{{ usuario.nome }}</td>
+                                <td>{{ usuario.email }}</td>
+                                <td><span class="badge bg-danger">{{ usuario.dias_atraso }} dia(s)</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post" action="{% url 'enviar_notificacao_atraso' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="mensagemAtraso" class="form-label">Mensagem de Notificação:</label>
+                        <textarea class="form-control" id="mensagemAtraso" name="mensagem" rows="5" required>{{ config.mensagem_pagamento_atrasado }}</textarea>
+                        <small class="form-text text-muted">
+                            Esta mensagem será enviada por e-mail para todos os usuários com pagamento atrasado.
+                        </small>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-paper-plane"></i> Enviar Notificação para {{ usuarios_atrasados }} usuário(s)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Envio de Mensagem de Aniversário -->
+<div class="modal fade" id="aniversariantesModal" tabindex="-1" aria-labelledby="aniversariantesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="aniversariantesModalLabel">
+                    <i class="fas fa-birthday-cake"></i> Enviar Mensagem de Aniversário
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>{{ total_aniversariantes }}</strong> aniversariante(s) hoje.
+                </div>
+
+                <form method="post" action="{% url 'enviar_mensagem_aniversario' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="mensagemAniversario" class="form-label">Mensagem de Aniversário:</label>
+                        <textarea class="form-control" id="mensagemAniversario" name="mensagem" rows="5" required>{{ config.mensagem_aniversario }}</textarea>
+                        <small class="form-text text-muted">
+                            Use <code>{academia}</code> para o nome da academia e <code>{nome}</code> para o nome do aniversariante.
+                        </small>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-paper-plane"></i> Enviar Mensagem para {{ total_aniversariantes }} aniversariante(s)
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Pizza - Situação Financeira
+    var ctx = document.getElementById('financeiroChart').getContext('2d');
+    var financeiroChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Em Dia', 'Alerta ({{ dias_alerta }} dias)', 'Atrasados'],
+            datasets: [{
+                data: [{{ perc_em_dia }}, {{ perc_alerta }}, {{ perc_atrasados }}],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',   // Verde
+                    'rgba(255, 193, 7, 0.8)',   // Amarelo
+                    'rgba(220, 53, 69, 0.8)'    // Vermelho
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(255, 193, 7, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var label = context.label || '';
+                            var value = context.parsed || 0;
+                            return label + ': ' + value + '%';
+                        }
+                    }
+                }
+            },
+            onClick: function(evt, activeElements) {
+                if (activeElements.length > 0) {
+                    var index = activeElements[0].index;
+                    // Se clicar na parte vermelha (atrasados - índice 2)
+                    if (index === 2 && {{ usuarios_atrasados }} > 0) {
+                        var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
+                        modal.show();
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Pagamento - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Pagamento #{{ pagamento.id }}</h4>
+                <span class="badge bg-light text-dark">{{ pagamento.get_status_display }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Informações do Plano</h5>
+                        <p><strong>Plano:</strong> {{ pagamento.plano.nome }}</p>
+                        <p><strong>Valor:</strong> R$ {{ pagamento.valor_pago }}</p>
+                        <p><strong>Vigência:</strong> {{ pagamento.data_inicio|date:"d/m/Y" }} a {{
+                            pagamento.data_fim|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Status</h5>
+                        <p>
+                            {% if pagamento.status == 'pendente' %}
+                            <span class="text-warning"><i class="fas fa-clock"></i> Aguardando Pagamento</span>
+                            {% elif pagamento.status == 'pago' %}
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Pago</span>
+                            {% else %}
+                            <span class="text-danger">{{ pagamento.get_status_display }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                {% if pagamento.status == 'pendente' %}
+                <hr>
+                <h5 class="mb-3">Realizar Pagamento</h5>
+
+                {% if pagamento.qr_code_text %}
+                <div class="text-center mb-4">
+                    <h6>Pagamento via Pix</h6>
+                    <p class="small text-muted">Escaneie o QR Code abaixo com o app do seu banco:</p>
+
+                    {% if pagamento.qr_code_base64 %}
+                    <img src="{{ pagamento.qr_code_base64 }}" alt="QR Code Pix" class="img-fluid border p-2 mb-3"
+                        style="max-width: 250px;">
+                    {% else %}
+                    <div class="alert alert-warning">Imagem do QR Code não disponível. Use o código abaixo.</div>
+                    {% endif %}
+
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="{{ pagamento.qr_code_text }}" id="pixCode"
+                            readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copiarPix()">Copiar
+                            Código</button>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if pagamento.link_pagamento %}
+                <div class="d-grid gap-2">
+                    <a href="{{ pagamento.link_pagamento }}" target="_blank" class="btn btn-success btn-lg">
+                        <i class="fas fa-external-link-alt"></i> Ir para Pagamento Seguro
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if not pagamento.qr_code_text and not pagamento.link_pagamento %}
+                <div class="alert alert-info">
+                    Clique no botão abaixo para gerar as opções de pagamento.
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'realizar_checkout' pagamento.pk %}" class="btn btn-primary btn-lg">
+                        Gerar Pagamento
+                    </a>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-success">
+                    <h4 class="alert-heading">Pagamento Concluído!</h4>
+                    <p>Seu pagamento foi confirmado e seu plano está ativo.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer text-end">
+                <a href="{% url 'pagamento_list' %}" class="btn btn-secondary">Voltar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copiarPix() {
+        var copyText = document.getElementById("pixCode");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); /* For mobile devices */
+        navigator.clipboard.writeText(copyText.value);
+        alert("Código Pix copiado!");
+    }
+</script>
+{% endblock %}

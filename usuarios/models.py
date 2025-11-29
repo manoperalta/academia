@@ -17,6 +17,8 @@ class Usuario(models.Model):
     bairro_user = models.CharField(max_length=100, verbose_name="Bairro")
     cep_user = models.CharField(max_length=20, verbose_name="CEP")
     cpf_cnpj_user = models.CharField(max_length=20, verbose_name="CPF/CNPJ")
+    email_user = models.EmailField(verbose_name="E-mail", blank=True, null=True)
+    telefone_user = models.CharField(max_length=20, verbose_name="Telefone", blank=True, null=True)
     data_create_user = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_user = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
     foto_user = models.ImageField(upload_to='usuarios_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")

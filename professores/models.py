@@ -17,6 +17,8 @@ class Professor(models.Model):
     bairro_prof = models.CharField(max_length=100, verbose_name="Bairro")
     cep_prof = models.CharField(max_length=20, verbose_name="CEP")
     cpf_cnpj_prof = models.CharField(max_length=20, verbose_name="CPF/CNPJ")
+    email_prof = models.EmailField(verbose_name="E-mail", blank=True, null=True)
+    telefone_prof = models.CharField(max_length=20, verbose_name="Telefone", blank=True, null=True)
     data_create_prof = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_prof = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
     foto_prof = models.ImageField(upload_to='professores_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")

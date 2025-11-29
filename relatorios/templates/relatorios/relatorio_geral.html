@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabeçalho e Resumo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4 fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>Relatório de Desempenho</h2>
+        </div>
+
+        <!-- Card Resumo Aulas -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100 bg-gradient-primary text-white"
+                style="background: linear-gradient(45deg, #4e73df, #224abe);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-1 opacity-75">Total de Aulas</h6>
+                            <h2 class="display-4 fw-bold mb-0">{{ total_aulas }}</h2>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                    </div>
+                    <p class="mt-3 mb-0 small opacity-75">
+                        <i class="fas fa-check-circle me-1"></i> Aulas concluídas
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Resumo Financeiro -->
+        <div class="col-md-4 mb-3">
+            <div
+                class="card border-0 shadow-sm h-100 {% if pagamento_atual %}bg-success text-white{% else %}bg-light border-start border-5 border-warning{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-uppercase mb-1 {% if not pagamento_atual %}text-muted{% endif %}">Plano
+                                Atual</h6>
+                            {% if pagamento_atual %}
+                            <h3 class="fw-bold mb-0">{{ pagamento_atual.plano.nome }}</h3>
+                            <p class="mb-0 mt-1 opacity-75">Vence em: {{ pagamento_atual.data_fim|date:"d/m/Y" }}</p>
+                            {% else %}
+                            <h3 class="fw-bold mb-0 text-dark">Nenhum Ativo</h3>
+                            <a href="{% url 'pagamento_list' %}" class="btn btn-sm btn-warning mt-2">Renovar Agora</a>
+                            {% endif %}
+                        </div>
+                        <div class="fs-1 {% if pagamento_atual %}opacity-50{% else %}text-warning{% endif %}">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Estatística Rápida -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0">
+                    <h6 class="fw-bold text-muted mb-0">Modalidades Favoritas</h6>
+                </div>
+                <div class="card-body">
+                    {% for cat, count in categorias_stats.items %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>{{ cat }}</span>
+                            <span class="fw-bold">{{ count }}</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 100%" aria-valuenow="100"
+                                aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small text-center my-3">Sem dados suficientes.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico Detalhado (Timeline) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Histórico de Aulas e Treinos</h6>
+                    <span class="badge bg-light text-dark border">{{ total_aulas }} registros</span>
+                </div>
+                <div class="card-body">
+                    {% if historico_aulas %}
+                    <div class="timeline">
+                        {% for item in historico_aulas %}
+                        <div class="row mb-4 border-bottom pb-4">
+                            <!-- Data e Hora -->
+                            <div class="col-md-2 text-center border-end d-flex flex-column justify-content-center">
+                                <h4 class="mb-0 fw-bold text-dark">{{ item.data|date:"d" }}</h4>
+                                <span class="text-uppercase small text-muted">{{ item.data|date:"M" }}</span>
+                                <span class="badge bg-light text-dark mt-2">{{ item.data|date:"Y" }}</span>
+                                <small class="text-muted mt-2">{{ item.hora_inicio|time:"H:i" }}</small>
+                            </div>
+
+                            <!-- Detalhes do Treino -->
+                            <div class="col-md-10 ps-md-4 pt-2 pt-md-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="fw-bold text-dark mb-1">Treino com {{ item.professor }}</h5>
+                                    {% if item.status == 'Concluido' %}
+                                    <span class="badge bg-success">Concluído</span>
+                                    {% elif item.status == 'Cancelado' %}
+                                    <span class="badge bg-danger">Cancelado</span>
+                                    {% else %}
+                                    <span class="badge bg-primary">Agendado</span>
+                                    {% endif %}
+                                </div>
+
+                                <p class="text-muted small mb-3">
+                                    <i class="far fa-clock me-1"></i> Duração: {{ item.hora_inicio|time:"H:i" }} às {{
+                                    item.hora_fim|time:"H:i" }}
+                                </p>
+
+                                <div class="bg-light p-3 rounded-3">
+                                    <h6 class="small fw-bold text-uppercase text-muted mb-2">Exercícios Realizados:</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for aula in item.aulas %}
+                                        <span class="badge bg-white text-dark border shadow-sm py-2 px-3">
+                                            <i class="fas fa-running me-1 text-primary"></i> {{ aula.nome }}
+                                            <span class="text-muted ms-1 small">({{
+                                                aula.get_categorias_exercicios_display }})</span>
+                                        </span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Sem dados"
+                            style="width: 100px; opacity: 0.5;" class="mb-3">
+                        <h5 class="text-muted">Nenhuma atividade registrada ainda.</h5>
+                        <p class="text-muted small">Agende sua primeira aula para começar a acompanhar seu progresso!
+                        </p>
+                        <a href="#" class="btn btn-primary mt-2">Agendar Aula</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background-image: linear-gradient(180deg, rgba(255, 255, 255, .15), rgba(255, 255, 255, 0));
+    }
+
+    .timeline {
+        position: relative;
+    }
+</style>
+{% endblock %}

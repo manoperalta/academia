@@ -14,7 +14,7 @@
                     {% csrf_token %}
 
                     <div class="mb-3">
-                        <label for="{{ form.usuario.id_for_label }}" class="form-label">{{ form.usuario.label }}</label>
+                        <label for="{{ form.usuario.id_for_label }}" class="form-label">Usuário</label>
                         {{ form.usuario }}
                         {% if form.usuario.errors %}
                         <div class="text-danger small">{{ form.usuario.errors }}</div>
@@ -22,7 +22,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.plano.id_for_label }}" class="form-label">{{ form.plano.label }}</label>
+                        <label for="{{ form.plano.id_for_label }}" class="form-label">Plano</label>
                         {{ form.plano }}
                         {% if form.plano.errors %}
                         <div class="text-danger small">{{ form.plano.errors }}</div>
@@ -32,16 +32,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.data_inicio.id_for_label }}" class="form-label">{{
-                                form.data_inicio.label }}</label>
+                            <label for="{{ form.data_inicio.id_for_label }}" class="form-label">Data de Início</label>
                             {{ form.data_inicio }}
                             {% if form.data_inicio.errors %}
                             <div class="text-danger small">{{ form.data_inicio.errors }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.valor_pago.id_for_label }}" class="form-label">{{ form.valor_pago.label
-                                }}</label>
+                            <label for="{{ form.valor_pago.id_for_label }}" class="form-label">Valor Pago</label>
                             {{ form.valor_pago }}
                             {% if form.valor_pago.errors %}
                             <div class="text-danger small">{{ form.valor_pago.errors }}</div>
@@ -58,22 +56,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    // Auto-fill valor_pago when plano is selected
-    const planoSelect = document.getElementById('{{ form.plano.id_for_label }}');
-    const valorInput = document.getElementById('{{ form.valor_pago.id_for_label }}');
-
-    planoSelect.addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-            // Extract price from option text (assumes format "Name - R$ XX.XX")
-            const text = selectedOption.text;
-            const match = text.match(/R\$\s*([\d,\.]+)/);
-            if (match) {
-                valorInput.value = match[1].replace(',', '.');
-            }
-        }
-    });
-</script>
 {% endblock %}

@@ -9,13 +9,13 @@
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">{{ title }}</h4>
             </div>
-            <div class="card-body">
-                <form method="post">
+            <div class="card-body" style="color: var(--text-primary);">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <div class="row">
                         <div class="col-md-12 mb-3">
-                            <label for="{{ form.nome.id_for_label }}" class="form-label">{{ form.nome.label }}</label>
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">Nome Completo</label>
                             {{ form.nome }}
                             {% if form.nome.errors %}
                             <div class="text-danger small">{{ form.nome.errors }}</div>
@@ -25,16 +25,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.data_nasc.id_for_label }}" class="form-label">{{ form.data_nasc.label
-                                }}</label>
+                            <label for="{{ form.data_nasc.id_for_label }}" class="form-label">Data de Nascimento</label>
                             {{ form.data_nasc }}
                             {% if form.data_nasc.errors %}
                             <div class="text-danger small">{{ form.data_nasc.errors }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.cpf_cnpj_user.id_for_label }}" class="form-label">{{
-                                form.cpf_cnpj_user.label }}</label>
+                            <label for="{{ form.cpf_cnpj_user.id_for_label }}" class="form-label">CPF/CNPJ</label>
                             {{ form.cpf_cnpj_user }}
                             {% if form.cpf_cnpj_user.errors %}
                             <div class="text-danger small">{{ form.cpf_cnpj_user.errors }}</div>
@@ -43,17 +41,32 @@
                     </div>
 
                     <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email_user.id_for_label }}" class="form-label">E-mail</label>
+                            {{ form.email_user }}
+                            {% if form.email_user.errors %}
+                            <div class="text-danger small">{{ form.email_user.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefone_user.id_for_label }}" class="form-label">Telefone</label>
+                            {{ form.telefone_user }}
+                            {% if form.telefone_user.errors %}
+                            <div class="text-danger small">{{ form.telefone_user.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="{{ form.endereco_user.id_for_label }}" class="form-label">{{
-                                form.endereco_user.label }}</label>
+                            <label for="{{ form.endereco_user.id_for_label }}" class="form-label">Endereço</label>
                             {{ form.endereco_user }}
                             {% if form.endereco_user.errors %}
                             <div class="text-danger small">{{ form.endereco_user.errors }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="{{ form.numero_end_user.id_for_label }}" class="form-label">{{
-                                form.numero_end_user.label }}</label>
+                            <label for="{{ form.numero_end_user.id_for_label }}" class="form-label">Número</label>
                             {{ form.numero_end_user }}
                             {% if form.numero_end_user.errors %}
                             <div class="text-danger small">{{ form.numero_end_user.errors }}</div>
@@ -63,16 +76,14 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.bairro_user.id_for_label }}" class="form-label">{{
-                                form.bairro_user.label }}</label>
+                            <label for="{{ form.bairro_user.id_for_label }}" class="form-label">Bairro</label>
                             {{ form.bairro_user }}
                             {% if form.bairro_user.errors %}
                             <div class="text-danger small">{{ form.bairro_user.errors }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.cep_user.id_for_label }}" class="form-label">{{ form.cep_user.label
-                                }}</label>
+                            <label for="{{ form.cep_user.id_for_label }}" class="form-label">CEP</label>
                             {{ form.cep_user }}
                             {% if form.cep_user.errors %}
                             <div class="text-danger small">{{ form.cep_user.errors }}</div>
@@ -82,11 +93,17 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="{{ form.status_user.id_for_label }}" class="form-label">{{
-                                form.status_user.label }}</label>
+                            <label for="{{ form.status_user.id_for_label }}" class="form-label">Status</label>
                             {{ form.status_user }}
                             {% if form.status_user.errors %}
                             <div class="text-danger small">{{ form.status_user.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.foto_user.id_for_label }}" class="form-label">Foto de Perfil</label>
+                            {{ form.foto_user }}
+                            {% if form.foto_user.errors %}
+                            <div class="text-danger small">{{ form.foto_user.errors }}</div>
                             {% endif %}
                         </div>
                     </div>
