@@ -53,10 +53,13 @@ body {
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container-fluid {
     padding: 2rem;
+    flex: 1;
 }
 
 /* ========================================
@@ -610,4 +613,26 @@ p {
 /* Strong */
 strong {
     color: var(--text-primary);
+}
+
+/* ========================================
+   ESTILOS MIGRADOS DE STYLE.CSS
+   ======================================== */
+
+.status-badge {
+    padding: 0.25em 0.6em;
+    border-radius: 10rem;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+.status-ativo { background-color: var(--accent-success); color: white; }
+.status-inativo { background-color: var(--accent-danger); color: white; }
+.status-agendado { background-color: var(--accent-info); color: white; }
+.status-concluido { background-color: var(--accent-success); color: white; }
+
+.auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding-top: 50px;
 }

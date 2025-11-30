@@ -4,38 +4,145 @@
 
 {% block content %}
 <style>
-    .glass-card {
-        background: rgba(255, 255, 255, 0.25);
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
+    .action-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
     }
 
-    .gradient-header {
-        background: linear-gradient(45deg, #11998e, #38ef7d);
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .action-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-card:hover::before {
+        opacity: 1;
+    }
+
+    .action-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .action-card.success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+    .action-card.info {
+        background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        color: white;
+    }
+
+    .action-card.warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         color: white;
     }
 
     .stat-card {
-        transition: transform 0.3s ease;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 12px;
     }
 
     .stat-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+    }
+
+    .icon-wrapper {
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 28px;
+    }
+
+    .quick-action-btn {
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 2px solid var(--border-color);
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: block;
+    }
+
+    .quick-action-btn:hover {
+        border-color: #667eea;
+        background: var(--bg-hover);
+        transform: translateX(5px);
+    }
+
+    .schedule-item {
+        border-left: 4px solid;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        background: var(--bg-card);
+        transition: all 0.3s ease;
+    }
+
+    .schedule-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateX(8px);
+    }
+
+    .pulse-animation {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
     }
 </style>
 
 <div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card gradient-header shadow-lg border-0">
-            <div class="card-body p-5">
-                <h1 class="display-4 fw-bold">Olá, Professor {{ user.username }}!</h1>
-                <p class="lead">Bem-vindo ao seu painel de controle. Aqui você tem o poder de transformar vidas através
-                    do movimento.</p>
-                <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
-                <p>Gerencie suas aulas, acompanhe seus alunos e organize sua agenda com facilidade.</p>
+    <div class="col-12">
+        <div class="gradient-header shadow-lg p-5">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="fas fa-chalkboard-teacher me-3"></i>
+                        Olá, Prof. {{ user.username }}!
+                    </h1>
+                    <p class="lead mb-0">Gerencie suas aulas, organize painéis e transforme a vida dos seus alunos</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="text-white-50">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        <span>{{ "now"|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -43,77 +150,100 @@
 
 {% if pagamento_vencido %}
 <div class="row mb-4">
-    <div class="col-md-12">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Pagamento Vencido!</h5>
+    <div class="col-12">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Pagamento Vencido!</h5>
             <p>
                 {% if ultimo_pagamento %}
                 Sua assinatura venceu em <strong>{{ ultimo_pagamento.data_fim|date:"d/m/Y" }}</strong>.
                 {% else %}
                 Você não possui nenhum pagamento registrado.
                 {% endif %}
-                Por favor, entre em contato com a administração para regularizar sua situação.
+                Por favor, entre em contato com a administração.
             </p>
             <hr>
-            <p class="mb-0">
-                <a href="{% url 'plano_list' %}" class="btn btn-light btn-sm">Ver Planos Disponíveis</a>
-            </p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <a href="{% url 'plano_list' %}" class="btn btn-light btn-sm">Ver Planos</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </div>
 </div>
 {% endif %}
 
-<div class="row">
-    <!-- Stats Cards -->
-    <div class="col-md-4 mb-4">
-        <div class="card stat-card shadow h-100 border-start border-5 border-success">
+<!-- Estatísticas -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-uppercase text-muted small fw-bold">Total de Aulas</h6>
-                        <h2 class="mb-0 display-6 fw-bold text-success">{{ aulas_count }}</h2>
+                        <p class="text-muted small text-uppercase mb-1">Total de Aulas</p>
+                        <h2 class="display-5 fw-bold text-success mb-0">{{ aulas_count }}</h2>
                     </div>
-                    <div class="icon-circle bg-success bg-opacity-10 text-success p-3 rounded-circle">
-                        <i class="fas fa-video fa-2x"></i>
+                    <div class="icon-wrapper bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-video"></i>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{% url 'aulas_list' %}" class="btn btn-sm btn-outline-success stretched-link">Ver todas</a>
+                    <a href="{% url 'aulas_list' %}" class="text-success text-decoration-none small">
+                        Ver todas <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card stat-card shadow h-100 border-start border-5 border-info">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-uppercase text-muted small fw-bold">Meus Painéis</h6>
-                        <h2 class="mb-0 display-6 fw-bold text-info">{{ paineis_count }}</h2>
+                        <p class="text-muted small text-uppercase mb-1">Painéis Criados</p>
+                        <h2 class="display-5 fw-bold text-info mb-0">{{ paineis_count }}</h2>
                     </div>
-                    <div class="icon-circle bg-info bg-opacity-10 text-info p-3 rounded-circle">
-                        <i class="fas fa-calendar-alt fa-2x"></i>
+                    <div class="icon-wrapper bg-info bg-opacity-10 text-info">
+                        <i class="fas fa-th-large"></i>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <a href="{% url 'painel_list' %}" class="btn btn-sm btn-outline-info stretched-link">Gerenciar</a>
+                    <a href="{% url 'painel_list' %}" class="text-info text-decoration-none small">
+                        Gerenciar <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card stat-card shadow h-100 border-start border-5 border-warning">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h6 class="text-uppercase text-muted small fw-bold">Alunos Ativos</h6>
-                        <h2 class="mb-0 display-6 fw-bold text-warning">--</h2>
+                        <p class="text-muted small text-uppercase mb-1">Agendamentos</p>
+                        <h2 class="display-5 fw-bold text-primary mb-0">{{ agendamentos_count|default:"0" }}</h2>
                     </div>
-                    <div class="icon-circle bg-warning bg-opacity-10 text-warning p-3 rounded-circle">
-                        <i class="fas fa-users fa-2x"></i>
+                    <div class="icon-wrapper bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'agenda_list' %}" class="text-primary text-decoration-none small">
+                        Ver agenda <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small text-uppercase mb-1">Alunos Ativos</p>
+                        <h2 class="display-5 fw-bold text-warning mb-0">--</h2>
+                    </div>
+                    <div class="icon-wrapper bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-users"></i>
                     </div>
                 </div>
                 <div class="mt-3">
@@ -124,42 +254,141 @@
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-8">
-        <div class="card shadow border-0">
-            <div class="card-header bg-white border-bottom-0 py-3">
-                <h5 class="mb-0 fw-bold text-secondary"><i class="fas fa-bolt me-2 text-warning"></i>Ações Rápidas</h5>
+<!-- Ações Principais -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'aulas_create' %}" class="text-decoration-none">
+            <div class="action-card success shadow-sm p-4">
+                <div class="mb-3">
+                    <i class="fas fa-plus-circle fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Criar Nova Aula</h5>
+                <p class="mb-0 opacity-75 small">Adicione uma nova aula/exercício ao seu catálogo</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'painel_create' %}" class="text-decoration-none">
+            <div class="action-card info shadow-sm p-4">
+                <div class="mb-3">
+                    <i class="fas fa-calendar-plus fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Criar Painel</h5>
+                <p class="mb-0 opacity-75 small">Monte um circuito de exercícios para seus alunos</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'agenda_list' %}" class="text-decoration-none">
+            <div class="action-card primary shadow-sm p-4">
+                <div class="mb-3">
+                    <i class="fas fa-clock fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Ver Agendamentos</h5>
+                <p class="mb-0 opacity-75 small">Veja quem agendou suas aulas disponíveis</p>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <a href="{% url 'aulas_list' %}" class="text-decoration-none">
+            <div class="action-card warning shadow-sm p-4">
+                <div class="mb-3">
+                    <i class="fas fa-list fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Minhas Aulas</h5>
+                <p class="mb-0 opacity-75 small">Gerencie todas as suas aulas cadastradas</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Informações e Dicas -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                    Como Funciona o Sistema de Agendamentos
+                </h5>
             </div>
             <div class="card-body">
-                <div class="row g-3">
+                <div class="row g-4">
                     <div class="col-md-6">
-                        <a href="{% url 'aulas_create' %}"
-                            class="btn btn-light w-100 p-3 text-start shadow-sm border hover-shadow">
-                            <i class="fas fa-plus-circle text-success me-2"></i> Nova Aula
-                        </a>
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 bg-primary bg-opacity-10 text-primary p-3 rounded-circle me-3">
+                                <i class="fas fa-video fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">1. Crie suas Aulas</h6>
+                                <p class="text-muted small mb-0">Cadastre exercícios com vídeos, descrições e categorias
+                                </p>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="col-md-6">
-                        <a href="{% url 'painel_create' %}"
-                            class="btn btn-light w-100 p-3 text-start shadow-sm border hover-shadow">
-                            <i class="fas fa-calendar-plus text-info me-2"></i> Novo Painel
-                        </a>
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 bg-success bg-opacity-10 text-success p-3 rounded-circle me-3">
+                                <i class="fas fa-th-large fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">2. Monte Painéis</h6>
+                                <p class="text-muted small mb-0">Crie circuitos combinando múltiplas aulas em sequência
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 bg-info bg-opacity-10 text-info p-3 rounded-circle me-3">
+                                <i class="fas fa-calendar-check fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">3. Defina Horários</h6>
+                                <p class="text-muted small mb-0">Configure data, hora e capacidade de alunos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0 bg-warning bg-opacity-10 text-warning p-3 rounded-circle me-3">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold">4. Alunos Agendam</h6>
+                                <p class="text-muted small mb-0">Os alunos escolhem os melhores horários disponíveis</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow border-0 bg-dark text-white h-100"
-            style="background: linear-gradient(135deg, #2c3e50, #4ca1af);">
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100"
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
             <div class="card-body p-4">
-                <h5 class="card-title fw-bold mb-4">Dica do Dia</h5>
-                <p class="card-text fst-italic">"A consistência é a chave para o sucesso. Incentive seus alunos a
-                    manterem a regularidade nos treinos."</p>
-                <div class="mt-4 text-end">
-                    <i class="fas fa-quote-right fa-2x opacity-50"></i>
+                <h5 class="fw-bold mb-4">
+                    <i class="fas fa-quote-left me-2"></i>
+                    Dica Profissional
+                </h5>
+                <p class="mb-4 fst-italic">
+                    "Organize seus painéis com antecedência e mantenha uma variedade de horários.
+                    Isso facilita para os alunos encontrarem o melhor momento para treinar!"
+                </p>
+                <div class="text-end opacity-75">
+                    <i class="fas fa-quote-right fa-2x"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

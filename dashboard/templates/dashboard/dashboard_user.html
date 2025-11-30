@@ -3,58 +3,184 @@
 {% block title %}Dashboard Aluno - {{ block.super }}{% endblock %}
 
 {% block content %}
+<style>
+    .welcome-header {
+        background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(58, 123, 213, 0.3);
+    }
+
+    .action-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        height: 100%;
+        background: var(--bg-card);
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(90deg, #3a7bd5, #00d2ff);
+        transition: height 0.3s ease;
+    }
+
+    .action-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-card:hover::before {
+        height: 100%;
+        opacity: 0.05;
+    }
+
+    .icon-box {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        transition: transform 0.3s ease;
+    }
+
+    .action-card:hover .icon-box {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .btn-action {
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .btn-primary-gradient {
+        background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-primary-gradient:hover {
+        background: linear-gradient(135deg, #2c6ac2 0%, #00b8e6 100%);
+        box-shadow: 0 5px 15px rgba(58, 123, 213, 0.4);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-warning-gradient {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+    }
+
+    .btn-warning-gradient:hover {
+        background: linear-gradient(135deg, #e082eb 0%, #e5475c 100%);
+        box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+
 <div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="card bg-info text-white">
-            <div class="card-body">
-                <h2 class="card-title">Bem-vindo, Aluno {{ user.username }}!</h2>
-                <p class="card-text">Acompanhe seus treinos e agendamentos.</p>
+    <div class="col-12">
+        <div class="welcome-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold mb-2">
+                        <i class="fas fa-user-astronaut me-3"></i>
+                        Olá, {{ user.username }}!
+                    </h1>
+                    <p class="lead mb-0 opacity-90">Pronto para o treino de hoje? Acompanhe sua evolução.</p>
+                </div>
+                <div class="col-md-4 text-end d-none d-md-block">
+                    <i class="fas fa-dumbbell fa-4x opacity-25"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 {% if pagamento_vencido %}
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Pagamento Vencido!</h5>
-            <p>
-                {% if ultimo_pagamento %}
-                Sua assinatura venceu em <strong>{{ ultimo_pagamento.data_fim|date:"d/m/Y" }}</strong>.
-                {% else %}
-                Você não possui nenhum pagamento registrado.
-                {% endif %}
-                Por favor, entre em contato com a administração para regularizar sua situação.
-            </p>
-            <hr>
-            <p class="mb-0">
-                <a href="{% url 'plano_list' %}" class="btn btn-light btn-sm">Ver Planos Disponíveis</a>
-            </p>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert"
+            style="border-left: 5px solid #dc3545 !important;">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0 bg-danger text-white rounded-circle p-3 me-3">
+                    <i class="fas fa-exclamation-triangle fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading fw-bold mb-1">Atenção: Pagamento Pendente</h5>
+                    <p class="mb-2">
+                        {% if ultimo_pagamento %}
+                        Sua assinatura venceu em <strong>{{ ultimo_pagamento.data_fim|date:"d/m/Y" }}</strong>.
+                        {% else %}
+                        Não identificamos um plano ativo em sua conta.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'plano_list' %}" class="btn btn-sm btn-outline-danger fw-bold">
+                        Regularizar Agora <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
         </div>
     </div>
 </div>
 {% endif %}
 
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-calendar-check fa-3x text-primary mb-3"></i>
-                <h5 class="card-title">Agendar Aula</h5>
-                <p class="card-text">Veja os horários disponíveis e inscreva-se.</p>
-                <a href="{% url 'agenda_list' %}" class="btn btn-outline-primary">Ver Agenda</a>
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card action-card shadow-sm h-100">
+            <div class="card-body text-center p-5 d-flex flex-column justify-content-center">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3 class="card-title fw-bold mb-3">Agendar Aula</h3>
+                <p class="card-text text-muted mb-4">
+                    Visualize os horários disponíveis, escolha seu circuito favorito e garanta sua vaga.
+                </p>
+                <div class="mt-auto">
+                    <a href="{% url 'agenda_list' %}" class="btn btn-primary-gradient btn-action btn-lg">
+                        <i class="fas fa-calendar-plus me-2"></i> Ver Agenda
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="fas fa-list-alt fa-3x text-warning mb-3"></i>
-                <h5 class="card-title">Meus Agendamentos</h5>
-                <p class="card-text">Consulte suas próximas aulas agendadas.</p>
-                <a href="{% url 'meus_agendamentos' %}" class="btn btn-outline-warning">Meus Agendamentos</a>
+
+    <div class="col-md-6">
+        <div class="card action-card shadow-sm h-100">
+            <div class="card-body text-center p-5 d-flex flex-column justify-content-center">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning"
+                    style="color: #f5576c !important; background-color: rgba(245, 87, 108, 0.1) !important;">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <h3 class="card-title fw-bold mb-3">Meus Agendamentos</h3>
+                <p class="card-text text-muted mb-4">
+                    Consulte suas próximas aulas, histórico de presença e cancele se necessário.
+                </p>
+                <div class="mt-auto">
+                    <a href="{% url 'meus_agendamentos' %}" class="btn btn-warning-gradient btn-action btn-lg">
+                        <i class="fas fa-history me-2"></i> Meus Treinos
+                    </a>
+                </div>
             </div>
         </div>
     </div>

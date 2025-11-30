@@ -24,7 +24,7 @@ def register(request):
 
             login(request, user)
             if user.is_professor:
-                return redirect('dashboard') # Professores podem ter fluxo diferente ou o mesmo
+                return redirect('complete_profile_professor')
             else:
                 return redirect('complete_profile')
     else:

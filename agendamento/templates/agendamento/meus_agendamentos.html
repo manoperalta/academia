@@ -3,52 +3,109 @@
 {% block title %}Meus Agendamentos - {{ block.super }}{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Meus Agendamentos</h1>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-transparent border-0">
+            <div class="card-body p-0">
+                <h1 class="display-5 fw-bold mb-2">
+                    <i class="fas fa-calendar-check me-3 text-warning"></i>
+                    Meus Agendamentos
+                </h1>
+                <p class="lead mb-0 opacity-75">Gerencie suas presenças e histórico de treinos</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>Data</th>
-                <th>Horário</th>
-                <th>Professor</th>
-                <th>Aulas</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for agendamento in agendamentos %}
-            <tr>
-                <td>{{ agendamento.painel.data_painel|date:"d/m/Y" }}</td>
-                <td>{{ agendamento.painel.horario_inicial_painel }} - {{ agendamento.painel.horario_final_painel }}</td>
-                <td>{{ agendamento.painel.criador.username }}</td>
-                <td>
-                    <ul class="list-unstyled mb-0">
-                        {% for aula in agendamento.painel.aulas.all %}
-                        <li><small>{{ aula.nome }}</small></li>
-                        {% endfor %}
-                    </ul>
-                </td>
-                <td>
-                    <span class="status-badge status-{{ agendamento.status|lower }}">
-                        {{ agendamento.status }}
-                    </span>
-                </td>
-                <td>
-                    {% if agendamento.status == 'Agendado' %}
-                    <a href="{% url 'cancelar_agendamento' agendamento.pk %}" class="btn btn-sm btn-outline-danger"
-                        onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">Cancelar</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="text-center">Você ainda não possui agendamentos. <a
-                        href="{% url 'agenda_list' %}">Agendar agora</a>.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card border-0 shadow-lg">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="py-4 ps-4">Data e Horário</th>
+                        <th class="py-4">Professor</th>
+                        <th class="py-4">Circuito</th>
+                        <th class="py-4">Status</th>
+                        <th class="py-4 pe-4 text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agendamento in agendamentos %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold fs-5">{{ agendamento.painel.data|date:"d/m/Y" }}</span>
+                                <span class="text-muted small">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ agendamento.painel.hora_inicio|time:"H:i" }} - {{
+                                    agendamento.painel.hora_fim|time:"H:i" }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-2 bg-primary bg-opacity-10 text-primary">
+                                    {{ agendamento.painel.responsavel.username|make_list|first|upper }}
+                                </div>
+                                <span class="fw-medium">{{ agendamento.painel.responsavel.username }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                {% for item in agendamento.painel.itens.all|slice:":3" %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal text-start">
+                                    <i class="fas fa-dumbbell me-1 small"></i> {{ item.aula.nome }}
+                                </span>
+                                {% endfor %}
+                                {% if agendamento.painel.itens.count > 3 %}
+                                <span class="text-muted small ps-1">+ {{ agendamento.painel.itens.count|add:"-3" }}
+                                    exercícios</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if agendamento.status == 'Agendado' %}
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">
+                                <i class="fas fa-check-circle me-1"></i> Agendado
+                            </span>
+                            {% elif agendamento.status == 'Cancelado' %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">
+                                <i class="fas fa-times-circle me-1"></i> Cancelado
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill">
+                                {{ agendamento.status }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            {% if agendamento.status == 'Agendado' %}
+                            <a href="{% url 'cancelar_agendamento' agendamento.pk %}"
+                                class="btn btn-outline-danger btn-sm rounded-pill px-3"
+                                onclick="return confirm('Tem certeza que deseja cancelar este agendamento?')">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="text-muted opacity-50 mb-3">
+                                <i class="fas fa-calendar-times fa-4x"></i>
+                            </div>
+                            <h5 class="fw-bold text-muted">Nenhum agendamento encontrado</h5>
+                            <p class="text-muted mb-4">Você ainda não agendou nenhuma aula.</p>
+                            <a href="{% url 'agenda_list' %}" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-calendar-plus me-2"></i> Ver Agenda Disponível
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

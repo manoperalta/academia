@@ -8,6 +8,7 @@ class Painel(models.Model):
     hora_inicio = models.TimeField(verbose_name="Hora de Início")
     hora_fim = models.TimeField(verbose_name="Hora de Fim")
     responsavel = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Responsável", related_name='paineis_criados')
+    numero_de_user = models.PositiveIntegerField(verbose_name="Capacidade de Alunos", null=True, blank=True, help_text="Deixe em branco para sem limite")
     
     data_create = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_update = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")

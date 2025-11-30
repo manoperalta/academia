@@ -1,26 +1,8 @@
 from django.db import models
 from django.conf import settings
-from aulas.models import Aulas
+from painel.models import Painel # Importando o modelo correto
 
-class Painel(models.Model):
-    criador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Criador (Professor/Admin)")
-    data_painel = models.DateField(verbose_name="Data do Painel")
-    horario_inicial_painel = models.TimeField(verbose_name="Horário Inicial")
-    horario_final_painel = models.TimeField(verbose_name="Horário Final")
-    numero_de_user = models.PositiveIntegerField(verbose_name="Capacidade de Alunos")
-    # Aulas que compõem o painel (sequência de exercícios)
-    aulas = models.ManyToManyField(Aulas, verbose_name="Aulas/Exercícios", related_name="paineis")
-    
-    data_create_painel = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
-    data_at_painel = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
-
-    def __str__(self):
-        return f"Painel {self.id} - {self.data_painel} ({self.horario_inicial_painel} - {self.horario_final_painel})"
-
-    class Meta:
-        verbose_name = "Painel de Agendamento"
-        verbose_name_plural = "Painéis de Agendamento"
-        ordering = ['-data_painel', 'horario_inicial_painel']
+# Modelo Painel removido pois agora usamos o do app 'painel'
 
 class Agendamento(models.Model):
     STATUS_CHOICES = (

@@ -3,48 +3,317 @@
 {% block title %}Agenda de Aulas - {{ block.super }}{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Agenda de Aulas Disponíveis</h1>
+<style>
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
 
-<div class="row">
-    {% for painel in paineis %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card h-100 {% if painel.vagas_restantes == 0 %}border-danger{% endif %}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="fw-bold">{{ painel.data_painel|date:"d/m/Y" }}</span>
-                <span class="badge bg-secondary">{{ painel.horario_inicial_painel }} - {{ painel.horario_final_painel
-                    }}</span>
+    .time-slot-card {
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .time-slot-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .time-slot-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
+    }
+
+    .time-slot-card.inscrito {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+        border-color: #10b981;
+    }
+
+    .time-slot-card.inscrito::before {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .time-slot-card.lotado {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: #ef4444;
+        opacity: 0.7;
+    }
+
+    .time-slot-card.lotado::before {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .time-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .professor-badge {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        padding: 0.25rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .aula-item {
+        background: var(--bg-tertiary);
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #667eea;
+        transition: all 0.2s ease;
+    }
+
+    .aula-item:hover {
+        background: var(--bg-hover);
+        transform: translateX(4px);
+    }
+
+    .category-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        background: var(--bg-tertiary);
+        color: #667eea;
+        font-weight: 500;
+    }
+
+    .vagas-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+
+    .vagas-info.disponivel {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+        color: #059669;
+    }
+
+    .vagas-info.limitadas {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
+        color: #d97706;
+    }
+
+    .vagas-info.ilimitado {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+        color: #2563eb;
+    }
+
+    .btn-agendar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-agendar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .date-header {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #667eea;
+    }
+
+    .date-header h3 {
+        margin: 0;
+        color: #667eea;
+        font-weight: 700;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 16px;
+        border: 2px dashed #667eea;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #667eea;
+        opacity: 0.5;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="calendar-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-5 fw-bold mb-2">
+                <i class="fas fa-calendar-alt me-3"></i>
+                Agenda de Aulas Disponíveis
+            </h1>
+            <p class="mb-0 opacity-75">Escolha os melhores horários para seu treino</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="d-flex flex-column align-items-end gap-2">
+                <div class="text-white-50">
+                    <i class="fas fa-clock me-2"></i>
+                    <span>{{ "now"|date:"d/m/Y" }}</span>
+                </div>
+                <a href="{% url 'meus_agendamentos' %}" class="btn btn-light btn-sm">
+                    <i class="fas fa-list me-2"></i>
+                    Meus Agendamentos
+                </a>
             </div>
-            <div class="card-body">
-                <h5 class="card-title">Professor: {{ painel.criador.username }}</h5>
-                <p class="card-text">
-                    <strong>Aulas:</strong>
-                <ul class="list-unstyled">
-                    {% for aula in painel.aulas.all %}
-                    <li>- {{ aula.nome }} <span class="badge bg-light text-dark">{{
-                            aula.get_categorias_exercicios_display }}</span></li>
-                    {% endfor %}
-                </ul>
-                </p>
-                <div class="d-flex justify-content-between align-items-center mt-3">
-                    <span class="text-muted">Vagas: {{ painel.vagas_restantes }}/{{ painel.numero_de_user }}</span>
+        </div>
+    </div>
+</div>
 
-                    {% if painel.inscrito %}
-                    <button class="btn btn-success" disabled>Inscrito</button>
-                    {% elif painel.vagas_restantes > 0 %}
-                    <a href="{% url 'realizar_agendamento' painel.pk %}" class="btn btn-primary">Agendar</a>
-                    {% else %}
-                    <button class="btn btn-danger" disabled>Lotado</button>
-                    {% endif %}
+{% if paineis %}
+{% regroup paineis by data as paineis_por_data %}
+
+{% for data_group in paineis_por_data %}
+<div class="date-header">
+    <div class="d-flex align-items-center gap-3">
+        <div>
+            <i class="fas fa-calendar-day fa-2x text-primary"></i>
+        </div>
+        <div>
+            <h3>{{ data_group.grouper|date:"l, d \d\e F \d\e Y"|title }}</h3>
+            <p class="text-muted mb-0 small">{{ data_group.list|length }} horário{{ data_group.list|length|pluralize }}
+                disponíve{{ data_group.list|length|pluralize:"l,is" }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    {% for painel in data_group.list %}
+    <div class="col-lg-6">
+        <div
+            class="card time-slot-card h-100 shadow-sm {% if painel.inscrito %}inscrito{% elif painel.tem_limite and painel.vagas_restantes == 0 %}lotado{% endif %}">
+            <div class="card-body p-4">
+                <!-- Cabeçalho: Horário e Professor -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="time-badge">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ painel.hora_inicio|time:"H:i" }} - {{ painel.hora_fim|time:"H:i" }}</span>
+                    </div>
+                    <div class="professor-badge">
+                        <i class="fas fa-chalkboard-teacher me-1"></i>
+                        {{ painel.responsavel.username }}
+                    </div>
+                </div>
+
+                <!-- Lista de Aulas -->
+                <div class="mb-3">
+                    <h6 class="fw-bold text-secondary mb-2">
+                        <i class="fas fa-dumbbell me-2"></i>
+                        Exercícios do Circuito:
+                    </h6>
+                    {% for item in painel.itens.all %}
+                    <div class="aula-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-medium">{{ item.aula.nome }}</span>
+                            <span class="category-badge">{{ item.aula.get_categorias_exercicios_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Informações de Vagas e Ação -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <div>
+                        {% if painel.tem_limite %}
+                        {% if painel.vagas_restantes > 0 %}
+                        <span
+                            class="vagas-info {% if painel.vagas_restantes <= 3 %}limitadas{% else %}disponivel{% endif %}">
+                            <i class="fas fa-users"></i>
+                            {{ painel.vagas_restantes }} vaga{{ painel.vagas_restantes|pluralize }} disponíve{{
+                            painel.vagas_restantes|pluralize:"l,is" }}
+                        </span>
+                        {% else %}
+                        <span class="vagas-info" style="background: rgba(239, 68, 68, 0.1); color: #dc2626;">
+                            <i class="fas fa-users-slash"></i>
+                            Sem vagas
+                        </span>
+                        {% endif %}
+                        {% else %}
+                        <span class="vagas-info ilimitado">
+                            <i class="fas fa-infinity"></i>
+                            Vagas ilimitadas
+                        </span>
+                        {% endif %}
+                        {% if painel.total_agendados > 0 %}
+                        <small class="text-muted d-block mt-1">
+                            {{ painel.total_agendados }} aluno{{ painel.total_agendados|pluralize }} agendado{{
+                            painel.total_agendados|pluralize }}
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        {% if painel.inscrito %}
+                        <button class="btn btn-success" disabled>
+                            <i class="fas fa-check-circle me-2"></i>
+                            Agendado
+                        </button>
+                        {% elif painel.tem_limite and painel.vagas_restantes == 0 %}
+                        <button class="btn btn-danger" disabled>
+                            <i class="fas fa-ban me-2"></i>
+                            Lotado
+                        </button>
+                        {% else %}
+                        <a href="{% url 'realizar_agendamento' painel.pk %}" class="btn btn-agendar">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Agendar Agora
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="alert alert-info">
-            Não há aulas disponíveis para agendamento no momento.
-        </div>
-    </div>
     {% endfor %}
 </div>
+{% endfor %}
+
+{% else %}
+<div class="empty-state">
+    <div>
+        <i class="fas fa-calendar-times"></i>
+    </div>
+    <h3 class="text-muted mb-3">Nenhuma Aula Disponível</h3>
+    <p class="text-muted mb-4">Não há aulas disponíveis para agendamento no momento.<br>Por favor, volte mais tarde ou
+        entre em contato com os professores.</p>
+    <a href="{% url 'dashboard' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>
+        Voltar ao Dashboard
+    </a>
+</div>
+{% endif %}
+
 {% endblock %}

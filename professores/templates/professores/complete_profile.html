@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Completar Perfil - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Complete seu Perfil de Professor</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">Por favor, complete suas informações para ter acesso total ao sistema.</p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.nome.id_for_label }}" class="form-label">Nome Completo</label>
+                            {{ form.nome }}
+                            {{ form.nome.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.data_nasc.id_for_label }}" class="form-label">Data de Nascimento</label>
+                            {{ form.data_nasc }}
+                            {{ form.data_nasc.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cpf_cnpj_prof.id_for_label }}" class="form-label">CPF/CNPJ</label>
+                            {{ form.cpf_cnpj_prof }}
+                            {{ form.cpf_cnpj_prof.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email_prof.id_for_label }}" class="form-label">E-mail</label>
+                            {{ form.email_prof }}
+                            {{ form.email_prof.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefone_prof.id_for_label }}" class="form-label">Telefone</label>
+                            {{ form.telefone_prof }}
+                            {{ form.telefone_prof.errors }}
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3 border-bottom pb-2">Endereço</h5>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.cep_prof.id_for_label }}" class="form-label">CEP</label>
+                            {{ form.cep_prof }}
+                            {{ form.cep_prof.errors }}
+                        </div>
+                        <div class="col-md-7 mb-3">
+                            <label for="{{ form.endereco_prof.id_for_label }}" class="form-label">Endereço</label>
+                            {{ form.endereco_prof }}
+                            {{ form.endereco_prof.errors }}
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label for="{{ form.numero_end_prof.id_for_label }}" class="form-label">Número</label>
+                            {{ form.numero_end_prof }}
+                            {{ form.numero_end_prof.errors }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.bairro_prof.id_for_label }}" class="form-label">Bairro</label>
+                            {{ form.bairro_prof }}
+                            {{ form.bairro_prof.errors }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.foto_prof.id_for_label }}" class="form-label">Foto de Perfil</label>
+                        {{ form.foto_prof }}
+                        {{ form.foto_prof.errors }}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">Salvar e Continuar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

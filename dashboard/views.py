@@ -124,9 +124,19 @@ def dashboard(request):
         if hasattr(user, 'professor_profile') and user.professor_profile.status_prof == 'Ativo':
             from aulas.models import Aulas
             from painel.models import Painel
+            from agendamento.models import Agendamento
+            
             aulas_count = Aulas.objects.filter(professor=user).count()
             paineis_count = Painel.objects.filter(responsavel=user).count()
-            context.update({'aulas_count': aulas_count, 'paineis_count': paineis_count})
+            
+            # Contar agendamentos nos painéis criados pelo professor
+            agendamentos_count = Agendamento.objects.filter(painel__responsavel=user).count()
+            
+            context.update({
+                'aulas_count': aulas_count, 
+                'paineis_count': paineis_count,
+                'agendamentos_count': agendamentos_count
+            })
             return render(request, 'dashboard/dashboard_prof.html', context)
         else:
             return render(request, 'dashboard/aguardando_aprovacao.html', context)
