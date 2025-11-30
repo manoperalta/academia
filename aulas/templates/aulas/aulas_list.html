@@ -26,8 +26,8 @@
                 </video>
             </div>
             {% else %}
-            <div class="bg-light text-center py-5">
-                <i class="fas fa-video-slash fa-3x text-muted"></i>
+            <div class="bg-tertiary text-center py-5">
+                <i class="fas fa-video-slash fa-3x text-secondary"></i>
             </div>
             {% endif %}
 
@@ -35,10 +35,10 @@
                 <h5 class="card-title">{{ aula.nome }}</h5>
                 <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
                 <p class="card-text text-truncate">{{ aula.descricao }}</p>
-                <p class="card-text"><small class="text-muted">Criado em {{ aula.data_create_aula|date:"d/m/Y"
+                <p class="card-text"><small class="text-secondary">Criado em {{ aula.data_create_aula|date:"d/m/Y"
                         }}</small></p>
             </div>
-            <div class="card-footer bg-white border-top-0">
+            <div class="card-footer bg-tertiary border-top-0">
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'aulas_update' pk=aula.pk %}" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-edit"></i> Editar

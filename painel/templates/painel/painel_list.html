@@ -21,7 +21,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
-                <thead class="table-light">
+                <thead class="bg-tertiary">
                     <tr>
                         <th>Data</th>
                         <th>Horário</th>
@@ -37,7 +37,7 @@
                         <td>{{ item.hora_inicio|time:"H:i" }} - {{ item.hora_fim|time:"H:i" }}</td>
                         <td>
                             <strong>{{ item.nome }}</strong><br>
-                            <small class="text-muted">{{ item.itens.count }} exercícios</small>
+                            <small class="text-secondary">{{ item.itens.count }} exercícios</small>
                         </td>
                         <td>{{ item.responsavel.username }}</td>
                         <td>

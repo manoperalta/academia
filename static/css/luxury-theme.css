@@ -223,6 +223,10 @@ textarea.form-control {
 
 /* Texto de ajuda */
 .form-text,
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
 .text-muted,
 small.text-muted {
     color: var(--text-muted) !important;

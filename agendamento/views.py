@@ -9,6 +9,15 @@ from painel.models import Painel
 
 @login_required
 def agenda_list(request):
+    # Se for professor ou staff, mostra a agenda dele com os alunos inscritos
+    if request.user.is_professor or request.user.is_staff:
+        # Mostrar painéis futuros e passados recentes (opcional, aqui mostrando futuros)
+        # ou todos ordenados por data decrescente para ver histórico?
+        # O pedido diz "coletar dados dos alunos que selecionaram determinado horario"
+        # Vamos mostrar do mais recente para o futuro
+        paineis = Painel.objects.filter(responsavel=request.user).order_by('-data', 'hora_inicio')
+        return render(request, 'agendamento/professor_agenda.html', {'paineis': paineis})
+
     if not request.user.is_student:
         return redirect('dashboard')
     
