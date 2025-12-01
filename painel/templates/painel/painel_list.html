@@ -33,13 +33,16 @@
                 <tbody>
                     {% for item in paineis %}
                     <tr>
-                        <td>{{ item.data|date:"d/m/Y" }}</td>
-                        <td>{{ item.hora_inicio|time:"H:i" }} - {{ item.hora_fim|time:"H:i" }}</td>
-                        <td>
-                            <strong>{{ item.nome }}</strong><br>
-                            <small class="text-secondary">{{ item.itens.count }} exercícios</small>
+                        <td><span class="text-dark">{{ item.data|date:"d/m/Y" }}</span></td>
+                        <td><span class="text-dark">{{ item.hora_inicio|time:"H:i" }}</span>
+                            <span class="text-dark">-</span>
+                            <span class="text-dark">{{ item.hora_fim|time:"H:i" }}</span>
                         </td>
-                        <td>{{ item.responsavel.username }}</td>
+                        <td>
+                            <strong><span class="text-dark">{{ item.nome }}</span></strong><br>
+                            <small class="text-dark">{{ item.itens.count }} exercícios</small>
+                        </td>
+                        <td><span class="text-dark">{{ item.responsavel.username }}</span></td>
                         <td>
                             <a href="{% url 'presentation_view' %}?painel_id={{ item.pk }}" target="_blank"
                                 class="btn btn-sm btn-success" title="Apresentar">
@@ -60,7 +63,7 @@
                     {% empty %}
                     <tr>
                         <td colspan="5" class="text-center py-4">
-                            <div class="text-muted">
+                            <div class="text-dark">
                                 <i class="fas fa-calendar-times fa-3x mb-3"></i>
                                 <p>Nenhum agendamento encontrado.</p>
                             </div>

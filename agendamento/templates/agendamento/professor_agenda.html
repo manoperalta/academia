@@ -50,13 +50,13 @@
                                 </div>
                                 <div>
                                     <span class="d-block fw-bold">{{ painel.hora_inicio|time:"H:i" }}</span>
-                                    <span class="text-secondary small">até {{ painel.hora_fim|time:"H:i" }}</span>
+                                    <span class="text-dark small">até {{ painel.hora_fim|time:"H:i" }}</span>
                                 </div>
                             </div>
                         </td>
                         <td>
                             <span class="fw-medium d-block">{{ painel.nome }}</span>
-                            <small class="text-secondary">
+                            <small class="text-dark">
                                 {{ painel.itens.count }} exercício{{ painel.itens.count|pluralize }}
                             </small>
                         </td>
@@ -97,7 +97,7 @@
                     <tr class="collapse bg-tertiary" id="alunos-{{ painel.id }}">
                         <td colspan="5" class="p-0">
                             <div class="p-4">
-                                <h6 class="fw-bold mb-3 text-secondary">
+                                <h6 class="fw-bold mb-3 text-dark">
                                     <i class="fas fa-users me-2"></i>Alunos Inscritos
                                 </h6>
                                 {% if painel.agendamentos.all %}
@@ -110,9 +110,8 @@
                                                     {{ agendamento.aluno.username|make_list|first|upper }}
                                                 </div>
                                                 <div>
-                                                    <span class="d-block fw-bold text-primary">{{
-                                                        agendamento.aluno.username }}</span>
-                                                    <small class="text-secondary">{{ agendamento.aluno.email }}</small>
+                                                    <span class="d-block fw-bold text-primary">{{ agendamento.aluno.username }}</span>
+                                                    <small class="text-dark">{{ agendamento.aluno.email }}</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -120,7 +119,7 @@
                                     {% endfor %}
                                 </div>
                                 {% else %}
-                                <div class="text-center py-3 text-secondary opacity-75">
+                                <div class="text-center py-3 text-dark opacity-75">
                                     <i class="fas fa-user-slash me-2"></i> Nenhum aluno inscrito ainda.
                                 </div>
                                 {% endif %}
@@ -140,8 +139,8 @@
     <div>
         <i class="fas fa-calendar-plus"></i>
     </div>
-    <h3 class="text-secondary mb-3">Nenhum Painel Criado</h3>
-    <p class="text-secondary mb-4">Você ainda não criou nenhum painel de aulas.<br>Crie um painel para começar a receber
+    <h3 class="text-dark mb-3">Nenhum Painel Criado</h3>
+    <p class="text-dark mb-4">Você ainda não criou nenhum painel de aulas.<br>Crie um painel para começar a receber
         agendamentos.</p>
     <a href="{% url 'painel_create' %}" class="btn btn-primary">
         <i class="fas fa-plus-circle me-2"></i>
