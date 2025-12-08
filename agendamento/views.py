@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from .models import Agendamento
 from painel.models import Painel
+from usuarios.models import FichaSaude
 
 # --- Views do Aluno ---
 
@@ -59,10 +60,85 @@ def realizar_agendamento(request, painel_id):
         if agendamentos_ativos >= painel.numero_de_user:
             messages.error(request, 'Este painel não tem mais vagas disponíveis.')
             return redirect('agenda_list')
-        
+    
+    # Verificar restrições de saúde
+    confirmar_restricao = request.GET.get('confirmar_restricao', False)
+    if not confirming_restriction_check(request, painel) and not confirmar_restricao:
+        # Se houver conflito e não foi confirmado ainda
+        conflitos = get_health_conflicts(request.user, painel)
+        if conflitos:
+            try:
+                ficha = request.user.usuario_profile.ficha_saude
+                restricoes = ficha.restricoes
+            except:
+                restricoes = ""
+                
+            return render(request, 'agendamento/confirm_restriction.html', {
+                'painel': painel,
+                'conflitos': conflitos,
+                'restricoes_usuario': restricoes
+            })
+
     Agendamento.objects.create(painel=painel, aluno=request.user, status='Agendado')
     messages.success(request, 'Agendamento realizado com sucesso!')
     return redirect('meus_agendamentos')
+
+def confirming_restriction_check(request, painel):
+    """Helper to check if we are in the confirmation flow"""
+    return request.GET.get('confirmar_restricao') == 'True'
+
+def get_health_conflicts(user, painel):
+    """
+    Verifica se há conflitos entre as restrições do usuário e as categorias das aulas do painel.
+    Retorna uma lista de dicionários com as aulas conflitantes.
+    """
+    try:
+        ficha = user.usuario_profile.ficha_saude
+        if not ficha or not ficha.restricoes:
+            return []
+            
+        restricoes_text = ficha.restricoes.lower()
+        conflitos = []
+        
+        for item in painel.itens.all():
+            aula = item.aula
+            categoria_key = aula.categorias_exercicios
+            categoria_display = aula.get_categorias_exercicios_display().lower()
+            
+            # Verifica se a categoria (chave ou nome legível) aparece no texto de restrições
+            # Ex: se restrição tem "evitar aeróbico" e categoria é "aerobico"
+            
+            # Simplificação: busca por palavras chave da categoria no texto de restrição
+            # Mapeamento de palavras chave por categoria
+            keywords = {
+                "aerobico": ["aeróbico", "aerobico", "cardio", "corrida", "esteira"],
+                "forca": ["força", "peso", "musculação", "carga"],
+                "flexibilidade": ["flexibilidade", "alongamento"],
+                "neuromotor": ["equilíbrio", "coordenacao", "coordenação"],
+                "pilates_solo": ["pilates", "solo", "mat"],
+                "pilates_aparelhos": ["pilates", "aparelho"]
+            }
+            
+            check_words = keywords.get(categoria_key, [])
+            check_words.append(categoria_display) # Adiciona o nome completo da categoria
+            
+            conflict_found = False
+            for word in check_words:
+                if word in restricoes_text:
+                    conflict_found = True
+                    break
+            
+            if conflict_found:
+                conflitos.append({
+                    'aula': aula,
+                    'categoria': aula.get_categorias_exercicios_display()
+                })
+                
+        return conflitos
+        
+    except Exception:
+        # Se usuário não tem perfil ou ficha, não há conflito a verificar
+        return []
 
 @login_required
 def meus_agendamentos(request):

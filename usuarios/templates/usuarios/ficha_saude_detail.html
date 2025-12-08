@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Ficha de Saúde - {{ usuario.nome }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Ficha de Saúde: {{ usuario.nome }}</h4>
+                {% if idade %}
+                <span class="badge bg-light text-dark">{{ idade }} anos</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.altura.id_for_label }}" class="form-label">Altura (m)</label>
+                            {{ form.altura }}
+                            {{ form.altura.errors }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.peso.id_for_label }}" class="form-label">Peso (kg)</label>
+                            {{ form.peso }}
+                            {{ form.peso.errors }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.restricoes.id_for_label }}" class="form-label">Restrições</label>
+                        {{ form.restricoes }}
+                        {{ form.restricoes.errors }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.prescricoes.id_for_label }}" class="form-label">Prescrições</label>
+                        {{ form.prescricoes }}
+                        {{ form.prescricoes.errors }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.obs.id_for_label }}" class="form-label">Observações</label>
+                        {{ form.obs }}
+                        {{ form.obs.errors }}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.usa_medicamento }}
+                        <label class="form-check-label" for="{{ form.usa_medicamento.id_for_label }}">
+                            Usa Medicamento?
+                        </label>
+                    </div>
+
+                    <div class="mb-3" id="div_qual_medicamento" style="display: none;">
+                        <label for="{{ form.qual_medicamento.id_for_label }}" class="form-label">Qual
+                            Medicamento?</label>
+                        {{ form.qual_medicamento }}
+                        {{ form.qual_medicamento.errors }}
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const checkbox = document.getElementById('usa_medicamento');
+                            const divMedicamento = document.getElementById('div_qual_medicamento');
+
+                            function toggleMedicamento() {
+                                if (checkbox.checked) {
+                                    divMedicamento.style.display = 'block';
+                                } else {
+                                    divMedicamento.style.display = 'none';
+                                }
+                            }
+
+                            checkbox.addEventListener('change', toggleMedicamento);
+                            toggleMedicamento(); // Run on load
+                        });
+                    </script>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'usuario_list' %}" class="btn btn-secondary me-md-2">Voltar</a>
+                        <button type="submit" class="btn btn-primary">Salvar Ficha</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

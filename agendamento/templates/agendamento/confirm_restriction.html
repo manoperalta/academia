@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Aviso de Restrição de Saúde - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Atenção: Restrição de Saúde Identificada
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Identificamos que este painel contém exercícios que podem conflitar com suas restrições de saúde.
+                </p>
+
+                <div class="alert alert-light border">
+                    <strong>Sua Restrição:</strong>
+                    <p class="mb-0 fst-italic">{{ restricoes_usuario }}</p>
+                </div>
+
+                <h5 class="mt-4 mb-3">Exercícios com Potencial Conflito:</h5>
+                <ul class="list-group mb-4">
+                    {% for conflito in conflitos %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ conflito.aula.nome }}</strong>
+                            <br>
+                            <small class="text-muted">{{ conflito.aula.descricao|truncatechars:100 }}</small>
+                        </div>
+                        <span class="badge bg-warning text-dark">{{ conflito.categoria }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <p class="text-muted small">
+                    Recomendamos que você consulte seu professor antes de participar desta aula.
+                </p>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="{% url 'agenda_list' %}" class="btn btn-secondary me-md-2">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar para Agenda
+                    </a>
+                    <a href="{% url 'realizar_agendamento' painel.pk %}?confirmar_restricao=True"
+                        class="btn btn-warning">
+                        <i class="fas fa-check me-2"></i>Estou ciente, Agendar mesmo assim
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

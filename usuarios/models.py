@@ -30,3 +30,20 @@ class Usuario(models.Model):
     class Meta:
         verbose_name = "Usuário"
         verbose_name_plural = "Usuários"
+
+class FichaSaude(models.Model):
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='ficha_saude')
+    altura = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Altura (m)", null=True, blank=True)
+    peso = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Peso (kg)", null=True, blank=True)
+    restricoes = models.TextField(verbose_name="Restrições", null=True, blank=True)
+    prescricoes = models.TextField(verbose_name="Prescrições", null=True, blank=True)
+    obs = models.TextField(verbose_name="Observações", null=True, blank=True)
+    usa_medicamento = models.BooleanField(default=False, verbose_name="Usa Medicamento?")
+    qual_medicamento = models.CharField(max_length=255, verbose_name="Qual Medicamento?", null=True, blank=True)
+
+    def __str__(self):
+        return f"Ficha de Saúde - {self.usuario.nome}"
+
+    class Meta:
+        verbose_name = "Ficha de Saúde"
+        verbose_name_plural = "Fichas de Saúde"

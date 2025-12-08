@@ -1,5 +1,5 @@
 from django import forms
-from .models import Usuario
+from .models import Usuario, FichaSaude
 
 class UsuarioForm(forms.ModelForm):
     class Meta:
@@ -39,4 +39,18 @@ class UsuarioProfileForm(forms.ModelForm):
             'bairro_user': forms.TextInput(attrs={'class': 'form-control'}),
             'cep_user': forms.TextInput(attrs={'class': 'form-control'}),
             'foto_user': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+class FichaSaudeForm(forms.ModelForm):
+    class Meta:
+        model = FichaSaude
+        fields = ['altura', 'peso', 'restricoes', 'prescricoes', 'obs', 'usa_medicamento', 'qual_medicamento']
+        widgets = {
+            'altura': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Ex: 1.75'}),
+            'peso': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Ex: 70.5'}),
+            'restricoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'prescricoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'obs': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'usa_medicamento': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'usa_medicamento'}),
+            'qual_medicamento': forms.TextInput(attrs={'class': 'form-control', 'id': 'qual_medicamento_input'}),
         }

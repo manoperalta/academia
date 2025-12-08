@@ -26,7 +26,8 @@
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-value" style="background: var(--gradient-success); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <div class="stat-value"
+                style="background: var(--gradient-success); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
                 {{ usuarios|length }}
             </div>
             <div class="stat-label">Ativos</div>
@@ -34,7 +35,8 @@
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-value" style="background: var(--gradient-warning); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <div class="stat-value"
+                style="background: var(--gradient-warning); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
                 0
             </div>
             <div class="stat-label">Inativos</div>
@@ -42,7 +44,8 @@
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-value" style="background: var(--gradient-info); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <div class="stat-value"
+                style="background: var(--gradient-info); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
                 {{ usuarios|length }}
             </div>
             <div class="stat-label">Este Mês</div>
@@ -74,7 +77,8 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="avatar-circle me-3" style="width: 40px; height: 40px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <div class="avatar-circle me-3"
+                                    style="width: 40px; height: 40px; background: var(--gradient-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div>
@@ -83,7 +87,8 @@
                             </div>
                         </td>
                         <td>
-                            <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--text-secondary);">
+                            <code
+                                style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--text-secondary);">
                                 {{ usuario.cpf_cnpj_user|default:"-" }}
                             </code>
                         </td>
@@ -110,10 +115,16 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group" role="group">
-                                <a href="{% url 'usuario_update' pk=usuario.pk %}" class="btn btn-sm btn-warning" title="Editar">
+                                <a href="{% url 'ficha_saude_detail' pk=usuario.pk %}"
+                                    class="btn btn-sm btn-info text-white" title="Ficha de Saúde">
+                                    <i class="fas fa-heartbeat"></i>
+                                </a>
+                                <a href="{% url 'usuario_update' pk=usuario.pk %}" class="btn btn-sm btn-warning"
+                                    title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'usuario_delete' pk=usuario.pk %}" class="btn btn-sm btn-danger" title="Excluir">
+                                <a href="{% url 'usuario_delete' pk=usuario.pk %}" class="btn btn-sm btn-danger"
+                                    title="Excluir">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>
@@ -123,7 +134,8 @@
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <div style="opacity: 0.5;">
-                                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                <i class="fas fa-users"
+                                    style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
                                 <p class="text-muted mb-0">Nenhum aluno encontrado.</p>
                                 <a href="{% url 'usuario_create' %}" class="btn btn-primary mt-3">
                                     <i class="fas fa-plus me-2"></i>Cadastrar Primeiro Aluno

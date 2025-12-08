@@ -26,7 +26,8 @@
                 <canvas id="financeiroChart" width="300" height="300"></canvas>
                 <div class="mt-3">
                     <p class="mb-1"><span class="badge bg-success">Em Dia: {{ usuarios_em_dia }}</span></p>
-                    <p class="mb-1"><span class="badge bg-warning text-dark">Alerta ({{ dias_alerta }} dias): {{ usuarios_alerta }}</span></p>
+                    <p class="mb-1"><span class="badge bg-warning text-dark">Alerta ({{ dias_alerta }} dias): {{
+                            usuarios_alerta }}</span></p>
                     <p class="mb-1"><span class="badge bg-danger">Atrasados: {{ usuarios_atrasados }}</span></p>
                     <p class="text-muted small">Total de usuários: {{ total_usuarios }}</p>
                 </div>
@@ -46,7 +47,7 @@
                 </div>
                 <h2 class="mt-3 mb-3">{{ total_aniversariantes }}</h2>
                 <p class="text-muted">aniversariante(s) hoje</p>
-                
+
                 {% if total_aniversariantes > 0 %}
                 <div class="list-group mt-3 text-start">
                     {% for aniversariante in aniversariantes_hoje %}
@@ -57,7 +58,8 @@
                     </div>
                     {% endfor %}
                 </div>
-                <button type="button" class="btn btn-warning mt-3" data-bs-toggle="modal" data-bs-target="#aniversariantesModal">
+                <button type="button" class="btn btn-warning mt-3" data-bs-toggle="modal"
+                    data-bs-target="#aniversariantesModal">
                     <i class="fas fa-envelope"></i> Enviar Mensagem
                 </button>
                 {% else %}
@@ -150,13 +152,14 @@
                 <h5 class="modal-title" id="atrasadosModalLabel">
                     <i class="fas fa-exclamation-triangle"></i> Enviar Notificação de Atraso
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info">
                     <strong>{{ usuarios_atrasados }}</strong> usuário(s) com pagamento atrasado.
                 </div>
-                
+
                 <h6>Usuários Atrasados:</h6>
                 <div class="table-responsive mb-3" style="max-height: 200px; overflow-y: auto;">
                     <table class="table table-sm table-striped">
@@ -183,14 +186,40 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="mensagemAtraso" class="form-label">Mensagem de Notificação:</label>
-                        <textarea class="form-control" id="mensagemAtraso" name="mensagem" rows="5" required>{{ config.mensagem_pagamento_atrasado }}</textarea>
+                        <textarea class="form-control" id="mensagemAtraso" name="mensagem" rows="5"
+                            required>{{ config.mensagem_pagamento_atrasado }}</textarea>
                         <small class="form-text text-muted">
-                            Esta mensagem será enviada por e-mail para todos os usuários com pagamento atrasado.
+                            Esta mensagem será enviada para todos os usuários com pagamento atrasado.
                         </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Enviar via:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioEmailAtraso"
+                                value="email" checked>
+                            <label class="form-check-label" for="envioEmailAtraso">
+                                <i class="fas fa-envelope me-1"></i> E-mail
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioWhatsappAtraso"
+                                value="whatsapp">
+                            <label class="form-check-label" for="envioWhatsappAtraso">
+                                <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioAmbosAtraso"
+                                value="ambos">
+                            <label class="form-check-label" for="envioAmbosAtraso">
+                                <i class="fas fa-paper-plane me-1"></i> Ambos (E-mail e WhatsApp)
+                            </label>
+                        </div>
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-paper-plane"></i> Enviar Notificação para {{ usuarios_atrasados }} usuário(s)
+                            <i class="fas fa-paper-plane"></i> Enviar Notificação para {{ usuarios_atrasados }}
+                            usuário(s)
                         </button>
                     </div>
                 </form>
@@ -200,7 +229,8 @@
 </div>
 
 <!-- Modal para Envio de Mensagem de Aniversário -->
-<div class="modal fade" id="aniversariantesModal" tabindex="-1" aria-labelledby="aniversariantesModalLabel" aria-hidden="true">
+<div class="modal fade" id="aniversariantesModal" tabindex="-1" aria-labelledby="aniversariantesModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
@@ -218,14 +248,41 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="mensagemAniversario" class="form-label">Mensagem de Aniversário:</label>
-                        <textarea class="form-control" id="mensagemAniversario" name="mensagem" rows="5" required>{{ config.mensagem_aniversario }}</textarea>
+                        <textarea class="form-control" id="mensagemAniversario" name="mensagem" rows="5"
+                            required>{{ config.mensagem_aniversario }}</textarea>
                         <small class="form-text text-muted">
-                            Use <code>{academia}</code> para o nome da academia e <code>{nome}</code> para o nome do aniversariante.
+                            Use <code>{academia}</code> para o nome da academia e <code>{nome}</code> para o nome do
+                            aniversariante.
                         </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Enviar via:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioEmailAniver"
+                                value="email" checked>
+                            <label class="form-check-label" for="envioEmailAniver">
+                                <i class="fas fa-envelope me-1"></i> E-mail
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioWhatsappAniver"
+                                value="whatsapp">
+                            <label class="form-check-label" for="envioWhatsappAniver">
+                                <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_envio" id="envioAmbosAniver"
+                                value="ambos">
+                            <label class="form-check-label" for="envioAmbosAniver">
+                                <i class="fas fa-paper-plane me-1"></i> Ambos (E-mail e WhatsApp)
+                            </label>
+                        </div>
                     </div>
                     <div class="d-grid">
                         <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-paper-plane"></i> Enviar Mensagem para {{ total_aniversariantes }} aniversariante(s)
+                            <i class="fas fa-paper-plane"></i> Enviar Mensagem para {{ total_aniversariantes }}
+                            aniversariante(s)
                         </button>
                     </div>
                 </form>
@@ -239,59 +296,60 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Gráfico de Pizza - Situação Financeira
-    var ctx = document.getElementById('financeiroChart').getContext('2d');
-    var financeiroChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Em Dia', 'Alerta ({{ dias_alerta }} dias)', 'Atrasados'],
-            datasets: [{
-                data: [{{ perc_em_dia }}, {{ perc_alerta }}, {{ perc_atrasados }}],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.8)',   // Verde
-                    'rgba(255, 193, 7, 0.8)',   // Amarelo
-                    'rgba(220, 53, 69, 0.8)'    // Vermelho
-                ],
-                borderColor: [
-                    'rgba(40, 167, 69, 1)',
-                    'rgba(255, 193, 7, 1)',
-                    'rgba(220, 53, 69, 1)'
-                ],
-                borderWidth: 2
+    document.addEventListener('DOMContentLoaded', function () {
+        // Gráfico de Pizza - Situação Financeira
+        var ctx = document.getElementById('financeiroChart').getContext('2d');
+        var financeiroChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Em Dia', 'Alerta ({{ dias_alerta }} dias)', 'Atrasados'],
+                datasets: [{
+                    data: [{{ perc_em_dia }}, {{ perc_alerta }}, {{ perc_atrasados }}],
+        backgroundColor: [
+        'rgba(40, 167, 69, 0.8)',   // Verde
+        'rgba(255, 193, 7, 0.8)',   // Amarelo
+        'rgba(220, 53, 69, 0.8)'    // Vermelho
+    ],
+        borderColor: [
+        'rgba(40, 167, 69, 1)',
+        'rgba(255, 193, 7, 1)',
+        'rgba(220, 53, 69, 1)'
+    ],
+        borderWidth: 2
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            var label = context.label || '';
-                            var value = context.parsed || 0;
-                            return label + ': ' + value + '%';
-                        }
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
                     }
                 }
             },
-            onClick: function(evt, activeElements) {
-                if (activeElements.length > 0) {
-                    var index = activeElements[0].index;
-                    // Se clicar na parte vermelha (atrasados - índice 2)
-                    if (index === 2 && {{ usuarios_atrasados }} > 0) {
-                        var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
-                        modal.show();
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        var label = context.label || '';
+                        var value = context.parsed || 0;
+                        return label + ': ' + value + '%';
                     }
+                }
+            }
+        },
+        onClick: function (evt, activeElements) {
+            if (activeElements.length > 0) {
+                var index = activeElements[0].index;
+                // Se clicar na parte vermelha (atrasados - índice 2)
+                if (index === 2 && {{ usuarios_atrasados }
+            } > 0) {
+        var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
+        modal.show();
+    }
                 }
             }
         }

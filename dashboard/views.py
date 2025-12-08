@@ -132,10 +132,15 @@ def dashboard(request):
             # Contar agendamentos nos painéis criados pelo professor
             agendamentos_count = Agendamento.objects.filter(painel__responsavel=user).count()
             
+            # Contar alunos ativos
+            from usuarios.models import Usuario
+            total_alunos = Usuario.objects.filter(status_user='Ativo', user__is_staff=False, user__is_superuser=False).count()
+            
             context.update({
                 'aulas_count': aulas_count, 
                 'paineis_count': paineis_count,
-                'agendamentos_count': agendamentos_count
+                'agendamentos_count': agendamentos_count,
+                'total_alunos': total_alunos
             })
             return render(request, 'dashboard/dashboard_prof.html', context)
         else:
@@ -148,7 +153,7 @@ def dashboard(request):
 
 @login_required
 def enviar_notificacao_atraso(request):
-    """Envia notificação por e-mail para usuários com pagamento atrasado"""
+    """Envia notificação por e-mail e/ou whatsapp para usuários com pagamento atrasado"""
     if not (request.user.is_superuser or request.user.is_staff):
         messages.error(request, 'Você não tem permissão para acessar esta funcionalidade.')
         return redirect('dashboard')
@@ -157,9 +162,11 @@ def enviar_notificacao_atraso(request):
         from academia.models import Configuracao
         from financeiro.models import Pagamento
         from django.contrib.auth import get_user_model
+        from notificacoes.models import Notificacao
         
         User = get_user_model()
         mensagem = request.POST.get('mensagem', '')
+        tipo_envio = request.POST.get('tipo_envio', 'email') # 'email', 'whatsapp' ou 'ambos'
         
         # Obter configuração
         config = Configuracao.objects.first()
@@ -173,7 +180,7 @@ def enviar_notificacao_atraso(request):
             is_superuser=False
         )
         
-        emails_enviados = 0
+        enviados = 0
         
         for usuario in usuarios_ativos:
             ultimo_pag = Pagamento.objects.filter(
@@ -189,20 +196,44 @@ def enviar_notificacao_atraso(request):
             else:
                 atrasado = True
             
-            if atrasado and usuario.email:
-                try:
-                    send_mail(
-                        subject=f'Aviso de Pagamento - {nome_academia}',
-                        message=mensagem,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[usuario.email],
-                        fail_silently=False,
-                    )
-                    emails_enviados += 1
-                except Exception as e:
-                    print(f'Erro ao enviar e-mail para {usuario.email}: {e}')
+            if atrasado:
+                # Enviar Email
+                if tipo_envio in ['email', 'ambos'] and usuario.email:
+                    try:
+                        notificacao = Notificacao.objects.create(
+                            assunto=f'Aviso de Pagamento - {nome_academia}',
+                            mensagem=mensagem,
+                            destinatarios=usuario.email,
+                            tipo='email',
+                            criado_por=request.user
+                        )
+                        if notificacao.enviar():
+                            enviados += 1
+                    except Exception as e:
+                        print(f'Erro ao enviar e-mail para {usuario.email}: {e}')
+
+                # Enviar WhatsApp
+                if tipo_envio in ['whatsapp', 'ambos']:
+                    # Tenta pegar o telefone do perfil do usuário
+                    telefone = None
+                    if hasattr(usuario, 'usuario_profile') and usuario.usuario_profile.telefone_user:
+                        telefone = usuario.usuario_profile.telefone_user
+                    
+                    if telefone:
+                        try:
+                            notificacao = Notificacao.objects.create(
+                                assunto=f'Aviso de Pagamento - {nome_academia}',
+                                mensagem=mensagem,
+                                destinatarios=telefone,
+                                tipo='whatsapp',
+                                criado_por=request.user
+                            )
+                            if notificacao.enviar():
+                                enviados += 1
+                        except Exception as e:
+                            print(f'Erro ao enviar whatsapp para {telefone}: {e}')
         
-        messages.success(request, f'Notificação enviada com sucesso para {emails_enviados} usuário(s)!')
+        messages.success(request, f'Processo de notificação finalizado. {enviados} notificações enviadas.')
         return redirect('dashboard')
     
     return redirect('dashboard')
@@ -218,8 +249,10 @@ def enviar_mensagem_aniversario(request):
     if request.method == 'POST':
         from academia.models import Configuracao
         from usuarios.models import Usuario
+        from notificacoes.models import Notificacao
         
         mensagem_template = request.POST.get('mensagem', '')
+        tipo_envio = request.POST.get('tipo_envio', 'email') # 'email', 'whatsapp' ou 'ambos'
         
         # Obter configuração
         config = Configuracao.objects.first()
@@ -233,27 +266,44 @@ def enviar_mensagem_aniversario(request):
             status_user='Ativo'
         )
         
-        emails_enviados = 0
+        enviados = 0
         
         for aniversariante in aniversariantes_hoje:
-            if aniversariante.email_user:
-                # Personalizar mensagem
-                mensagem_personalizada = mensagem_template.replace('{academia}', nome_academia)
-                mensagem_personalizada = mensagem_personalizada.replace('{nome}', aniversariante.nome)
-                
+            # Personalizar mensagem
+            mensagem_personalizada = mensagem_template.replace('{academia}', nome_academia)
+            mensagem_personalizada = mensagem_personalizada.replace('{nome}', aniversariante.nome)
+            
+            # Enviar Email
+            if tipo_envio in ['email', 'ambos'] and aniversariante.email_user:
                 try:
-                    send_mail(
-                        subject=f'Feliz Aniversário! - {nome_academia}',
-                        message=mensagem_personalizada,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[aniversariante.email_user],
-                        fail_silently=False,
+                    notificacao = Notificacao.objects.create(
+                        assunto=f'Feliz Aniversário! - {nome_academia}',
+                        mensagem=mensagem_personalizada,
+                        destinatarios=aniversariante.email_user,
+                        tipo='email',
+                        criado_por=request.user
                     )
-                    emails_enviados += 1
+                    if notificacao.enviar():
+                        enviados += 1
                 except Exception as e:
                     print(f'Erro ao enviar e-mail para {aniversariante.email_user}: {e}')
+
+            # Enviar WhatsApp
+            if tipo_envio in ['whatsapp', 'ambos'] and aniversariante.telefone_user:
+                try:
+                    notificacao = Notificacao.objects.create(
+                        assunto=f'Feliz Aniversário! - {nome_academia}',
+                        mensagem=mensagem_personalizada,
+                        destinatarios=aniversariante.telefone_user,
+                        tipo='whatsapp',
+                        criado_por=request.user
+                    )
+                    if notificacao.enviar():
+                        enviados += 1
+                except Exception as e:
+                    print(f'Erro ao enviar whatsapp para {aniversariante.telefone_user}: {e}')
         
-        messages.success(request, f'Mensagem de aniversário enviada com sucesso para {emails_enviados} pessoa(s)!')
+        messages.success(request, f'Processo de envio finalizado. {enviados} mensagens enviadas.')
         return redirect('dashboard')
     
     return redirect('dashboard')
