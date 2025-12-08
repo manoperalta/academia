@@ -42,11 +42,12 @@ def dashboard(request):
         hoje = date.today()
         data_alerta = hoje + timedelta(days=dias_alerta)
         
-        # Todos os usuários ativos (não staff/superuser)
+        # Todos os usuários ativos (não staff/superuser e não professores)
         usuarios_ativos = User.objects.filter(
             is_active=True,
             is_staff=False,
-            is_superuser=False
+            is_superuser=False,
+            is_professor=False
         )
         
         total_usuarios = usuarios_ativos.count()
@@ -177,7 +178,8 @@ def enviar_notificacao_atraso(request):
         usuarios_ativos = User.objects.filter(
             is_active=True,
             is_staff=False,
-            is_superuser=False
+            is_superuser=False,
+            is_professor=False
         )
         
         enviados = 0

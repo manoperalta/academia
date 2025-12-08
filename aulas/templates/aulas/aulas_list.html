@@ -35,8 +35,8 @@
                 <h5 class="card-title">{{ aula.nome }}</h5>
                 <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
                 <p class="card-text text-truncate">{{ aula.descricao }}</p>
-                <p class="card-text"><small class="text-secondary">Criado em {{ aula.data_create_aula|date:"d/m/Y"
-                        }}</small></p>
+                <p class="card-text"><small class="text-dark">Criado em {{ aula.data_create_aula|date:"d/m/Y" }}</small>
+                </p>
             </div>
             <div class="card-footer bg-tertiary border-top-0">
                 <div class="d-flex justify-content-between">
@@ -52,7 +52,7 @@
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-        <div class="text-muted">
+        <div class="text-dark">
             <i class="fas fa-film fa-4x mb-3"></i>
             <h4>Nenhuma aula cadastrada</h4>
             <p>Comece criando sua primeira aula agora mesmo!</p>

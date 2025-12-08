@@ -49,13 +49,13 @@
                                     <i class="fas fa-clock"></i>
                                 </div>
                                 <div>
-                                    <span class="d-block fw-bold">{{ painel.hora_inicio|time:"H:i" }}</span>
+                                    <span class="text-dark">{{ painel.hora_inicio|time:"H:i" }}</span>
                                     <span class="text-dark small">até {{ painel.hora_fim|time:"H:i" }}</span>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <span class="fw-medium d-block">{{ painel.nome }}</span>
+                            <span class="text-dark">{{ painel.nome }}</span>
                             <small class="text-dark">
                                 {{ painel.itens.count }} exercício{{ painel.itens.count|pluralize }}
                             </small>
@@ -110,7 +110,8 @@
                                                     {{ agendamento.aluno.username|make_list|first|upper }}
                                                 </div>
                                                 <div>
-                                                    <span class="d-block fw-bold text-primary">{{ agendamento.aluno.username }}</span>
+                                                    <span class="d-block fw-bold text-primary">{{
+                                                        agendamento.aluno.username }}</span>
                                                     <small class="text-dark">{{ agendamento.aluno.email }}</small>
                                                 </div>
                                             </div>

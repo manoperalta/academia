@@ -18,7 +18,7 @@
             </div>
             <div class="card-body text-center">
                 <h2 class="text-primary">R$ {{ plano.valor }}</h2>
-                <p class="text-muted">{{ plano.get_tipo_display }}</p>
+                <p class="text-dark">{{ plano.get_tipo_display }}</p>
                 {% if plano.descricao %}
                 <p class="small">{{ plano.descricao }}</p>
                 {% endif %}
@@ -27,8 +27,8 @@
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-        <i class="fas fa-list fa-3x mb-3 text-muted"></i>
-        <p class="text-muted">Nenhum plano disponível no momento.</p>
+        <i class="fas fa-list fa-3x mb-3 text-dark"></i>
+        <p class="text-dark">Nenhum plano disponível no momento.</p>
     </div>
     {% endfor %}
 </div>

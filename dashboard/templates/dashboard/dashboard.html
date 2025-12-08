@@ -18,18 +18,20 @@
 <div class="row mb-4">
     <!-- Gráfico Financeiro -->
     <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Situação Financeira dos Alunos</h5>
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Situação Financeira dos Alunos</h5>
             </div>
-            <div class="card-body text-center">
-                <canvas id="financeiroChart" width="300" height="300"></canvas>
-                <div class="mt-3">
-                    <p class="mb-1"><span class="badge bg-success">Em Dia: {{ usuarios_em_dia }}</span></p>
-                    <p class="mb-1"><span class="badge bg-warning text-dark">Alerta ({{ dias_alerta }} dias): {{
-                            usuarios_alerta }}</span></p>
-                    <p class="mb-1"><span class="badge bg-danger">Atrasados: {{ usuarios_atrasados }}</span></p>
-                    <p class="text-muted small">Total de usuários: {{ total_usuarios }}</p>
+            <div class="card-body text-center" style="background-color: #2c3e50; color: white;">
+                <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="financeiroChart"></canvas>
+                </div>
+                <div class="mt-4 d-flex flex-column align-items-center gap-2">
+                    <span class="badge bg-success p-2 px-3 fs-6 w-75">Em Dia: {{ usuarios_em_dia }}</span>
+                    <span class="badge bg-warning text-dark p-2 px-3 fs-6 w-75">Alerta ({{ dias_alerta }} dias):
+                        {{usuarios_alerta }}</span>
+                    <span class="badge bg-danger p-2 px-3 fs-6 w-75">Atrasados: {{ usuarios_atrasados }}</span>
+                    <p class="text-white-50 mt-2 mb-0">Total de usuários: {{ total_usuarios }}</p>
                 </div>
             </div>
         </div>
@@ -306,9 +308,9 @@
                 datasets: [{
                     data: [{{ perc_em_dia }}, {{ perc_alerta }}, {{ perc_atrasados }}],
         backgroundColor: [
-        'rgba(40, 167, 69, 0.8)',   // Verde
-        'rgba(255, 193, 7, 0.8)',   // Amarelo
-        'rgba(220, 53, 69, 0.8)'    // Vermelho
+        'rgba(40, 167, 69, 0.8)',
+        'rgba(255, 193, 7, 0.8)',
+        'rgba(220, 53, 69, 0.8)'
     ],
         borderColor: [
         'rgba(40, 167, 69, 1)',
@@ -316,8 +318,8 @@
         'rgba(220, 53, 69, 1)'
     ],
         borderWidth: 2
-            }]
-        },
+                }]
+            },
         options: {
         responsive: true,
         maintainAspectRatio: true,
@@ -325,6 +327,7 @@
             legend: {
                 position: 'bottom',
                 labels: {
+                    color: '#ffffff',
                     padding: 15,
                     font: {
                         size: 12
@@ -350,10 +353,10 @@
         var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
         modal.show();
     }
+                    }
                 }
             }
-        }
+        });
     });
-});
 </script>
 {% endblock %}

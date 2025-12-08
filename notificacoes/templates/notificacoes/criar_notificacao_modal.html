@@ -22,8 +22,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.mensagem.id_for_label }}" class="form-label">{{ form.mensagem.label
-                            }}</label>
+                        <label for="{{ form.mensagem.id_for_label }}" class="form-label">Mensagem</label>
                         {{ form.mensagem }}
                         {% if form.mensagem.errors %}
                         <div class="text-danger small">{{ form.mensagem.errors }}</div>
@@ -41,8 +40,7 @@
                     </div>
 
                     <div class="mb-3" id="destinatarios-field">
-                        <label for="{{ form.destinatarios.id_for_label }}" class="form-label">{{
-                            form.destinatarios.label }}</label>
+                        <label for="{{ form.destinatarios.id_for_label }}" class="form-label">Destinatários</label>
                         {{ form.destinatarios }}
                         {% if form.destinatarios.errors %}
                         <div class="text-danger small">{{ form.destinatarios.errors }}</div>

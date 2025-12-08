@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def pagamento_list(request):
+    if getattr(request.user, 'is_professor', False):
+        messages.error(request, 'Professores não possuem acesso à área financeira.')
+        return redirect('dashboard')
+
     if request.user.is_superuser or request.user.is_staff:
         pagamentos = Pagamento.objects.all().select_related('usuario', 'plano')
     else:
