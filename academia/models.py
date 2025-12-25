@@ -1,12 +1,26 @@
 from django.db import models
 
 class Configuracao(models.Model):
+    THEME_CHOICES = [
+        ('dark', 'Tema Escuro'),
+        ('light', 'Tema Claro'),
+    ]
+    
     titulo = models.CharField(max_length=255, verbose_name="Nome do Site")
     endereco = models.CharField(max_length=255, verbose_name="Endereço")
     numero = models.CharField(max_length=20, verbose_name="Número")
     cep = models.CharField(max_length=20, verbose_name="CEP")
     cnpj = models.CharField(max_length=20, verbose_name="CNPJ")
     ie = models.CharField(max_length=20, verbose_name="Inscrição Estadual", blank=True, null=True)
+    
+    # Configuração de Tema
+    theme_mode = models.CharField(
+        max_length=10,
+        choices=THEME_CHOICES,
+        default='dark',
+        verbose_name="Tema do Sistema",
+        help_text="Escolha entre tema claro ou escuro para todo o sistema"
+    )
     
     # Configurações de Alertas Financeiros
     dias_alerta_vencimento = models.IntegerField(

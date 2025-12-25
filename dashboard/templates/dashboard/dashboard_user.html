@@ -95,6 +95,19 @@
         color: white;
         transform: translateY(-2px);
     }
+
+    .alert-status {
+        border-left-width: 5px !important;
+        border-left-style: solid !important;
+    }
+
+    .alert-status.alert-warning {
+        border-left-color: #ffc107 !important;
+    }
+
+    .alert-status.alert-danger {
+        border-left-color: #dc3545 !important;
+    }
 </style>
 
 <div class="row">
@@ -116,27 +129,41 @@
     </div>
 </div>
 
-{% if pagamento_vencido %}
+{% if pagamento_vencido or pagamento_pendente %}
 <div class="row mb-4">
     <div class="col-12">
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0" role="alert"
-            style="border-left: 5px solid #dc3545 !important;">
+        <div class="alert {% if pagamento_pendente %}alert-warning{% else %}alert-danger{% endif %} alert-status alert-dismissible fade show shadow-sm border-0"
+            role="alert">
             <div class="d-flex align-items-center">
-                <div class="flex-shrink-0 bg-danger text-white rounded-circle p-3 me-3">
-                    <i class="fas fa-exclamation-triangle fa-lg"></i>
+                <div
+                    class="flex-shrink-0 {% if pagamento_pendente %}bg-warning{% else %}bg-danger{% endif %} text-white rounded-circle p-3 me-3">
+                    <i
+                        class="fas {% if pagamento_pendente %}fa-clock{% else %}fa-exclamation-triangle{% endif %} fa-lg"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <h5 class="alert-heading fw-bold mb-1">Atenção: Pagamento Pendente</h5>
+                    <h5 class="alert-heading fw-bold mb-1">
+                        {% if pagamento_pendente %}Atenção: Pagamento em Análise/Pendente{% else %}Atenção: Assinatura
+                        Vencida{% endif %}
+                    </h5>
                     <p class="mb-2">
-                        {% if ultimo_pagamento %}
+                        {% if pagamento_pendente %}
+                        Identificamos um pagamento pendente. Clique no botão ao lado para concluir ou ver detalhes.
+                        {% elif ultimo_pagamento %}
                         Sua assinatura venceu em <strong>{{ ultimo_pagamento.data_fim|date:"d/m/Y" }}</strong>.
                         {% else %}
                         Não identificamos um plano ativo em sua conta.
                         {% endif %}
                     </p>
-                    <a href="{% url 'plano_list' %}" class="btn btn-sm btn-outline-danger fw-bold">
+                    {% if pagamento_pendente %}
+                    <a href="{% url 'pagamento_detalhe' ultimo_pagamento.pk %}"
+                        class="btn btn-sm btn-outline-dark fw-bold">
+                        Ver Detalhes do Pagamento <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                    {% else %}
+                    <a href="#planos-section" class="btn btn-sm btn-outline-danger fw-bold">
                         Regularizar Agora <i class="fas fa-arrow-right ms-1"></i>
                     </a>
+                    {% endif %}
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
@@ -145,7 +172,7 @@
 </div>
 {% endif %}
 
-<div class="row g-4">
+<div class="row g-4 mb-5">
     <div class="col-md-6">
         <div class="card action-card shadow-sm h-100">
             <div class="card-body text-center p-5 d-flex flex-column justify-content-center">
@@ -184,5 +211,40 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="row g-4 mb-5" id="planos-section">
+    <div class="col-12">
+        <h2 class="fw-bold mb-4"><i class="fas fa-gem me-2 text-primary"></i>Nossos Planos</h2>
+    </div>
+    {% for plano in planos %}
+    <div class="col-md-4">
+        <div class="card action-card shadow-sm h-100 border-0">
+            {% if plano.imagem %}
+            <img src="{{ plano.imagem.url }}" class="card-img-top" alt="{{ plano.nome }}"
+                style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-dumbbell fa-4x text-muted opacity-25"></i>
+            </div>
+            {% endif %}
+            <div class="card-body p-4 text-center">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">
+                    {{ plano.get_tipo_display }}
+                </span>
+                <h3 class="card-title fw-bold mb-3">{{ plano.nome }}</h3>
+                <h4 class="text-primary fw-bold mb-3">R$ {{ plano.valor }}</h4>
+                {% if plano.descricao %}
+                <p class="card-text text-muted mb-4">{{ plano.descricao }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                <a href="{% url 'comprar_plano' plano.pk %}" class="btn btn-primary-gradient btn-action">
+                    <i class="fas fa-shopping-cart me-2"></i> Assinar Agora
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

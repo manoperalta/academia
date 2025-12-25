@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="print-area">
+    <!-- Cabecalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary"><i class="fas fa-file-invoice-dollar me-2"></i>{{ title }}</h2>
+            <p class="text-secondary mb-0">Gerado em: {{ today|date:"d/m/Y" }}</p>
+        </div>
+        <button onclick="window.print()" class="btn btn-outline-primary d-print-none">
+            <i class="fas fa-print me-2"></i>Imprimir / Salvar PDF
+        </button>
+    </div>
+
+    <div class="row">
+        <!-- Tabela de Pagos -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-check-circle me-2"></i>Alunos Em Dia (Pagos)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 text-dark">Nome</th>
+                                    <th class="text-dark">E-mail</th>
+                                    <th class="text-dark">Status</th>
+                                    <th class="text-dark">Vigencia Ate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in pagos %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ item.nome }}</td>
+                                    <td class="text-dark">{{ item.email }}</td>
+                                    <td><span class="badge bg-success">{{ item.status_financeiro }}</span></td>
+                                    <td class="text-dark">{{ item.data_fim|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-dark">Nenhum aluno com pagamento
+                                        em dia.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Devedores/Pendentes -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-exclamation-circle me-2"></i>Alunos Com Pendencias
+                        (Devedores)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 text-dark">Nome</th>
+                                    <th class="text-dark">E-mail</th>
+                                    <th class="text-dark">Status Ultimo Reg.</th>
+                                    <th class="text-dark">Vigencia Expirada Em</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in devedores %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ item.nome }}</td>
+                                    <td class="text-dark">{{ item.email }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ item.status_financeiro }}</span>
+                                    </td>
+                                    <td class="text-dark">
+                                        {% if item.data_fim %}
+                                        {{ item.data_fim|date:"d/m/Y" }}
+                                        {% else %}
+                                        <span class="text-dark fst-italic">Nunca Pagou</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-secondary">Nenhum aluno com pendencias.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+
+        .sidebar,
+        .navbar,
+        .btn,
+        footer,
+        .d-print-none {
+            display: none !important;
+        }
+
+        .container-fluid,
+        .content-wrapper,
+        #content {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .bg-success {
+            background-color: #198754 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .bg-danger {
+            background-color: #dc3545 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .card {
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}

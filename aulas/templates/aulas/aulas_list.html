@@ -34,6 +34,11 @@
             <div class="card-body">
                 <h5 class="card-title">{{ aula.nome }}</h5>
                 <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
+                {% if aula.restricao != 'nenhuma' %}
+                <span class="badge bg-warning text-dark mb-2" title="Restrição de Saúde">
+                    <i class="fas fa-exclamation-triangle me-1"></i>{{ aula.get_restricao_display }}
+                </span>
+                {% endif %}
                 <p class="card-text text-truncate">{{ aula.descricao }}</p>
                 <p class="card-text"><small class="text-dark">Criado em {{ aula.data_create_aula|date:"d/m/Y" }}</small>
                 </p>

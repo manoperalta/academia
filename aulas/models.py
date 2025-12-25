@@ -12,6 +12,19 @@ class Aulas(models.Model):
         ("pilates_aparelhos", "Pilates em Aparelhos")
     ]
 
+    RESTRICOES_CHOICES = [
+        ('nenhuma', 'Nenhuma'),
+        ('cardiaco', 'Problemas Cardíacos'),
+        ('respiratorio', 'Problemas Respiratórios'),
+        ('coluna', 'Problemas de Coluna'),
+        ('articulacao', 'Problemas Articulares'),
+        ('gestante', 'Gestante'),
+        ('hipertensao', 'Hipertensão'),
+        ('lesao_muscular', 'Lesão Muscular'),
+        ('diabetes', 'Diabetes'),
+        ('obesidade', 'Obesidade'),
+    ]
+
     nome = models.CharField(max_length=255, verbose_name="Nome da Aula")
     descricao = models.TextField(verbose_name="Descrição")
     file_de_video = models.FileField(
@@ -24,6 +37,7 @@ class Aulas(models.Model):
     # Para imagens, utilizaremos um modelo relacionado para permitir múltiplas imagens (até 5)
     professor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Professor/Criador")
     categorias_exercicios = models.CharField(max_length=50, choices=CATEGORIAS_EXERCICIOS, verbose_name="Categoria")
+    restricao = models.CharField(max_length=50, choices=RESTRICOES_CHOICES, default='nenhuma', verbose_name="Restrição de Saúde")
     data_create_aula = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_aula = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
 

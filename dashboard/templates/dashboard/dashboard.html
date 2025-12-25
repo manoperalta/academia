@@ -22,8 +22,8 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Situação Financeira dos Alunos</h5>
             </div>
-            <div class="card-body text-center" style="background-color: #2c3e50; color: white;">
-                <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+            <div class="card-body text-center chart-container">
+                <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="financeiroChart"></canvas>
                 </div>
                 <div class="mt-4 d-flex flex-column align-items-center gap-2">
@@ -130,7 +130,10 @@
                 <i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
                 <h5 class="card-title">Financeiro</h5>
                 <p class="card-text">Gerenciar pagamentos e planos.</p>
-                <a href="{% url 'pagamento_list' %}" class="btn btn-outline-success">Gerenciar</a>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'pagamento_list' %}" class="btn btn-outline-success">Pagamentos</a>
+                    <a href="{% url 'plano_list' %}" class="btn btn-outline-primary">Planos</a>
+                </div>
             </div>
         </div>
     </div>
@@ -293,66 +296,75 @@
     </div>
 </div>
 
+<!-- Dados para o gráfico -->
+<input type="hidden" id="data-perc-em-dia" value="{{ perc_em_dia|default:0|stringformat:'f' }}">
+<input type="hidden" id="data-perc-alerta" value="{{ perc_alerta|default:0|stringformat:'f' }}">
+<input type="hidden" id="data-perc-atrasados" value="{{ perc_atrasados|default:0|stringformat:'f' }}">
+<input type="hidden" id="data-total-atrasados" value="{{ usuarios_atrasados|default:0 }}">
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Gráfico de Pizza - Situação Financeira
+        // Dados lidos dos inputs hidden para evitar erros de renderização em JS
+        var percEmDia = parseFloat(document.getElementById('data-perc-em-dia').value) || 0;
+        var percAlerta = parseFloat(document.getElementById('data-perc-alerta').value) || 0;
+        var percAtrasados = parseFloat(document.getElementById('data-perc-atrasados').value) || 0;
+        var totalAtrasados = parseInt(document.getElementById('data-total-atrasados').value) || 0;
+
         var ctx = document.getElementById('financeiroChart').getContext('2d');
         var financeiroChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Em Dia', 'Alerta ({{ dias_alerta }} dias)', 'Atrasados'],
                 datasets: [{
-                    data: [{{ perc_em_dia }}, {{ perc_alerta }}, {{ perc_atrasados }}],
-        backgroundColor: [
-        'rgba(40, 167, 69, 0.8)',
-        'rgba(255, 193, 7, 0.8)',
-        'rgba(220, 53, 69, 0.8)'
-    ],
-        borderColor: [
-        'rgba(40, 167, 69, 1)',
-        'rgba(255, 193, 7, 1)',
-        'rgba(220, 53, 69, 1)'
-    ],
-        borderWidth: 2
+                    data: [percEmDia, percAlerta, percAtrasados],
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)',
+                        'rgba(255, 193, 7, 0.8)',
+                        'rgba(220, 53, 69, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(220, 53, 69, 1)'
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 5,
+                    cutout: '75%'
                 }]
             },
-        options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    color: '#ffffff',
-                    padding: 15,
-                    font: {
-                        size: 12
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                return label + ': ' + value + '%';
+                            }
+                        }
                     }
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function (context) {
-                        var label = context.label || '';
-                        var value = context.parsed || 0;
-                        return label + ': ' + value + '%';
-                    }
-                }
-            }
-        },
-        onClick: function (evt, activeElements) {
-            if (activeElements.length > 0) {
-                var index = activeElements[0].index;
-                // Se clicar na parte vermelha (atrasados - índice 2)
-                if (index === 2 && {{ usuarios_atrasados }
-            } > 0) {
-        var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
-        modal.show();
-    }
+                },
+                onClick: function (evt, activeElements) {
+                    if (activeElements.length > 0) {
+                        var index = activeElements[0].index;
+                        if (index === 2 && totalAtrasados > 0) {
+                            var modal = new bootstrap.Modal(document.getElementById('atrasadosModal'));
+                            modal.show();
+                        }
                     }
                 }
             }

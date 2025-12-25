@@ -5,18 +5,22 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 
 class GatewayConfig(models.Model):
+    GATEWAY_CHOICES = [
+        ('mercadopago', 'Mercado Pago'),
+        ('pagbank', 'PagBank'),
+    ]
     AMBIENTE_CHOICES = [
         ('sandbox', 'Sandbox (Testes)'),
         ('producao', 'Produção'),
     ]
 
-    nome = models.CharField(max_length=50, default="PagBank", editable=False)
+    gateway = models.CharField(max_length=20, choices=GATEWAY_CHOICES, default='mercadopago', verbose_name="Gateway de Pagamento")
     ativo = models.BooleanField(default=True, verbose_name="Gateway Ativo")
     ambiente = models.CharField(max_length=20, choices=AMBIENTE_CHOICES, default='sandbox', verbose_name="Ambiente")
     
-    # Credenciais
-    token = models.CharField(max_length=255, verbose_name="Token de Acesso")
-    public_key = models.TextField(verbose_name="Chave Pública (Public Key)", blank=True, null=True)
+    # Credenciais Mercado Pago / PagBank
+    access_token = models.CharField(max_length=255, default='', verbose_name="Access Token", help_text="Token de acesso do gateway")
+    public_key = models.CharField(max_length=255, verbose_name="Public Key", default='', blank=True, help_text="Chave pública para checkout")
     
     # Configurações adicionais
     url_webhook = models.URLField(verbose_name="URL de Notificação (Webhook)", blank=True, null=True, help_text="URL para receber atualizações de status")
@@ -27,11 +31,11 @@ class GatewayConfig(models.Model):
         return super(GatewayConfig, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"Configuração PagBank ({self.get_ambiente_display()})"
+        return f"Configuração {self.get_gateway_display()} ({self.get_ambiente_display()})"
 
     class Meta:
-        verbose_name = "Configuração do Gateway (PagBank)"
-        verbose_name_plural = "Configuração do Gateway (PagBank)"
+        verbose_name = "Configuração do Gateway de Pagamento"
+        verbose_name_plural = "Configuração do Gateway de Pagamento"
 
 class Plano(models.Model):
     TIPOS_PLANO = [
@@ -45,6 +49,7 @@ class Plano(models.Model):
     tipo = models.CharField(max_length=20, choices=TIPOS_PLANO, verbose_name="Periodicidade")
     valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor")
     descricao = models.TextField(blank=True, verbose_name="Descrição")
+    imagem = models.ImageField(upload_to='planos/', blank=True, null=True, verbose_name="Imagem de Capa")
 
     def __str__(self):
         return f"{self.nome} - R$ {self.valor}"
@@ -97,3 +102,17 @@ class Pagamento(models.Model):
         verbose_name = "Pagamento"
         verbose_name_plural = "Pagamentos"
         ordering = ['-data_pagamento']
+
+class Despesa(models.Model):
+    descricao = models.CharField(max_length=255, verbose_name="Descrição")
+    valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor")
+    data = models.DateField(verbose_name="Data da Despesa")
+    categoria = models.CharField(max_length=100, blank=True, verbose_name="Categoria")
+    
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor}"
+
+    class Meta:
+        verbose_name = "Despesa"
+        verbose_name_plural = "Despesas"
+        ordering = ['-data']

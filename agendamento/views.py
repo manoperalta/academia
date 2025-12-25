@@ -49,19 +49,21 @@ def realizar_agendamento(request, painel_id):
         
     painel = get_object_or_404(Painel, pk=painel_id)
     
-    # Verificar se já existe agendamento
-    if Agendamento.objects.filter(painel=painel, aluno=request.user, status='Agendado').exists():
+    # 1. Verificar se já existe agendamento (qualquer status)
+    agendamento_existente = Agendamento.objects.filter(painel=painel, aluno=request.user).first()
+    
+    if agendamento_existente and agendamento_existente.status == 'Agendado':
         messages.warning(request, 'Você já está agendado para este painel.')
         return redirect('agenda_list')
         
-    # Verificar vagas apenas se houver limite
+    # 2. Verificar vagas apenas se houver limite
     if painel.numero_de_user:
         agendamentos_ativos = painel.agendamentos.filter(status='Agendado').count()
         if agendamentos_ativos >= painel.numero_de_user:
             messages.error(request, 'Este painel não tem mais vagas disponíveis.')
             return redirect('agenda_list')
     
-    # Verificar restrições de saúde
+    # 3. Verificar restrições de saúde
     confirmar_restricao = request.GET.get('confirmar_restricao', False)
     if not confirming_restriction_check(request, painel) and not confirmar_restricao:
         # Se houver conflito e não foi confirmado ainda
@@ -79,8 +81,15 @@ def realizar_agendamento(request, painel_id):
                 'restricoes_usuario': restricoes
             })
 
-    Agendamento.objects.create(painel=painel, aluno=request.user, status='Agendado')
-    messages.success(request, 'Agendamento realizado com sucesso!')
+    # 4. Criar ou Reativar Agendamento
+    if agendamento_existente:
+        agendamento_existente.status = 'Agendado'
+        agendamento_existente.save()
+        messages.success(request, 'Agendamento realizado com sucesso! (Reativado)')
+    else:
+        Agendamento.objects.create(painel=painel, aluno=request.user, status='Agendado')
+        messages.success(request, 'Agendamento realizado com sucesso!')
+        
     return redirect('meus_agendamentos')
 
 def confirming_restriction_check(request, painel):
@@ -89,7 +98,7 @@ def confirming_restriction_check(request, painel):
 
 def get_health_conflicts(user, painel):
     """
-    Verifica se há conflitos entre as restrições do usuário e as categorias das aulas do painel.
+    Verifica se há conflitos entre as restrições do usuário e as categorias/restrições das aulas do painel.
     Retorna uma lista de dicionários com as aulas conflitantes.
     """
     try:
@@ -102,15 +111,38 @@ def get_health_conflicts(user, painel):
         
         for item in painel.itens.all():
             aula = item.aula
+            reasons = []
+            
+            # 1. Verificar restrição explícita da aula
+            if hasattr(aula, 'restricao') and aula.restricao != 'nenhuma':
+                restricao_key = aula.restricao
+                restricao_label = aula.get_restricao_display().lower()
+                
+                keywords = {
+                    'cardiaco': ['cardíaco', 'coração', 'cardiaco', 'arritmia', 'infarto'],
+                    'respiratorio': ['respiratório', 'pulmão', 'asma', 'bronquite', 'falta de ar'],
+                    'coluna': ['coluna', 'costas', 'lombar', 'cervical', 'hernia', 'hérnia', 'escoliose'],
+                    'articulacao': ['articulação', 'joelho', 'ombro', 'artrite', 'artrose', 'tornozelo', 'quadril'],
+                    'gestante': ['gestante', 'gravidez', 'grávida'],
+                    'hipertensao': ['hipertensão', 'pressão alta', 'hipertenso'],
+                    'lesao_muscular': ['lesão', 'muscular', 'distensão', 'estiramento'],
+                    'diabetes': ['diabetes', 'glicose', 'insulina'],
+                    'obesidade': ['obesidade', 'sobrepeso', 'imc'],
+                }
+                
+                check_words = keywords.get(restricao_key, [])
+                check_words.append(restricao_label)
+                
+                for word in check_words:
+                    if word in restricoes_text:
+                        reasons.append(f"Restrição: {aula.get_restricao_display()}")
+                        break
+
+            # 2. Verificar categoria do exercício
             categoria_key = aula.categorias_exercicios
             categoria_display = aula.get_categorias_exercicios_display().lower()
             
-            # Verifica se a categoria (chave ou nome legível) aparece no texto de restrições
-            # Ex: se restrição tem "evitar aeróbico" e categoria é "aerobico"
-            
-            # Simplificação: busca por palavras chave da categoria no texto de restrição
-            # Mapeamento de palavras chave por categoria
-            keywords = {
+            keywords_cat = {
                 "aerobico": ["aeróbico", "aerobico", "cardio", "corrida", "esteira"],
                 "forca": ["força", "peso", "musculação", "carga"],
                 "flexibilidade": ["flexibilidade", "alongamento"],
@@ -119,19 +151,18 @@ def get_health_conflicts(user, painel):
                 "pilates_aparelhos": ["pilates", "aparelho"]
             }
             
-            check_words = keywords.get(categoria_key, [])
-            check_words.append(categoria_display) # Adiciona o nome completo da categoria
+            check_words = keywords_cat.get(categoria_key, [])
+            check_words.append(categoria_display)
             
-            conflict_found = False
             for word in check_words:
                 if word in restricoes_text:
-                    conflict_found = True
+                    reasons.append(f"Categoria: {aula.get_categorias_exercicios_display()}")
                     break
             
-            if conflict_found:
+            if reasons:
                 conflitos.append({
                     'aula': aula,
-                    'categoria': aula.get_categorias_exercicios_display()
+                    'categoria': " | ".join(reasons)
                 })
                 
         return conflitos

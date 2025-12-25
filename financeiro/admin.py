@@ -1,20 +1,20 @@
 from django.contrib import admin
-from .models import Plano, Pagamento, GatewayConfig
+from .models import Plano, Pagamento, GatewayConfig, Despesa
 
 @admin.register(GatewayConfig)
 class GatewayConfigAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'ambiente', 'ativo')
+    list_display = ('gateway', 'ambiente', 'ativo')
     fieldsets = (
         ('Configuração Geral', {
-            'fields': ('ativo', 'ambiente')
+            'fields': ('gateway', 'ativo', 'ambiente')
         }),
         ('Credenciais', {
-            'fields': ('token', 'public_key'),
-            'description': 'Obtenha estas credenciais no painel do desenvolvedor do PagBank.'
+            'fields': ('access_token', 'public_key'),
+            'description': 'Obtenha estas credenciais no painel do desenvolvedor do gateway selecionado.'
         }),
         ('Webhooks', {
             'fields': ('url_webhook',),
-            'description': 'Configure esta URL no painel do PagBank para receber atualizações automáticas.'
+            'description': 'Configure esta URL no painel do gateway para receber atualizações automáticas.'
         }),
     )
 
@@ -48,3 +48,9 @@ class PagamentoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+@admin.register(Despesa)
+class DespesaAdmin(admin.ModelAdmin):
+    list_display = ('descricao', 'valor', 'data', 'categoria')
+    list_filter = ('data', 'categoria')
+    search_fields = ('descricao', 'categoria')

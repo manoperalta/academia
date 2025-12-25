@@ -3,32 +3,112 @@
 {% block title %}Planos Disponíveis - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h2>Planos Disponíveis</h2>
+<style>
+    .action-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        background: var(--bg-card);
+    }
+
+    .action-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary-gradient {
+        background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+        border: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-gradient:hover {
+        background: linear-gradient(135deg, #2c6ac2 0%, #00b8e6 100%);
+        box-shadow: 0 5px 15px rgba(58, 123, 213, 0.4);
+        color: white;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="row mb-5 align-items-center">
+    <div class="col-md-8">
+        <h1 class="display-5 fw-bold mb-2">Planos e Assinaturas</h1>
+        <p class="lead text-muted">Escolha o plano que melhor se adapta ao seu ritmo de treino.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user.is_superuser or user.is_staff %}
+        <a href="{% url 'plano_create' %}" class="btn btn-primary-gradient mb-3">
+            <i class="fas fa-plus me-2"></i> Adicionar Plano
+        </a>
+        {% endif %}
+        <i class="fas fa-gem fa-4x text-primary opacity-25 d-block"></i>
     </div>
 </div>
 
-<div class="row">
+<div class="row g-4">
     {% for plano in planos %}
-    <div class="col-md-3 mb-4">
-        <div class="card shadow h-100">
-            <div class="card-header bg-primary text-white text-center">
-                <h5 class="mb-0">{{ plano.nome }}</h5>
+    <div class="col-md-4">
+        <div class="card action-card shadow-sm h-100 border-0">
+            {% if plano.imagem %}
+            <img src="{{ plano.imagem.url }}" class="card-img-top" alt="{{ plano.nome }}"
+                style="height: 250px; object-fit: cover;">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 250px;">
+                <i class="fas fa-dumbbell fa-4x text-muted opacity-25"></i>
             </div>
-            <div class="card-body text-center">
-                <h2 class="text-primary">R$ {{ plano.valor }}</h2>
-                <p class="text-dark">{{ plano.get_tipo_display }}</p>
+            {% endif %}
+
+            {% if user.is_superuser or user.is_staff %}
+            <div class="position-absolute top-0 end-0 p-3" style="z-index: 10;">
+                <div class="btn-group shadow-sm">
+                    <a href="{% url 'plano_update' plano.pk %}" class="btn btn-sm btn-light text-warning"
+                        title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'plano_delete' plano.pk %}" class="btn btn-sm btn-light text-danger"
+                        title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            <div class="card-body p-4 text-center">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">
+                    {{ plano.get_tipo_display }}
+                </span>
+                <h2 class="card-title fw-bold mb-3">{{ plano.nome }}</h2>
+                <h3 class="text-primary fw-bold mb-4">R$ {{ plano.valor }}</h3>
+                <hr class="my-4 opacity-10">
                 {% if plano.descricao %}
-                <p class="small">{{ plano.descricao }}</p>
+                <p class="card-text text-muted mb-4 fs-5">{{ plano.descricao }}</p>
                 {% endif %}
+
+                <ul class="list-unstyled text-start mb-4">
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Acesso a todas as aulas</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Professores qualificados</li>
+                    <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Agendamento simplificado</li>
+                </ul>
+            </div>
+            <div class="card-footer bg-transparent border-0 p-4 pt-0 text-center">
+                <a href="{% url 'comprar_plano' plano.pk %}" class="btn btn-primary-gradient w-100">
+                    <i class="fas fa-shopping-cart me-2"></i> Selecionar Plano
+                </a>
             </div>
         </div>
     </div>
     {% empty %}
     <div class="col-12 text-center py-5">
-        <i class="fas fa-list fa-3x mb-3 text-dark"></i>
-        <p class="text-dark">Nenhum plano disponível no momento.</p>
+        <div class="icon-box bg-light rounded-circle p-5 d-inline-block mb-4">
+            <i class="fas fa-search fa-3x text-muted"></i>
+        </div>
+        <h3 class="text-muted">Nenhum plano disponível no momento.</h3>
+        <p class="text-muted">Por favor, volte mais tarde ou entre em contato conosco.</p>
     </div>
     {% endfor %}
 </div>

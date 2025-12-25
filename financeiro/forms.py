@@ -11,3 +11,15 @@ class PagamentoForm(forms.ModelForm):
             'data_inicio': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'valor_pago': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+
+class PlanoForm(forms.ModelForm):
+    class Meta:
+        model = Plano
+        fields = ['nome', 'tipo', 'valor', 'descricao', 'imagem']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'imagem': forms.FileInput(attrs={'class': 'form-control'}),
+        }

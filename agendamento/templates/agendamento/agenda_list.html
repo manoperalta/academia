@@ -204,8 +204,7 @@
         </div>
         <div>
             <h3>{{ data_group.grouper|date:"l, d \d\e F \d\e Y"|title }}</h3>
-            <p class="text-dark mb-0 small">{{ data_group.list|length }} horário{{ data_group.list|length|pluralize
-                }} disponíve{{ data_group.list|length|pluralize:"l,is" }}</p>
+            <p class="text-dark mb-0 small">{{ data_group.list|length }} horário{{ data_group.list|length|pluralize }} disponíve{{ data_group.list|length|pluralize:"l,is" }}</p>
         </div>
     </div>
 </div>
@@ -213,15 +212,13 @@
 <div class="row g-4 mb-5">
     {% for painel in data_group.list %}
     <div class="col-lg-6">
-        <div
-            class="card time-slot-card h-100 shadow-sm {% if painel.inscrito %}inscrito{% elif painel.tem_limite and painel.vagas_restantes == 0 %}lotado{% endif %}">
+        <div class="card time-slot-card h-100 shadow-sm {% if painel.inscrito %}inscrito{% elif painel.tem_limite and painel.vagas_restantes == 0 %}lotado{% endif %}">
             <div class="card-body p-4">
                 <!-- Cabeçalho: Horário e Professor -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="time-badge">
                         <i class="fas fa-clock"></i>
-                        <span class="text-dark">{{ painel.hora_inicio|time:"H:i" }} - {{
-                            painel.hora_fim|time:"H:i" }}</span>
+                        <span class="text-dark">{{ painel.hora_inicio|time:"H:i" }} - {{ painel.hora_fim|time:"H:i" }}</span>
                     </div>
                     <div class="professor-badge">
                         <i class="fas fa-chalkboard-teacher me-1"></i>
@@ -239,7 +236,14 @@
                     <div class="aula-item">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="fw-medium">{{ item.aula.nome }}</span>
-                            <span class="category-badge">{{ item.aula.get_categorias_exercicios_display }}</span>
+                            <div>
+                                <span class="category-badge">{{ item.aula.get_categorias_exercicios_display }}</span>
+                                {% if item.aula.restricao != 'nenhuma' %}
+                                <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">
+                                    <i class="fas fa-exclamation-triangle"></i> {{ item.aula.get_restricao_display }}
+                                </span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -250,11 +254,9 @@
                     <div>
                         {% if painel.tem_limite %}
                         {% if painel.vagas_restantes > 0 %}
-                        <span
-                            class="vagas-info {% if painel.vagas_restantes <= 3 %}limitadas{% else %}disponivel{% endif %}">
+                        <span class="vagas-info {% if painel.vagas_restantes <= 3 %}limitadas{% else %}disponivel{% endif %}">
                             <i class="fas fa-users"></i>
-                            {{ painel.vagas_restantes }} vaga{{ painel.vagas_restantes|pluralize }} disponíve{{
-                            painel.vagas_restantes|pluralize:"l,is" }}
+                            {{ painel.vagas_restantes }} vaga{{ painel.vagas_restantes|pluralize }} disponíve{{ painel.vagas_restantes|pluralize:"l,is" }}
                         </span>
                         {% else %}
                         <span class="vagas-info" style="background: rgba(239, 68, 68, 0.1); color: #dc2626;">
@@ -269,10 +271,7 @@
                         </span>
                         {% endif %}
                         {% if painel.total_agendados > 0 %}
-                        <small class="text-dark d-block mt-1">
-                            {{ painel.total_agendados }} aluno{{ painel.total_agendados|pluralize }} agendado{{
-                            painel.total_agendados|pluralize }}
-                        </small>
+                        <small class="text-dark d-block mt-1">{{ painel.total_agendados }} aluno{{ painel.total_agendados|pluralize }} agendado{{ painel.total_agendados|pluralize }}</small>
                         {% endif %}
                     </div>
 
@@ -308,9 +307,7 @@
         <i class="fas fa-calendar-times"></i>
     </div>
     <h3 class="text-dark mb-3">Nenhuma Aula Disponível</h3>
-    <p class="text-dark mb-4">Não há aulas disponíveis para agendamento no momento.<br>Por favor, volte mais tarde
-        ou
-        entre em contato com os professores.</p>
+    <p class="text-dark mb-4">Não há aulas disponíveis para agendamento no momento.<br>Por favor, volte mais tarde ou entre em contato com os professores.</p>
     <a href="{% url 'dashboard' %}" class="btn btn-primary">
         <i class="fas fa-arrow-left me-2"></i>
         Voltar ao Dashboard

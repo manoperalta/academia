@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- Luxury Theme CSS -->
-    <link rel="stylesheet" href="{% static 'css/luxury-theme.css' %}">
+    <link rel="stylesheet" href="{% static 'css/luxury-theme.css' %}?v=3">
 
     <!-- Custom CSS (Migrado para luxury-theme.css) -->
     <!-- <link rel="stylesheet" href="{% static 'css/style.css' %}"> -->
@@ -31,7 +31,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body data-theme="{{ site_config.theme_mode|default:'dark' }}">
     <!-- Navbar Luxuosa -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">

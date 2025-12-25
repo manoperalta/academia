@@ -13,17 +13,22 @@ def dashboard(request):
     
     # Check payment status for all users
     pagamento_vencido = False
+    pagamento_pendente = False
     if not (user.is_superuser or user.is_staff):
-        from financeiro.models import Pagamento
-        ultimo_pagamento = Pagamento.objects.filter(usuario=user).order_by('-data_fim').first()
+        from financeiro.models import Pagamento, Plano
+        ultimo_pagamento = Pagamento.objects.filter(usuario=user).order_by('-data_pagamento').first()
         if ultimo_pagamento:
-            if ultimo_pagamento.data_fim < date.today():
+            if ultimo_pagamento.status == 'pendente':
+                pagamento_pendente = True
+            elif ultimo_pagamento.data_fim < date.today():
                 pagamento_vencido = True
         else:
             pagamento_vencido = True  # No payments recorded
         
         context['pagamento_vencido'] = pagamento_vencido
+        context['pagamento_pendente'] = pagamento_pendente
         context['ultimo_pagamento'] = ultimo_pagamento
+        context['planos'] = Plano.objects.all()
     
     if user.is_superuser or user.is_staff:
         # Buscar configurações

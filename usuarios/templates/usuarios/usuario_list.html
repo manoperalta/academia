@@ -69,6 +69,7 @@
                         <th><i class="fas fa-envelope me-2"></i>E-mail</th>
                         <th><i class="fas fa-phone me-2"></i>Telefone</th>
                         <th><i class="fas fa-toggle-on me-2"></i>Status</th>
+                        <th><i class="fas fa-money-bill me-2"></i>Pagamento</th>
                         <th class="text-center"><i class="fas fa-cog me-2"></i>Ações</th>
                     </tr>
                 </thead>
@@ -111,6 +112,67 @@
                             <span class="badge" style="background: var(--gradient-danger); padding: 0.5rem 1rem;">
                                 <i class="fas fa-times-circle me-1"></i>Inativo
                             </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.ultimo_pagamento %}
+                            <div class="d-flex align-items-center">
+                                {% if usuario.ultimo_pagamento.status == 'pago' %}
+                                <span class="badge bg-success me-2">Pago</span>
+                                {% elif usuario.ultimo_pagamento.status == 'pendente' %}
+                                <span class="badge bg-warning text-dark me-2">Pendente</span>
+                                {% else %}
+                                <span class="badge bg-danger me-2">{{ usuario.ultimo_pagamento.get_status_display
+                                    }}</span>
+                                {% endif %}
+
+                                {% if user.is_superuser or user.is_staff %}
+                                <button class="btn btn-sm btn-outline-primary p-1" data-bs-toggle="modal"
+                                    data-bs-target="#modalStatus{{ usuario.ultimo_pagamento.pk }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+
+                                <!-- Modal para atualizar status -->
+                                <div class="modal fade" id="modalStatus{{ usuario.ultimo_pagamento.pk }}" tabindex="-1"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Atualizar Status</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <form
+                                                action="{% url 'atualizar_status_pagamento' usuario.ultimo_pagamento.pk %}"
+                                                method="POST">
+                                                {% csrf_token %}
+                                                <div class="modal-body">
+                                                    <select name="status" class="form-select">
+                                                        <option value="pendente" {% if
+                                                            usuario.ultimo_pagamento.status=='pendente' %}selected{%
+                                                            endif %}>Pendente</option>
+                                                        <option value="pago" {% if
+                                                            usuario.ultimo_pagamento.status=='pago' %}selected{% endif
+                                                            %}>Pago</option>
+                                                        <option value="cancelado" {% if
+                                                            usuario.ultimo_pagamento.status=='cancelado' %}selected{%
+                                                            endif %}>Cancelado</option>
+                                                        <option value="em_analise" {% if
+                                                            usuario.ultimo_pagamento.status=='em_analise' %}selected{%
+                                                            endif %}>Em Análise</option>
+                                                    </select>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="badge bg-secondary text-white">Sem Registro</span>
                             {% endif %}
                         </td>
                         <td class="text-center">

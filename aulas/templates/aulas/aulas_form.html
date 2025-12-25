@@ -33,6 +33,15 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="{{ form.restricao.id_for_label }}" class="form-label">Restrição de Saúde (se houver)</label>
+                        {{ form.restricao }}
+                        <div class="form-text">Selecione se esta aula possui alguma contraindicação específica.</div>
+                        {% if form.restricao.errors %}
+                        <div class="text-danger small">{{ form.restricao.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
                         <label for="{{ form.descricao.id_for_label }}" class="form-label">Descrição</label>
                         {{ form.descricao }}
                         {% if form.descricao.errors %}

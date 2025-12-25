@@ -8,4 +8,9 @@ urlpatterns = [
     path('pagamentos/checkout/<int:pk>/', views.realizar_checkout, name='realizar_checkout'),
     path('pagamentos/detalhe/<int:pk>/', views.pagamento_detalhe, name='pagamento_detalhe'),
     path('planos/', views.plano_list, name='plano_list'),
+    path('planos/novo/', views.plano_create, name='plano_create'),
+    path('planos/editar/<int:pk>/', views.plano_update, name='plano_update'),
+    path('planos/excluir/<int:pk>/', views.plano_delete, name='plano_delete'),
+    path('planos/comprar/<int:pk>/', views.comprar_plano, name='comprar_plano'),
+    path('pagamentos/atualizar-status/<int:pk>/', views.atualizar_status_pagamento, name='atualizar_status_pagamento'),
 ]

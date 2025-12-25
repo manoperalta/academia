@@ -8,6 +8,12 @@ from .forms import UsuarioForm, UsuarioProfileForm, FichaSaudeForm
 @login_required
 def usuario_list(request):
     usuarios = Usuario.objects.all()
+    from financeiro.models import Pagamento
+    for usuario in usuarios:
+        # Pega o último pagamento desse usuário (independente de estar pago ou não)
+        # Se quiser apenas o vigente, a lógica muda, mas aqui pegamos o último registro
+        usuario.ultimo_pagamento = Pagamento.objects.filter(usuario=usuario.user).order_by('-data_pagamento').first()
+    
     return render(request, 'usuarios/usuario_list.html', {'usuarios': usuarios})
 
 @login_required

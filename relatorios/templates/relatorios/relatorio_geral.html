@@ -7,8 +7,16 @@
 <div class="container-fluid py-4">
     <!-- Cabeçalho e Resumo -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h2 class="mb-4 fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>Relatório de Desempenho</h2>
+            <div class="mb-4">
+                <a href="{% url 'relatorio_financeiro' %}" class="btn btn-outline-success btn-sm"><i
+                        class="fas fa-file-invoice-dollar me-1"></i> Financeiro</a>
+                <a href="{% url 'relatorio_usuarios' %}" class="btn btn-outline-info btn-sm"><i
+                        class="fas fa-users me-1"></i> Usuários</a>
+                <a href="{% url 'relatorio_extrato' %}" class="btn btn-outline-warning btn-sm"><i
+                        class="fas fa-receipt me-1"></i> Extrato</a>
+            </div>
         </div>
 
         <!-- Card Resumo Aulas -->
@@ -39,7 +47,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="text-uppercase mb-1 {% if not pagamento_atual %}text-muted{% endif %}">Plano
+                            <h6 class="text-uppercase mb-1 {% if not pagamento_atual %}text-secondary{% endif %}">Plano
                                 Atual</h6>
                             {% if pagamento_atual %}
                             <h3 class="fw-bold mb-0">{{ pagamento_atual.plano.nome }}</h3>
@@ -99,15 +107,15 @@
                             <!-- Data e Hora -->
                             <div class="col-md-2 text-center border-end d-flex flex-column justify-content-center">
                                 <h4 class="mb-0 fw-bold text-dark">{{ item.data|date:"d" }}</h4>
-                                <span class="text-uppercase small text-muted">{{ item.data|date:"M" }}</span>
+                                <span class="text-uppercase small text-secondary">{{ item.data|date:"M" }}</span>
                                 <span class="badge bg-light text-dark mt-2">{{ item.data|date:"Y" }}</span>
-                                <small class="text-muted mt-2">{{ item.hora_inicio|time:"H:i" }}</small>
+                                <small class="text-secondary mt-2">{{ item.hora_inicio|time:"H:i" }}</small>
                             </div>
 
                             <!-- Detalhes do Treino -->
                             <div class="col-md-10 ps-md-4 pt-2 pt-md-0">
                                 <div class="d-flex justify-content-between align-items-start">
-                                    <h5 class="fw-bold text-dark mb-1">Treino com {{ item.professor }}</h5>
+                                    <h5 class="fw-bold text-dark mb-1">Treino com {{ item.responsavel }}</h5>
                                     {% if item.status == 'Concluido' %}
                                     <span class="badge bg-success">Concluído</span>
                                     {% elif item.status == 'Cancelado' %}
@@ -123,12 +131,12 @@
                                 </p>
 
                                 <div class="bg-light p-3 rounded-3">
-                                    <h6 class="small fw-bold text-uppercase text-muted mb-2">Exercícios Realizados:</h6>
+                                    <h6 class="small fw-bold text-uppercase text-dark mb-2">Exercícios Realizados:</h6>
                                     <div class="d-flex flex-wrap gap-2">
                                         {% for aula in item.aulas %}
                                         <span class="badge bg-white text-dark border shadow-sm py-2 px-3">
                                             <i class="fas fa-running me-1 text-primary"></i> {{ aula.nome }}
-                                            <span class="text-muted ms-1 small">({{
+                                            <span class="text-secondary ms-1 small">({{
                                                 aula.get_categorias_exercicios_display }})</span>
                                         </span>
                                         {% endfor %}

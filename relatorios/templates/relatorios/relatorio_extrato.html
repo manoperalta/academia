@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary"><i class="fas fa-file-invoice me-2"></i>{{ title }}</h2>
+            <p class="text-muted mb-0">Visão geral das movimentações financeiras.</p>
+        </div>
+        <div class="d-print-none">
+            <!-- Este relatório não precisa de PDF, conforme solicitado -->
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase mb-2 opacity-75">Total de Entradas</h6>
+                    <h2 class="fw-bold mb-0">R$ {{ total_entradas|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-danger text-white h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase mb-2 opacity-75">Total de Saídas</h6>
+                    <h2 class="fw-bold mb-0">R$ {{ total_saidas|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div
+                class="card border-0 shadow-sm {% if saldo >= 0 %}bg-primary{% else %}bg-warning{% endif %} text-white h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase mb-2 opacity-75">Saldo Líquido</h6>
+                    <h2 class="fw-bold mb-0">R$ {{ saldo|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Entradas -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom border-success border-3">
+                    <h5 class="mb-0 text-success fw-bold"><i class="fas fa-arrow-up me-2"></i>Entradas (Pagamentos)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light sticky-top">
+                                <tr>
+                                    <th class="ps-3">Data</th>
+                                    <th>Origem</th>
+                                    <th class="text-end pe-3">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in entradas %}
+                                <tr>
+                                    <td class="ps-3">{{ item.data_pagamento|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{
+                                            item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username
+                                            }}</div>
+                                        <small class="text-secondary">{{ item.plano.nome }}</small>
+                                    </td>
+                                    <td class="text-end pe-3 text-success fw-bold">+ R$ {{ item.valor_pago|floatformat:2
+                                        }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3 text-muted">Nenhuma entrada registrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saídas -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom border-danger border-3">
+                    <h5 class="mb-0 text-danger fw-bold"><i class="fas fa-arrow-down me-2"></i>Saídas (Despesas)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light sticky-top">
+                                <tr>
+                                    <th class="ps-3">Data</th>
+                                    <th>Descrição</th>
+                                    <th class="text-end pe-3">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in saidas %}
+                                <tr>
+                                    <td class="ps-3">{{ item.data|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <div class="fw-bold">{{ item.descricao }}</div>
+                                        <small class="text-secondary">{{ item.categoria|default:"Geral" }}</small>
+                                    </td>
+                                    <td class="text-end pe-3 text-danger fw-bold">- R$ {{ item.valor|floatformat:2 }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-3 text-muted">Nenhuma despesa registrada.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pendentes -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom border-warning border-3">
+                    <h5 class="mb-0 text-warning fw-bold"><i class="fas fa-clock me-2"></i>Pendentes (Aguardando
+                        Webhook)</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3">Data Criação</th>
+                                    <th>Usuário</th>
+                                    <th>Plano</th>
+                                    <th class="text-end pe-3">Valor Previsto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in pendentes %}
+                                <tr>
+                                    <td class="ps-3">{{ item.data_pagamento|date:"d/m/Y" }}</td>
+                                    <td>{{
+                                        item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username
+                                        }}</td>
+                                    <td>{{ item.plano.nome }}</td>
+                                    <td class="text-end pe-3 fw-bold">R$ {{ item.valor_pago|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted">Nenhum pagamento pendente.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="bg-light fw-bold">
+                                <tr>
+                                    <td colspan="3" class="text-end pe-3">Total Pendente:</td>
+                                    <td class="text-end pe-3">R$ {{ total_pendentes|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
