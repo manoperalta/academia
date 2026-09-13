@@ -48,6 +48,11 @@
         <h1 class="truncate text-lg font-semibold text-slate-900">{{ titulo|default:"Painel" }}</h1>
         {% if subtitulo %}<p class="truncate text-xs text-slate-500">{{ subtitulo }}</p>{% endif %}
       </div>
+      <form method="get" action="{% url 'busca:resultados' %}" class="hidden items-center gap-2 sm:flex">
+        <input name="q" value="{{ request.GET.q|default:'' }}" placeholder="Buscar no painel" aria-label="Buscar no painel"
+               class="w-56 rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+        <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">Buscar</button>
+      </form>
       <form method="post" action="{% url 'gestao:selecionar_unidade' %}" class="flex items-center gap-2">
         {% csrf_token %}
         <input type="hidden" name="voltar" value="{{ request.path }}">

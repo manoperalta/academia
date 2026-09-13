@@ -285,10 +285,10 @@ def calcular_risco(aluno) -> dict:
         pontuacao += PESO_DETRATOR
         motivos.append(f"Avaliou a academia com nota de detrator: +{PESO_DETRATOR}")
 
-    if _dias_desde(aluno.criado_em if hasattr(aluno, "criado_em") else None) is not None:
-        if _dias_desde(aluno.criado_em) < 30:
-            pontuacao += PESO_NOVATO
-            motivos.append(f"Aluno novo (menos de 30 dias de casa): +{PESO_NOVATO}")
+    dias_de_casa = _dias_desde(getattr(aluno, "criado_em", None))
+    if dias_de_casa is not None and dias_de_casa < 30:
+        pontuacao += PESO_NOVATO
+        motivos.append(f"Aluno novo ({dias_de_casa} dia(s) de casa): +{PESO_NOVATO}")
 
     if total_de_checkins >= 12:
         pontuacao -= REDUCAO_FREQUENTE
