@@ -92,7 +92,7 @@ def _rotina_dominios(dry_run: bool) -> str:
         return f"verificaria {len(com_dominio)} dominio(s) proprio(s)"
     verificados = reemitidos = 0
     for rede in com_dominio:
-        resultado = verificar_dominio(rede, forcar=True)
+        verificar_dominio(rede, forcar=True)
         verificados += 1
         if rede.certificado_status == StatusCertificado.ERRO and rede.dominio_status == "pronto":
             reemitir_certificado(rede)

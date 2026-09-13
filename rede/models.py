@@ -137,9 +137,7 @@ class RegraDeRepasse(models.Model):
             return False
         if self.inicio_da_vigencia and data < self.inicio_da_vigencia:
             return False
-        if self.fim_da_vigencia and data > self.fim_da_vigencia:
-            return False
-        return True
+        return not (self.fim_da_vigencia and data > self.fim_da_vigencia)
 
     @property
     def aliquota_total(self) -> Decimal:

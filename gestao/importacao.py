@@ -432,7 +432,7 @@ def analisar_aplicar_multiunidade(
                     relatorio["erros"].append(f"linha {numero}: data de nascimento invalida")
                     continue
             if campo == "status":
-                valor = _status(valor, "Ativo" if tipo == "alunos" else "Ativo")
+                valor = _status(valor, "Ativo")
             dados[campo] = valor
 
         if not dados.get("nome"):

@@ -73,7 +73,7 @@ class CheckinView(LoginRequiredMixin, View):
             return redirect("aluno:inicio")
         unidade = Unidade.objects.filter(pk=request.POST.get("unidade")).first() or aluno.unidade
         try:
-            checkin, resultado = registrar_checkin(aluno, unidade)
+            _checkin, resultado = registrar_checkin(aluno, unidade)
         except ErroDeCheckin as erro:
             messages.error(request, str(erro))
             return redirect("aluno:inicio")

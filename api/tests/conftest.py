@@ -40,7 +40,7 @@ def receita(db, rede):
         login = get_user_model().objects.create_user(
             username=f"aluno.api.{posicao}", password=SENHA, email=f"api{posicao}@x.com"
         )
-        aluno = Usuario.todos.create(
+        Usuario.todos.create(
             rede=rede, unidade=unidade, user=login, nome=f"Aluno API {posicao}", status_user="Ativo"
         )
         Pagamento.objects.create(

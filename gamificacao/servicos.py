@@ -47,7 +47,7 @@ def pontuar(aluno, evento: str, referencia: str = "", quantidade: int = 1) -> di
             return {"pontuou": False, "motivo": "limite diario atingido", "conquistas": []}
 
     ganho = regra.pontos * max(1, quantidade)
-    lancamento, criado = LancamentoDePontos.objects.get_or_create(
+    _lancamento, criado = LancamentoDePontos.objects.get_or_create(
         saldo=saldo,
         evento=evento,
         referencia=referencia or timezone.now().strftime("%Y%m%d%H%M%S"),
