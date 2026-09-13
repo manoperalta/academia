@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 from django.urls import reverse
 from django.utils import timezone
@@ -166,3 +168,18 @@ def test_aluno_baixa_a_propria_carteirinha_no_pwa(client, aluno):
     assert resposta.status_code == 200
     assert resposta["Content-Type"] == "application/pdf"
     assert b"Carteirinha do aluno" in resposta.content
+
+
+def test_demonstrativo_de_repasse_traz_a_memoria_e_o_hash(cliente_painel, repasse):
+    resposta = cliente_painel.get(reverse("documentos:demonstrativo_de_repasse", args=[repasse.pk]))
+    assert resposta.status_code == 200
+    corpo = resposta.content
+    assert b"Demonstrativo de repasse" in corpo
+    assert b"R$ 720,00" in corpo  # receita bruta do periodo
+    assert b"R$ 18,00" in corpo  # exclusoes
+    assert b"8,000" in corpo  # percentual do royalty
+    assert b"R$ 56,16" in corpo  # royalty
+    assert b"R$ 10,53" in corpo  # fundo de marketing
+    assert b"R$ 66,69" in corpo  # total devido
+    assert b"8934b0ee36f0be61a1f2cd98" in corpo  # hash para conferencia
+    assert b"Piso minimo aplicado" not in corpo  # piso nao aplicado nao entra na memoria

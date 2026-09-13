@@ -134,3 +134,31 @@ def cliente_restrito(client, db, rede, unidade):
     )
     client.force_login(login)
     return client
+
+
+@pytest.fixture
+def repasse(db, rede, unidade):
+    """Repasse com os campos reais do modelo (base, percentual, fundo, piso, hash)."""
+    from rede.models import Repasse
+
+    hoje = timezone.localdate()
+    return Repasse.objects.create(
+        rede=rede,
+        unidade=unidade,
+        inicio=hoje.replace(day=1),
+        fim=hoje,
+        base="liquido",
+        receita_bruta=Decimal("720.00"),
+        exclusoes=Decimal("18.00"),
+        receita_liquida=Decimal("702.00"),
+        base_de_calculo=Decimal("702.00"),
+        percentual=Decimal("8.000"),
+        fundo_de_marketing=Decimal("1.50"),
+        valor_do_royalty=Decimal("56.16"),
+        valor_do_fundo=Decimal("10.53"),
+        valor_devido=Decimal("66.69"),
+        piso_aplicado=False,
+        vencimento=hoje + timedelta(days=5),
+        hash_do_calculo="8934b0ee36f0be61a1f2cd98",
+        observacoes="Conferido linha a linha pela unidade.",
+    )

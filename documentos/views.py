@@ -7,8 +7,8 @@ quem esta logado em uma, entao a resposta e 404, nunca um PDF de outro cliente.
 
 from __future__ import annotations
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 
 from area_do_aluno.views import aluno_da_sessao
