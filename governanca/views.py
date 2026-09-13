@@ -1,4 +1,5 @@
 """Views de governanca: login seguro, 2FA, midia protegida, status e privacidade."""
+
 from __future__ import annotations
 
 import logging
@@ -17,9 +18,18 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from core.seguranca import (
-    acesso_a_midia_permitido, bloqueio_ativo, confirmar_2fa, desativar_2fa, dispositivo_do,
-    dois_fatores_ativo, exigir_2fa_para, gerar_codigos_de_recuperacao, iniciar_2fa,
-    limpar_falhas_de_login, marcar_sessao_verificada, registrar_falha_de_login,
+    acesso_a_midia_permitido,
+    bloqueio_ativo,
+    confirmar_2fa,
+    desativar_2fa,
+    dispositivo_do,
+    dois_fatores_ativo,
+    exigir_2fa_para,
+    gerar_codigos_de_recuperacao,
+    iniciar_2fa,
+    limpar_falhas_de_login,
+    marcar_sessao_verificada,
+    registrar_falha_de_login,
     validar_segundo_fator,
 )
 from governanca.forms import Codigo2FAForm, Desativar2FAForm, LoginSeguroForm
@@ -52,12 +62,16 @@ class LoginSeguroView(View):
         if bloqueado:
             TentativaDeLogin.objects.create(identificador=identificador, ip=ip, bloqueado=True)
             minutos = max(1, espera // 60)
-            return render(request, self.template_name, {
-                "form": formulario,
-                "bloqueado_ate": minutos,
-                "tentativas": tentativas,
-                "erro": f"Muitas tentativas. Tente novamente em {minutos} minuto(s).",
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    "form": formulario,
+                    "bloqueado_ate": minutos,
+                    "tentativas": tentativas,
+                    "erro": f"Muitas tentativas. Tente novamente em {minutos} minuto(s).",
+                },
+            )
 
         usuario = authenticate(
             request,
@@ -67,17 +81,28 @@ class LoginSeguroView(View):
         if usuario is None:
             registrar_falha_de_login(identificador, ip)
             TentativaDeLogin.objects.create(identificador=identificador, ip=ip, sucesso=False)
-            return render(request, self.template_name, {
-                "form": formulario, "erro": "E-mail ou senha incorretos.", "proximo": proximo,
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    "form": formulario,
+                    "erro": "E-mail ou senha incorretos.",
+                    "proximo": proximo,
+                },
+            )
 
         limpar_falhas_de_login(identificador, ip)
         TentativaDeLogin.objects.create(identificador=identificador, ip=ip, sucesso=True)
         login(request, usuario)
         from api.auditoria import registrar
 
-        registrar("login", "usuario", entidade_id=usuario.pk,
-                  descricao=f"Acesso pelo e-mail {identificador}", request=request)
+        registrar(
+            "login",
+            "usuario",
+            entidade_id=usuario.pk,
+            descricao=f"Acesso pelo e-mail {identificador}",
+            request=request,
+        )
         if dois_fatores_ativo(usuario):
             return redirect(f"{reverse('governanca:dois_fatores')}?proximo={proximo}")
         if exigir_2fa_para(usuario):
@@ -109,28 +134,49 @@ class DoisFatoresView(View):
             return redirect("governanca:entrar")
         if not dois_fatores_ativo(request.user):
             return redirect("governanca:dois_fatores_cadastrar")
-        return render(request, self.template_name, {
-            "form": Codigo2FAForm(), "proximo": request.GET.get("proximo", ""),
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": Codigo2FAForm(),
+                "proximo": request.GET.get("proximo", ""),
+            },
+        )
 
     def post(self, request):
         if not request.user.is_authenticated:
             return redirect("governanca:entrar")
         formulario = Codigo2FAForm(request.POST)
         proximo = request.POST.get("proximo", "")
-        if formulario.is_valid() and validar_segundo_fator(request.user, formulario.cleaned_data["codigo"]):
+        if formulario.is_valid() and validar_segundo_fator(
+            request.user, formulario.cleaned_data["codigo"]
+        ):
             marcar_sessao_verificada(request)
             from api.auditoria import registrar
 
-            registrar("2fa", "usuario", entidade_id=request.user.pk, descricao="Segundo fator aceito",
-                      request=request)
+            registrar(
+                "2fa",
+                "usuario",
+                entidade_id=request.user.pk,
+                descricao="Segundo fator aceito",
+                request=request,
+            )
             return redirect(proximo or reverse("gestao:visao_geral"))
-        TentativaDeLogin.objects.create(identificador=f"2fa:{request.user.username}",
-                                        ip=_ip_do_cliente(request), sucesso=False, bloqueado=True)
-        return render(request, self.template_name, {
-            "form": formulario, "proximo": proximo,
-            "erro": "Codigo invalido. Confira o app autenticador (ou use um codigo de recuperacao).",
-        })
+        TentativaDeLogin.objects.create(
+            identificador=f"2fa:{request.user.username}",
+            ip=_ip_do_cliente(request),
+            sucesso=False,
+            bloqueado=True,
+        )
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": formulario,
+                "proximo": proximo,
+                "erro": "Codigo invalido. Confira o app autenticador (ou use um codigo de recuperacao).",
+            },
+        )
 
 
 class Cadastrar2FAView(LoginRequiredMixin, View):
@@ -144,13 +190,20 @@ class Cadastrar2FAView(LoginRequiredMixin, View):
             dispositivo = iniciar_2fa(request.user)
         from core import totp
 
-        return render(request, self.template_name, {
-            "segredo": dispositivo.segredo,
-            "uri": totp.uri_otpauth(dispositivo.segredo, request.user.email or request.user.username),
-            "form": Codigo2FAForm(),
-            "obrigatorio": request.GET.get("obrigatorio") == "1" or exigir_2fa_para(request.user),
-            "ativo": bool(dispositivo.confirmado_em),
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "segredo": dispositivo.segredo,
+                "uri": totp.uri_otpauth(
+                    dispositivo.segredo, request.user.email or request.user.username
+                ),
+                "form": Codigo2FAForm(),
+                "obrigatorio": request.GET.get("obrigatorio") == "1"
+                or exigir_2fa_para(request.user),
+                "ativo": bool(dispositivo.confirmado_em),
+            },
+        )
 
     def post(self, request):
         formulario = Codigo2FAForm(request.POST)
@@ -159,19 +212,34 @@ class Cadastrar2FAView(LoginRequiredMixin, View):
             marcar_sessao_verificada(request)
             from api.auditoria import registrar
 
-            registrar("2fa", "usuario", entidade_id=request.user.pk, descricao="2FA ativado",
-                      request=request)
-            return render(request, "governanca/2fa_codigos.html", {"codigos": codigos, "novos": True})
+            registrar(
+                "2fa",
+                "usuario",
+                entidade_id=request.user.pk,
+                descricao="2FA ativado",
+                request=request,
+            )
+            return render(
+                request, "governanca/2fa_codigos.html", {"codigos": codigos, "novos": True}
+            )
         from core import totp
 
         dispositivo = iniciar_2fa(request.user)
-        return render(request, self.template_name, {
-            "segredo": dispositivo.segredo,
-            "uri": totp.uri_otpauth(dispositivo.segredo, request.user.email or request.user.username),
-            "form": formulario, "erro": "Codigo incorreto. Confira o horario do celular e tente de novo.",
-            "obrigatorio": request.GET.get("obrigatorio") == "1" or exigir_2fa_para(request.user),
-            "ativo": False,
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "segredo": dispositivo.segredo,
+                "uri": totp.uri_otpauth(
+                    dispositivo.segredo, request.user.email or request.user.username
+                ),
+                "form": formulario,
+                "erro": "Codigo incorreto. Confira o horario do celular e tente de novo.",
+                "obrigatorio": request.GET.get("obrigatorio") == "1"
+                or exigir_2fa_para(request.user),
+                "ativo": False,
+            },
+        )
 
 
 class CodigosDeRecuperacaoView(LoginRequiredMixin, View):
@@ -206,8 +274,13 @@ class Desativar2FAView(LoginRequiredMixin, View):
                 desativar_2fa(request.user)
                 from api.auditoria import registrar
 
-                registrar("2fa", "usuario", entidade_id=request.user.pk, descricao="2FA desativado",
-                          request=request)
+                registrar(
+                    "2fa",
+                    "usuario",
+                    entidade_id=request.user.pk,
+                    descricao="2FA desativado",
+                    request=request,
+                )
                 messages.success(request, "Segundo fator desativado.")
                 return redirect("gestao:seguranca")
         return render(request, self.template_name, {"form": formulario})
@@ -227,7 +300,6 @@ class MidiaView(View):
     """
 
     def get(self, request, caminho: str):
-        from core.seguranca import acesso_a_midia_permitido
 
         if not request.user.is_authenticated:
             return HttpResponseRedirect(f"{reverse('governanca:entrar')}?proximo={request.path}")
@@ -263,10 +335,14 @@ class StatusView(TemplateView):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 cursor.fetchone()
-        except Exception as erro:  # noqa: BLE001
+        except Exception as erro:
             banco_ok = False
             contexto["erro_banco"] = str(erro)[:200]
-        ultimo_backup = RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO).order_by("-criado_em").first()
+        ultimo_backup = (
+            RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO)
+            .order_by("-criado_em")
+            .first()
+        )
         saude = resumo_de_saude(horas=24)
         contexto.update(
             banco_ok=banco_ok,

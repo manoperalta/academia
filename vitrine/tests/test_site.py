@@ -1,8 +1,7 @@
 """Paginas publicas: home, planos, ajuda, contato e checagens ao vivo."""
+
 from __future__ import annotations
 
-import pytest
-from django.core import mail
 from django.urls import reverse
 
 from plataforma.tests.conftest import criar_pacote
@@ -62,9 +61,15 @@ def test_verificacao_de_cnpj_ao_vivo(client, db):
 
 
 def test_contato_envia_email(client, db):
-    resposta = client.post(reverse("vitrine:contato"), {
-        "nome": "Fulano", "email": "fulano@exemplo.com", "telefone": "51",
-        "academia": "Academia X", "mensagem": "Quero uma demonstracao",
-    })
+    resposta = client.post(
+        reverse("vitrine:contato"),
+        {
+            "nome": "Fulano",
+            "email": "fulano@exemplo.com",
+            "telefone": "51",
+            "academia": "Academia X",
+            "mensagem": "Quero uma demonstracao",
+        },
+    )
     assert resposta.status_code == 200
     assert resposta.context["enviado"] is True

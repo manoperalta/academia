@@ -1,26 +1,49 @@
 """API v1 da fase 7: JWT, escopos, paginacao, ETag, idempotencia, lote, webhooks e jobs."""
-from __future__ import annotations
 
-from decimal import Decimal
+from __future__ import annotations
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
 
 from api import jwt as jwt_api
-from api.models import ApiToken, EntregaDeWebhook, RegistroAuditoria, TarefaAssincrona, WebhookDeSaida
-from core.models import Unidade, VinculoUsuario
-from core.papeis import Papel
+from api.models import (
+    ApiToken,
+    EntregaDeWebhook,
+    RegistroAuditoria,
+    TarefaAssincrona,
+    WebhookDeSaida,
+)
 
 
 @pytest.fixture
 def token(db, rede):
-    return ApiToken.gerar(rede=rede, nome="token de teste", escopos=[
-        "alunos:read", "alunos:write", "rede:read", "rede:write", "repasses:read", "repasses:write",
-        "financeiro:read", "financeiro:write", "unidades:read", "unidades:write", "equipe:read",
-        "professores:read", "aulas:read", "agenda:read", "comunicacao:read", "comunicacao:write",
-        "relatorios:read", "auditoria:read", "webhooks:write", "saude:read",
-    ])
+    return ApiToken.gerar(
+        rede=rede,
+        nome="token de teste",
+        escopos=[
+            "alunos:read",
+            "alunos:write",
+            "rede:read",
+            "rede:write",
+            "repasses:read",
+            "repasses:write",
+            "financeiro:read",
+            "financeiro:write",
+            "unidades:read",
+            "unidades:write",
+            "equipe:read",
+            "professores:read",
+            "aulas:read",
+            "agenda:read",
+            "comunicacao:read",
+            "comunicacao:write",
+            "relatorios:read",
+            "auditoria:read",
+            "webhooks:write",
+            "saude:read",
+        ],
+    )
 
 
 @pytest.fixture
@@ -48,20 +71,27 @@ def test_jwt_recusa_assinatura_errada_e_expirado():
 
 def test_entrar_com_senha_devolve_jwt(client, db, rede, admin_da_rede_senha):
     usuario, senha = admin_da_rede_senha
-    resposta = client.post("/api/v1/auth/token/", {"email": usuario.email, "senha": senha},
-                           content_type="application/json")
+    resposta = client.post(
+        "/api/v1/auth/token/",
+        {"email": usuario.email, "senha": senha},
+        content_type="application/json",
+    )
     assert resposta.status_code == 200
     corpo = resposta.json()
     assert corpo["acesso"] and corpo["renovacao"] and corpo["expira_em"] == 3600
-    renovado = client.post("/api/v1/auth/refresh/", {"renovacao": corpo["renovacao"]},
-                           content_type="application/json")
+    renovado = client.post(
+        "/api/v1/auth/refresh/", {"renovacao": corpo["renovacao"]}, content_type="application/json"
+    )
     assert renovado.status_code == 200 and renovado.json()["acesso"]
 
 
 def test_entrar_com_senha_errada_responde_rfc7807(client, db, rede, admin_da_rede_senha):
     usuario, _senha = admin_da_rede_senha
-    resposta = client.post("/api/v1/auth/token/", {"email": usuario.email, "senha": "errada"},
-                           content_type="application/json")
+    resposta = client.post(
+        "/api/v1/auth/token/",
+        {"email": usuario.email, "senha": "errada"},
+        content_type="application/json",
+    )
     assert resposta.status_code == 401
     corpo = resposta.json()
     assert corpo["status"] == 401 and corpo["codigo"] == "credenciais_invalidas"
@@ -76,12 +106,13 @@ def test_sem_escopo_de_leitura_recebe_403(client, db, rede, receita):
 
 
 def test_token_sem_escopo_de_escrita_nao_cria(client, db, rede):
-    _restrito, segredo = ApiToken.gerar(rede=rede, nome="token restrito",
-                                        escopos=["alunos:read"])
-    resposta = client.post("/api/v1/planos/", {"nome": "Plano X", "valor": "100.00",
-                                               "tipo": "mensal"},
-                           content_type="application/json",
-                           HTTP_AUTHORIZATION=f"Token {segredo}")
+    _restrito, segredo = ApiToken.gerar(rede=rede, nome="token restrito", escopos=["alunos:read"])
+    resposta = client.post(
+        "/api/v1/planos/",
+        {"nome": "Plano X", "valor": "100.00", "tipo": "mensal"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Token {segredo}",
+    )
     assert resposta.status_code == 403
     assert resposta.json()["codigo"] == "escopo_insuficiente"
 
@@ -121,10 +152,20 @@ def test_etag_devolve_304(client, db, rede, token, autorizacao, receita):
 # ------------------------------------------------------------------ idempotencia, dry_run, lote
 def test_idempotency_key_nao_duplica(client, db, rede, token, autorizacao):
     corpo = {"nome": "Plano Idempotente", "valor": "120.00", "tipo": "mensal"}
-    primeira = client.post("/api/v1/planos/", corpo, content_type="application/json",
-                           HTTP_IDEMPOTENCY_KEY="chave-1", **autorizacao)
-    segunda = client.post("/api/v1/planos/", corpo, content_type="application/json",
-                          HTTP_IDEMPOTENCY_KEY="chave-1", **autorizacao)
+    primeira = client.post(
+        "/api/v1/planos/",
+        corpo,
+        content_type="application/json",
+        HTTP_IDEMPOTENCY_KEY="chave-1",
+        **autorizacao,
+    )
+    segunda = client.post(
+        "/api/v1/planos/",
+        corpo,
+        content_type="application/json",
+        HTTP_IDEMPOTENCY_KEY="chave-1",
+        **autorizacao,
+    )
     assert primeira.status_code == 201 and segunda.status_code == 201
     assert segunda.headers.get("Idempotency-Replayed") == "true"
     assert primeira.json()["id"] == segunda.json()["id"]
@@ -134,9 +175,12 @@ def test_dry_run_nao_grava(client, db, rede, token, autorizacao):
     from financeiro.models import Plano
 
     antes = Plano.objects.count()
-    resposta = client.post("/api/v1/planos/?dry_run=1",
-                           {"nome": "Simulado", "valor": "99.00", "tipo": "mensal"},
-                           content_type="application/json", **autorizacao)
+    resposta = client.post(
+        "/api/v1/planos/?dry_run=1",
+        {"nome": "Simulado", "valor": "99.00", "tipo": "mensal"},
+        content_type="application/json",
+        **autorizacao,
+    )
     assert resposta.status_code == 200 and resposta.json()["dry_run"] is True
     assert Plano.objects.count() == antes
 
@@ -144,20 +188,29 @@ def test_dry_run_nao_grava(client, db, rede, token, autorizacao):
 def test_lote_com_relatorio_por_item_e_desfazer(client, db, rede, token, autorizacao):
     from financeiro.models import Plano
 
-    itens = [{"nome": "Plano A", "valor": "100.00", "tipo": "mensal"},
-             {"nome": "Plano B", "valor": "200.00", "tipo": "mensal"},
-             {"nome": "", "valor": "0"}]
-    previa = client.post("/api/v1/planos/lote/?dry_run=1", itens, content_type="application/json",
-                         **autorizacao)
+    itens = [
+        {"nome": "Plano A", "valor": "100.00", "tipo": "mensal"},
+        {"nome": "Plano B", "valor": "200.00", "tipo": "mensal"},
+        {"nome": "", "valor": "0"},
+    ]
+    previa = client.post(
+        "/api/v1/planos/lote/?dry_run=1", itens, content_type="application/json", **autorizacao
+    )
     assert previa.json()["dry_run"] is True and previa.json()["criados"] == 2
     assert Plano.objects.count() == 0
 
-    criado = client.post("/api/v1/planos/lote/", itens, content_type="application/json", **autorizacao)
+    criado = client.post(
+        "/api/v1/planos/lote/", itens, content_type="application/json", **autorizacao
+    )
     corpo = criado.json()
     assert corpo["criados"] == 2 and corpo["erros"] and len(corpo["criados_ids"]) == 2
 
-    desfeito = client.post("/api/v1/planos/desfazer/", {"ids": corpo["criados_ids"]},
-                           content_type="application/json", **autorizacao)
+    desfeito = client.post(
+        "/api/v1/planos/desfazer/",
+        {"ids": corpo["criados_ids"]},
+        content_type="application/json",
+        **autorizacao,
+    )
     assert desfeito.json()["revertidos"] == 2
 
 
@@ -165,9 +218,12 @@ def test_lote_com_relatorio_por_item_e_desfazer(client, db, rede, token, autoriz
 def test_webhook_entrega_assinada_e_retentativa(db, rede, monkeypatch):
     from api import webhooks
 
-    webhook = WebhookDeSaida.objects.create(rede=rede, url="https://exemplo.com/hook",
-                                            eventos=["repasse.emitido"],
-                                            segredo=WebhookDeSaida.gerar_segredo())
+    webhook = WebhookDeSaida.objects.create(
+        rede=rede,
+        url="https://exemplo.com/hook",
+        eventos=["repasse.emitido"],
+        segredo=WebhookDeSaida.gerar_segredo(),
+    )
     entregas = webhooks.disparar_evento("repasse.emitido", {"repasse": 1}, rede=rede)
     assert len(entregas) == 1
     entrega = entregas[0]
@@ -182,8 +238,7 @@ def test_webhook_entrega_assinada_e_retentativa(db, rede, monkeypatch):
     entrega = webhooks.entregar(entrega)
     assert entrega.situacao == EntregaDeWebhook.Situacao.ENTREGUE
     assert capturado["cabecalhos"]["X-Assinatura"].startswith("sha256=")
-    esperado = webhook.assina(capturado["corpo"],
-                              int(capturado["cabecalhos"]["X-Timestamp"]))
+    esperado = webhook.assina(capturado["corpo"], int(capturado["cabecalhos"]["X-Timestamp"]))
     assert capturado["cabecalhos"]["X-Assinatura"] == f"sha256={esperado}"
     assert capturado["cabecalhos"]["X-Evento"] == "repasse.emitido"
 
@@ -194,7 +249,7 @@ def test_webhook_entrega_assinada_e_retentativa(db, rede, monkeypatch):
     nova = webhooks.disparar_evento("repasse.emitido", {"repasse": 2}, rede=rede)[0]
     nova = webhooks.entregar(nova)
     assert nova.situacao == EntregaDeWebhook.Situacao.FALHOU
-    assert nova.tentativas == 1 and nova.proxima_tentativa is not None   # backoff agendado
+    assert nova.tentativas == 1 and nova.proxima_tentativa is not None  # backoff agendado
     reenviada = webhooks.reenviar(nova)
     assert reenviada.tentativas == 1 and reenviada.situacao != EntregaDeWebhook.Situacao.ENTREGUE
 
@@ -202,8 +257,9 @@ def test_webhook_entrega_assinada_e_retentativa(db, rede, monkeypatch):
 def test_webhook_nao_escuta_evento_fora_da_lista(db, rede):
     from api import webhooks
 
-    WebhookDeSaida.objects.create(rede=rede, url="https://exemplo.com/hook",
-                                  eventos=["aluno.criado"], segredo="x")
+    WebhookDeSaida.objects.create(
+        rede=rede, url="https://exemplo.com/hook", eventos=["aluno.criado"], segredo="x"
+    )
     assert webhooks.disparar_evento("repasse.emitido", {}, rede=rede) == []
     with pytest.raises(ValueError):
         webhooks.disparar_evento("evento.inventado", {}, rede=rede)
@@ -213,8 +269,9 @@ def test_webhook_nao_escuta_evento_fora_da_lista(db, rede):
 def test_relatorio_vira_job_e_gera_csv(client, db, rede, token, autorizacao, receita):
     from api.tarefas import processar_pendentes
 
-    resposta = client.post("/api/v1/relatorios/rede/", {}, content_type="application/json",
-                           **autorizacao)
+    resposta = client.post(
+        "/api/v1/relatorios/rede/", {}, content_type="application/json", **autorizacao
+    )
     assert resposta.status_code == 202
     tarefa_id = resposta.json()["tarefa"]
     acompanhamento = client.get(f"/api/v1/jobs/{tarefa_id}/", **autorizacao)
@@ -241,9 +298,12 @@ def test_estado_do_tenant_responde_com_limites_e_filas(client, db, rede, token, 
 # ------------------------------------------------------------------ auditoria por token
 def test_escrita_pela_api_fica_auditada_com_o_token(client, db, rede, token, autorizacao):
     objeto, _segredo = token
-    resposta = client.post("/api/v1/planos/", {"nome": "Plano Auditado", "valor": "150.00",
-                                              "tipo": "mensal"},
-                           content_type="application/json", **autorizacao)
+    resposta = client.post(
+        "/api/v1/planos/",
+        {"nome": "Plano Auditado", "valor": "150.00", "tipo": "mensal"},
+        content_type="application/json",
+        **autorizacao,
+    )
     assert resposta.status_code == 201
     registro = RegistroAuditoria.objects.filter(entidade="plano").first()
     assert registro is not None
@@ -273,4 +333,12 @@ def test_catalogo_tem_os_30_recursos():
 
     assert len(RECURSOS) == 30
     escopos = {recurso.escopo for recurso in RECURSOS}
-    assert {"plataforma", "unidades", "alunos", "financeiro", "repasses", "rede", "auditoria"} <= escopos
+    assert {
+        "plataforma",
+        "unidades",
+        "alunos",
+        "financeiro",
+        "repasses",
+        "rede",
+        "auditoria",
+    } <= escopos

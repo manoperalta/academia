@@ -5,6 +5,7 @@ Cada recurso declara modelo, escopo minimo, campos expostos, filtros e busca. O
 ``updated_since``/``deleted_since``, ``ETag``, ``Idempotency-Key``, ``dry_run`` e o
 registro de auditoria por token -- sem repetir isso em cada viewset.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -45,64 +46,211 @@ class Recurso:
 
 RECURSOS: tuple[Recurso, ...] = (
     # 1-5 plataforma
-    Recurso("redes", "core.Rede", "plataforma", busca=("nome", "slug"), filtros=("status",),
-            ordenacao=("nome",), plataforma=True, sem_unidade=True,
-            ajuda="Criar rede dispara o provisionamento do cliente."),
-    Recurso("pacotes", "plataforma.Pacote", "plataforma", filtros=("visivel_no_site",),
-            ordenacao=("preco_mensal",), plataforma=True, sem_unidade=True),
-    Recurso("assinaturas", "plataforma.Assinatura", "plataforma", filtros=("situacao", "pacote"),
-            plataforma=True, sem_unidade=True),
-    Recurso("faturas", "plataforma.Fatura", "plataforma", filtros=("situacao",),
-            plataforma=True, sem_unidade=True),
-    Recurso("metricas", "plataforma.MetricaDaPlataforma", "plataforma", plataforma=True,
-            sem_unidade=True, somente_leitura=True),
+    Recurso(
+        "redes",
+        "core.Rede",
+        "plataforma",
+        busca=("nome", "slug"),
+        filtros=("status",),
+        ordenacao=("nome",),
+        plataforma=True,
+        sem_unidade=True,
+        ajuda="Criar rede dispara o provisionamento do cliente.",
+    ),
+    Recurso(
+        "pacotes",
+        "plataforma.Pacote",
+        "plataforma",
+        filtros=("visivel_no_site",),
+        ordenacao=("preco_mensal",),
+        plataforma=True,
+        sem_unidade=True,
+    ),
+    Recurso(
+        "assinaturas",
+        "plataforma.Assinatura",
+        "plataforma",
+        filtros=("situacao", "pacote"),
+        plataforma=True,
+        sem_unidade=True,
+    ),
+    Recurso(
+        "faturas",
+        "plataforma.Fatura",
+        "plataforma",
+        filtros=("situacao",),
+        plataforma=True,
+        sem_unidade=True,
+    ),
+    Recurso(
+        "metricas",
+        "plataforma.MetricaDaPlataforma",
+        "plataforma",
+        plataforma=True,
+        sem_unidade=True,
+        somente_leitura=True,
+    ),
     # 6-10 rede e operacao
-    Recurso("unidades", "core.Unidade", "unidades", busca=("nome", "codigo", "cidade"),
-            filtros=("status", "tipo", "uf"), ordenacao=("nome",), sem_unidade=True),
-    Recurso("equipe", "core.VinculoUsuario", "equipe", filtros=("papel", "ativo", "unidade"),
-            sem_unidade=True),
+    Recurso(
+        "unidades",
+        "core.Unidade",
+        "unidades",
+        busca=("nome", "codigo", "cidade"),
+        filtros=("status", "tipo", "uf"),
+        ordenacao=("nome",),
+        sem_unidade=True,
+    ),
+    Recurso(
+        "equipe",
+        "core.VinculoUsuario",
+        "equipe",
+        filtros=("papel", "ativo", "unidade"),
+        sem_unidade=True,
+    ),
     Recurso("convites", "core.ConviteEquipe", "equipe", filtros=("status",), sem_unidade=True),
-    Recurso("alunos", "usuarios.Usuario", "alunos", busca=("nome", "email_user", "cpf_cnpj_user"),
-            filtros=("status_user", "unidade"), ordenacao=("nome",)),
-    Recurso("matriculas", "financeiro.Pagamento", "financeiro", filtros=("status", "unidade", "plano"),
-            ordenacao=("-data_pagamento",)),
-    Recurso("contratos", "financeiro.Contrato", "financeiro", filtros=("status",),
-            somente_leitura=False),
-    Recurso("professores", "professores.Professor", "professores", busca=("nome", "email_prof"),
-            filtros=("status_prof", "unidade"), ordenacao=("nome",)),
-    Recurso("aulas", "aulas.Aulas", "aulas", busca=("nome",), filtros=("unidade",), ordenacao=("nome",)),
+    Recurso(
+        "alunos",
+        "usuarios.Usuario",
+        "alunos",
+        busca=("nome", "email_user", "cpf_cnpj_user"),
+        filtros=("status_user", "unidade"),
+        ordenacao=("nome",),
+    ),
+    Recurso(
+        "matriculas",
+        "financeiro.Pagamento",
+        "financeiro",
+        filtros=("status", "unidade", "plano"),
+        ordenacao=("-data_pagamento",),
+    ),
+    Recurso(
+        "contratos", "financeiro.Contrato", "financeiro", filtros=("status",), somente_leitura=False
+    ),
+    Recurso(
+        "professores",
+        "professores.Professor",
+        "professores",
+        busca=("nome", "email_prof"),
+        filtros=("status_prof", "unidade"),
+        ordenacao=("nome",),
+    ),
+    Recurso(
+        "aulas", "aulas.Aulas", "aulas", busca=("nome",), filtros=("unidade",), ordenacao=("nome",)
+    ),
     Recurso("midias", "aulas.ImagemAula", "aulas", filtros=("aula",), somente_leitura=True),
     Recurso("turmas", "painel.Painel", "agenda", filtros=("unidade",), ordenacao=("nome",)),
-    Recurso("agendamentos", "agendamento.Agendamento", "agenda", filtros=("status", "unidade", "painel"),
-            ordenacao=("-data_agendamento",)),
-    Recurso("presencas", "agendamento.Presenca", "agenda", filtros=("agendamento",),
-            somente_leitura=True),
-    Recurso("avaliacoes", "agendamento.AvaliacaoFisica", "saude", filtros=("usuario",),
-            somente_leitura=False),
-    Recurso("planos", "financeiro.Plano", "financeiro", busca=("nome",), filtros=("tipo", "unidade"),
-            ordenacao=("nome",)),
-    Recurso("cobrancas", "financeiro.Cobranca", "financeiro", filtros=("status", "unidade"),
-            ordenacao=("-vencimento",)),
-    Recurso("pagamentos", "financeiro.Pagamento", "financeiro", filtros=("status", "unidade"),
-            ordenacao=("-data_pagamento",), somente_leitura=False),
-    Recurso("despesas", "financeiro.Despesa", "financeiro", filtros=("categoria", "unidade"),
-            ordenacao=("-data",)),
-    Recurso("repasses", "rede.Repasse", "repasses", filtros=("situacao", "unidade"),
-            ordenacao=("-inicio",), sem_unidade=True),
+    Recurso(
+        "agendamentos",
+        "agendamento.Agendamento",
+        "agenda",
+        filtros=("status", "unidade", "painel"),
+        ordenacao=("-data_agendamento",),
+    ),
+    Recurso(
+        "presencas",
+        "agendamento.Presenca",
+        "agenda",
+        filtros=("agendamento",),
+        somente_leitura=True,
+    ),
+    Recurso(
+        "avaliacoes",
+        "agendamento.AvaliacaoFisica",
+        "saude",
+        filtros=("usuario",),
+        somente_leitura=False,
+    ),
+    Recurso(
+        "planos",
+        "financeiro.Plano",
+        "financeiro",
+        busca=("nome",),
+        filtros=("tipo", "unidade"),
+        ordenacao=("nome",),
+    ),
+    Recurso(
+        "cobrancas",
+        "financeiro.Cobranca",
+        "financeiro",
+        filtros=("status", "unidade"),
+        ordenacao=("-vencimento",),
+    ),
+    Recurso(
+        "pagamentos",
+        "financeiro.Pagamento",
+        "financeiro",
+        filtros=("status", "unidade"),
+        ordenacao=("-data_pagamento",),
+        somente_leitura=False,
+    ),
+    Recurso(
+        "despesas",
+        "financeiro.Despesa",
+        "financeiro",
+        filtros=("categoria", "unidade"),
+        ordenacao=("-data",),
+    ),
+    Recurso(
+        "repasses",
+        "rede.Repasse",
+        "repasses",
+        filtros=("situacao", "unidade"),
+        ordenacao=("-inicio",),
+        sem_unidade=True,
+    ),
     Recurso("metas", "rede.Meta", "rede", filtros=("indicador", "unidade"), sem_unidade=True),
-    Recurso("comunicados", "rede.Comunicado", "rede", filtros=("publico", "ativo"),
-            ordenacao=("-criado_em",), sem_unidade=True),
-    Recurso("templates", "notificacoes.TemplateMensagem", "comunicacao", busca=("nome",),
-            filtros=("canal",), somente_leitura=False),
-    Recurso("auditoria", "api.RegistroAuditoria", "auditoria", filtros=("recurso", "acao", "usuario"),
-            ordenacao=("-criado_em",), somente_leitura=True, sem_unidade=True),
-    Recurso("webhooks", "api.WebhookDeSaida", "webhooks", filtros=("estado",),
-            ordenacao=("-criado_em",), sem_unidade=True),
-    Recurso("tarefas", "api.TarefaAssincrona", "relatorios", filtros=("tipo", "situacao"),
-            ordenacao=("-criado_em",), somente_leitura=True, sem_unidade=True),
-    Recurso("tokens", "api.ApiToken", "rede", filtros=("ativo",), ordenacao=("-criado_em",),
-            somente_leitura=False, sem_unidade=True,
-            ajuda="O segredo aparece uma unica vez, na criacao ou na rotacao."),
+    Recurso(
+        "comunicados",
+        "rede.Comunicado",
+        "rede",
+        filtros=("publico", "ativo"),
+        ordenacao=("-criado_em",),
+        sem_unidade=True,
+    ),
+    Recurso(
+        "templates",
+        "notificacoes.TemplateMensagem",
+        "comunicacao",
+        busca=("nome",),
+        filtros=("canal",),
+        somente_leitura=False,
+    ),
+    Recurso(
+        "auditoria",
+        "api.RegistroAuditoria",
+        "auditoria",
+        filtros=("recurso", "acao", "usuario"),
+        ordenacao=("-criado_em",),
+        somente_leitura=True,
+        sem_unidade=True,
+    ),
+    Recurso(
+        "webhooks",
+        "api.WebhookDeSaida",
+        "webhooks",
+        filtros=("estado",),
+        ordenacao=("-criado_em",),
+        sem_unidade=True,
+    ),
+    Recurso(
+        "tarefas",
+        "api.TarefaAssincrona",
+        "relatorios",
+        filtros=("tipo", "situacao"),
+        ordenacao=("-criado_em",),
+        somente_leitura=True,
+        sem_unidade=True,
+    ),
+    Recurso(
+        "tokens",
+        "api.ApiToken",
+        "rede",
+        filtros=("ativo",),
+        ordenacao=("-criado_em",),
+        somente_leitura=False,
+        sem_unidade=True,
+        ajuda="O segredo aparece uma unica vez, na criacao ou na rotacao.",
+    ),
 )
 #: Recursos que nao entram no router automatico (tem viewset proprio).
 FORA_DO_ROUTER = {"metricas", "contratos", "presencas", "midias", "cobrancas"}
@@ -131,10 +279,11 @@ def serializador_de(recurso: Recurso) -> type:
         class Meta:
             model = modelo
             fields = recurso.campos or "__all__"
-            read_only_fields = (
-                [campo.name for campo in modelo._meta.fields
-                 if campo.name in {"criado_em", "atualizado_em", "arquivado_em", "id"}]
-            )
+            read_only_fields = [
+                campo.name
+                for campo in modelo._meta.fields
+                if campo.name in {"criado_em", "atualizado_em", "arquivado_em", "id"}
+            ]
 
     Serializador.__name__ = f"{modelo.__name__}DaApi"
     _CACHE_SERIALIZADORES[chave] = Serializador
@@ -193,7 +342,12 @@ class RecursoDaApi(viewsets.ModelViewSet):
         rede = getattr(self.request, "rede", None) or getattr(
             getattr(self.request, "auth", None), "rede", None
         )
-        if not self.recurso.plataforma and not self.recurso.sem_unidade and "rede" in campos and rede:
+        if (
+            not self.recurso.plataforma
+            and not self.recurso.sem_unidade
+            and "rede" in campos
+            and rede
+        ):
             consulta = consulta.filter(rede=rede)
         unidade = getattr(self.request, "unidade", None)
         if unidade is not None and "unidade" in campos and not self.recurso.sem_unidade:
@@ -224,8 +378,14 @@ class RecursoDaApi(viewsets.ModelViewSet):
 
         ordenacao = self.request.query_params.get("ordering") or ",".join(self.recurso.ordenacao)
         permitidos = {campo.name for campo in consulta.model._meta.get_fields()} | {
-            "pk", f"-pk", *self.recurso.ordenacao, *self.recurso.filtros}
-        escolhidas = [item for item in ordenacao.split(",") if item.strip().lstrip("-") in permitidos]
+            "pk",
+            "-pk",
+            *self.recurso.ordenacao,
+            *self.recurso.filtros,
+        }
+        escolhidas = [
+            item for item in ordenacao.split(",") if item.strip().lstrip("-") in permitidos
+        ]
         return consulta.order_by(*(escolhidas or self.recurso.ordenacao))
 
     @staticmethod
@@ -245,7 +405,9 @@ class RecursoDaApi(viewsets.ModelViewSet):
     def assinatura_do_resultado(self, consulta) -> str:
         campo_tempo = campo_de_tempo(consulta.model)
         agregado = consulta.aggregate(total=Max("pk"))
-        ultimo = consulta.aggregate(quando=Max(campo_tempo))["quando"] if campo_tempo != "pk" else None
+        ultimo = (
+            consulta.aggregate(quando=Max(campo_tempo))["quando"] if campo_tempo != "pk" else None
+        )
         return f'W/"{consulta.count()}-{agregado["total"]}-{ultimo}"'
 
     def list(self, request, *args, **kwargs):
@@ -255,7 +417,11 @@ class RecursoDaApi(viewsets.ModelViewSet):
             return Response(status=status.HTTP_304_NOT_MODIFIED)
         pagina = self.paginate_queryset(consulta)
         alvo = pagina if pagina is not None else consulta
-        resposta = self.get_paginated_response(self.get_serializer(alvo, many=True).data)             if pagina is not None else Response(self.get_serializer(alvo, many=True).data)
+        resposta = (
+            self.get_paginated_response(self.get_serializer(alvo, many=True).data)
+            if pagina is not None
+            else Response(self.get_serializer(alvo, many=True).data)
+        )
         resposta["ETag"] = etiqueta
         return resposta
 
@@ -281,7 +447,8 @@ class RecursoDaApi(viewsets.ModelViewSet):
         campos = {campo.name for campo in modelo._meta.get_fields()}
         copia = dict(dados or {})
         rede = getattr(self.request, "rede", None) or getattr(
-            getattr(self.request, "auth", None), "rede", None)
+            getattr(self.request, "auth", None), "rede", None
+        )
         if "rede" in campos and not copia.get("rede") and rede is not None:
             copia["rede"] = rede.pk
         unidade = getattr(self.request, "unidade", None)
@@ -295,7 +462,8 @@ class RecursoDaApi(viewsets.ModelViewSet):
         campos = {campo.name for campo in modelo._meta.get_fields()}
         dados = getattr(serializador, "validated_data", {}) or {}
         rede = getattr(self.request, "rede", None) or getattr(
-            getattr(self.request, "auth", None), "rede", None)
+            getattr(self.request, "auth", None), "rede", None
+        )
         if "rede" in campos and not dados.get("rede") and rede is not None:
             dados["rede"] = rede
         unidade = getattr(self.request, "unidade", None)
@@ -311,7 +479,8 @@ class RecursoDaApi(viewsets.ModelViewSet):
         entidade = self.recurso.slug[:-1] if self.recurso.slug.endswith("s") else self.recurso.slug
         acao = self.ACOES_POR_METODO.get(self.request.method.upper(), "ler")
         registrar(
-            acao, entidade,
+            acao,
+            entidade,
             entidade_id=getattr(registro, "pk", None),
             descricao=f"{self.request.method} {self.request.path}",
             request=self.request,
@@ -322,22 +491,38 @@ class RecursoDaApi(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"type": "about:blank", "title": "Escopo insuficiente",
-                             "status": 403, "detail": f"O token precisa de {exigido}.",
-                             "codigo": "escopo_insuficiente"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "type": "about:blank",
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                    "codigo": "escopo_insuficiente",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         chave = request.headers.get("Idempotency-Key")
         if chave:
             guardado = cache.get(f"idem:{chave}")
             if guardado is not None:
-                return Response(guardado["corpo"], status=guardado["status"],
-                                headers={"Idempotency-Replayed": "true"})
+                return Response(
+                    guardado["corpo"],
+                    status=guardado["status"],
+                    headers={"Idempotency-Replayed": "true"},
+                )
         simular = str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}
         serializador = self.get_serializer(data=self.dados_com_contexto(request.data))
         serializador.is_valid(raise_exception=True)
         if simular:
             return Response(
-                {"dry_run": True, "seria_criado": 1, "valido": True,
-                 "dados": {chave: str(valor) for chave, valor in serializador.validated_data.items()}},
+                {
+                    "dry_run": True,
+                    "seria_criado": 1,
+                    "valido": True,
+                    "dados": {
+                        chave: str(valor) for chave, valor in serializador.validated_data.items()
+                    },
+                },
                 status=status.HTTP_200_OK,
             )
         self.completar_contexto(serializador)
@@ -351,9 +536,15 @@ class RecursoDaApi(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}.",
-                             "codigo": "escopo_insuficiente"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                    "codigo": "escopo_insuficiente",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         if str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}:
             return Response({"dry_run": True, "seria_atualizado": 1}, status=status.HTTP_200_OK)
         resposta = super().update(request, *args, **kwargs)
@@ -364,12 +555,18 @@ class RecursoDaApi(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}.",
-                             "codigo": "escopo_insuficiente"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                    "codigo": "escopo_insuficiente",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         registro = self.get_object()
         if hasattr(registro, "arquivar"):
-            registro.arquivar()          # exclusao vira arquivamento (RF-API-006)
+            registro.arquivar()  # exclusao vira arquivamento (RF-API-006)
             self.auditoria_da_escrita(registro)
             return Response(status=status.HTTP_204_NO_CONTENT)
         if hasattr(registro, "arquivado_em"):
@@ -385,25 +582,45 @@ class RecursoDaApi(viewsets.ModelViewSet):
         """Criacao/atualizacao em lote com relatorio por item (RF-API-011/005)."""
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}.",
-                             "codigo": "escopo_insuficiente"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                    "codigo": "escopo_insuficiente",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         itens = request.data if isinstance(request.data, list) else request.data.get("itens", [])
         simular = str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}
         atomico = str(request.query_params.get("atomic", "")).lower() in {"1", "true", "sim"}
-        relatorio = {"dry_run": simular, "total": len(itens), "criados": 0, "erros": [], "criados_ids": []}
+        relatorio = {
+            "dry_run": simular,
+            "total": len(itens),
+            "criados": 0,
+            "erros": [],
+            "criados_ids": [],
+        }
         if atomico:
             with transaction.atomic():
                 self._processar_lote(itens, simular, relatorio, abortar_em_erro=True)
         else:
             self._processar_lote(itens, simular, relatorio)
-        status_code = status.HTTP_200_OK if simular or relatorio["erros"] else status.HTTP_201_CREATED
+        status_code = (
+            status.HTTP_200_OK if simular or relatorio["erros"] else status.HTTP_201_CREATED
+        )
         if not simular and relatorio["criados"]:
-            registrar("criar_lote", self.recurso.slug, entidade_id=None,
-                      descricao=f"{relatorio['criados']} registro(s) via lote "
-                                f"({len(relatorio['criados_ids'])} id(s) para desfazer)",
-                      request=request, token=getattr(request, "auth", None)
-                      if hasattr(getattr(request, "auth", None), "pk") else None)
+            registrar(
+                "criar_lote",
+                self.recurso.slug,
+                entidade_id=None,
+                descricao=f"{relatorio['criados']} registro(s) via lote "
+                f"({len(relatorio['criados_ids'])} id(s) para desfazer)",
+                request=request,
+                token=getattr(request, "auth", None)
+                if hasattr(getattr(request, "auth", None), "pk")
+                else None,
+            )
         return Response(relatorio, status=status_code)
 
     def _processar_lote(self, itens, simular, relatorio, abortar_em_erro=False):
@@ -435,9 +652,15 @@ class RecursoDaApi(viewsets.ModelViewSet):
                 registro.arquivado_em = timezone.now()
                 registro.save(update_fields=["arquivado_em"])
                 revertidos += 1
-        registrar("desfazer_lote", self.recurso.slug, entidade_id=None,
-                  descricao=f"{revertidos} registro(s) revertido(s)", request=request)
+        registrar(
+            "desfazer_lote",
+            self.recurso.slug,
+            entidade_id=None,
+            descricao=f"{revertidos} registro(s) revertido(s)",
+            request=request,
+        )
         return Response({"revertidos": revertidos, "janela": "24h"})
+
 
 # ------------------------------------------------------------------ recursos com acoes extras
 class AlunoDaApi(RecursoDaApi):
@@ -450,24 +673,42 @@ class AlunoDaApi(RecursoDaApi):
         from api.escopos import tem_escopo
 
         if not tem_escopo(self.escopos_do_token(), "saude:read"):
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": "A ficha de saude exige saude:read.",
-                             "codigo": "escopo_insuficiente"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": "A ficha de saude exige saude:read.",
+                    "codigo": "escopo_insuficiente",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         aluno = self.get_object()
         ficha = getattr(aluno, "fichasaude", None)
         if ficha is None:
-            return Response({"detail": "Aluno sem ficha de saude cadastrada."},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Aluno sem ficha de saude cadastrada."}, status=status.HTTP_404_NOT_FOUND
+            )
         from governanca.servicos import registrar_acesso_sensivel
 
-        registrar_acesso_sensivel(request.rede, aluno.nome, recurso="ficha_saude", acao="leitura",
-                                  usuario=request.user if request.user.is_authenticated else None,
-                                  origem="api")
-        return Response({
-            "aluno": aluno.nome, "altura": ficha.altura, "peso": ficha.peso,
-            "restricoes": ficha.restricoes, "prescricoes": ficha.prescricoes,
-            "usa_medicamento": ficha.usa_medicamento, "obs": ficha.obs,
-        })
+        registrar_acesso_sensivel(
+            request.rede,
+            aluno.nome,
+            recurso="ficha_saude",
+            acao="leitura",
+            usuario=request.user if request.user.is_authenticated else None,
+            origem="api",
+        )
+        return Response(
+            {
+                "aluno": aluno.nome,
+                "altura": ficha.altura,
+                "peso": ficha.peso,
+                "restricoes": ficha.restricoes,
+                "prescricoes": ficha.prescricoes,
+                "usa_medicamento": ficha.usa_medicamento,
+                "obs": ficha.obs,
+            }
+        )
 
     @action(detail=True, methods=["post"], url_path="transferir")
     def transferir(self, request, pk=None):
@@ -475,37 +716,67 @@ class AlunoDaApi(RecursoDaApi):
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         aluno = self.get_object()
         destino = self._unidade(request.data.get("unidade"))
         if destino is None:
-            return Response({"title": "Unidade invalida", "status": 400,
-                             "detail": "Informe a unidade de destino."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "title": "Unidade invalida",
+                    "status": 400,
+                    "detail": "Informe a unidade de destino.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}:
-            return Response({"dry_run": True, "seria_transferido": 1,
-                             "de": aluno.unidade_id, "para": destino.pk}, status=status.HTTP_200_OK)
-        resultado = transferir_alunos([aluno], destino, request.data.get("motivo", ""), request.user)
+            return Response(
+                {
+                    "dry_run": True,
+                    "seria_transferido": 1,
+                    "de": aluno.unidade_id,
+                    "para": destino.pk,
+                },
+                status=status.HTTP_200_OK,
+            )
+        resultado = transferir_alunos(
+            [aluno], destino, request.data.get("motivo", ""), request.user
+        )
         return Response(resultado, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="inativar")
     def inativar(self, request, pk=None):
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."},
-                            status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         aluno = self.get_object()
         if str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}:
-            return Response({"dry_run": True, "seria_inativado": aluno.pk}, status=status.HTTP_200_OK)
+            return Response(
+                {"dry_run": True, "seria_inativado": aluno.pk}, status=status.HTTP_200_OK
+            )
         aluno.status_user = "Inativo"
         aluno.save(update_fields=["status_user"])
         self.auditoria_da_escrita(aluno)
         from api.webhooks import disparar_evento
 
-        disparar_evento("aluno.inativado", {"aluno": aluno.pk, "nome": aluno.nome},
-                        rede=getattr(request, "rede", None))
+        disparar_evento(
+            "aluno.inativado",
+            {"aluno": aluno.pk, "nome": aluno.nome},
+            rede=getattr(request, "rede", None),
+        )
         return Response({"aluno": aluno.pk, "status": aluno.status_user}, status=status.HTTP_200_OK)
 
     def _unidade(self, identificador):
@@ -528,21 +799,39 @@ class UnidadeDaApi(RecursoDaApi):
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         unidade = self.get_object()
-        destino = Unidade.objects.filter(pk=request.data.get("destino")).first() if request.data.get("destino") else None
+        destino = (
+            Unidade.objects.filter(pk=request.data.get("destino")).first()
+            if request.data.get("destino")
+            else None
+        )
         if str(request.query_params.get("dry_run", "")).lower() in {"1", "true", "sim"}:
             from usuarios.models import Usuario
 
-            return Response({"dry_run": True, "unidade": unidade.nome,
-                             "alunos_a_transferir": Usuario.todos.filter(unidade=unidade).count(),
-                             "destino": destino.pk if destino else None}, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "dry_run": True,
+                    "unidade": unidade.nome,
+                    "alunos_a_transferir": Usuario.todos.filter(unidade=unidade).count(),
+                    "destino": destino.pk if destino else None,
+                },
+                status=status.HTTP_200_OK,
+            )
         try:
             resultado = encerrar_unidade(unidade, destino, usuario=request.user)
         except ErroDeRede as erro:
-            return Response({"title": "Operacao recusada", "status": 400, "detail": str(erro)},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"title": "Operacao recusada", "status": 400, "detail": str(erro)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(resultado, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["post"], url_path="template")
@@ -552,15 +841,26 @@ class UnidadeDaApi(RecursoDaApi):
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         unidade = self.get_object()
         modelo = TemplateDeUnidade.objects.filter(pk=request.data.get("template")).first()
         implantacao = aplicar_template(unidade, modelo, usuario=request.user)
-        return Response({"unidade": unidade.pk, "template": getattr(modelo, "pk", None),
-                         "progresso": implantacao.progresso,
-                         "aplicado": implantacao.resultado.get("aplicado", [])},
-                        status=status.HTTP_200_OK)
+        return Response(
+            {
+                "unidade": unidade.pk,
+                "template": getattr(modelo, "pk", None),
+                "progresso": implantacao.progresso,
+                "aplicado": implantacao.resultado.get("aplicado", []),
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class RepasseDaApi(RecursoDaApi):
@@ -575,39 +875,70 @@ class RepasseDaApi(RecursoDaApi):
 
         unidade = Unidade.objects.filter(pk=request.query_params.get("unidade")).first()
         if unidade is None:
-            return Response({"title": "Unidade obrigatoria", "status": 400,
-                             "detail": "Informe ?unidade=<id>."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"title": "Unidade obrigatoria", "status": 400, "detail": "Informe ?unidade=<id>."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         inicio, fim = periodo_do_mes()
         try:
             calculo = calcular_repasse(unidade, inicio, fim)
         except ErroDeRede as erro:
-            return Response({"title": "Sem regra de repasse", "status": 400, "detail": str(erro)},
-                            status=status.HTTP_400_BAD_REQUEST)
-        return Response({"unidade": unidade.nome, "inicio": inicio, "fim": fim,
-                         "base_de_calculo": str(calculo["base_de_calculo"]),
-                         "valor_devido": str(calculo["valor_devido"]),
-                         "linhas": [{"descricao": linha["descricao"], "valor": str(linha["valor"])}
-                                    for linha in calculo["linhas"]]})
+            return Response(
+                {"title": "Sem regra de repasse", "status": 400, "detail": str(erro)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(
+            {
+                "unidade": unidade.nome,
+                "inicio": inicio,
+                "fim": fim,
+                "base_de_calculo": str(calculo["base_de_calculo"]),
+                "valor_devido": str(calculo["valor_devido"]),
+                "linhas": [
+                    {"descricao": linha["descricao"], "valor": str(linha["valor"])}
+                    for linha in calculo["linhas"]
+                ],
+            }
+        )
 
     @action(detail=True, methods=["post"], url_path="emitir")
     def emitir(self, request, pk=None):
-        from rede.servicos import emitir_repasse, periodo_do_mes
+        from rede.servicos import emitir_repasse
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         previsto = self.get_object()
-        repasse = emitir_repasse(previsto.unidade, previsto.inicio, previsto.fim, request.user,
-                                 forcar=True)
+        repasse = emitir_repasse(
+            previsto.unidade, previsto.inicio, previsto.fim, request.user, forcar=True
+        )
         from api.webhooks import disparar_evento
 
-        disparar_evento("repasse.emitido", {"repasse": repasse.pk, "unidade": repasse.unidade_id,
-                                            "valor": str(repasse.valor_devido)},
-                        rede=getattr(request, "rede", None))
-        return Response({"repasse": repasse.pk, "situacao": repasse.situacao,
-                         "valor_devido": str(repasse.valor_devido),
-                         "hash": repasse.hash_do_calculo}, status=status.HTTP_200_OK)
+        disparar_evento(
+            "repasse.emitido",
+            {
+                "repasse": repasse.pk,
+                "unidade": repasse.unidade_id,
+                "valor": str(repasse.valor_devido),
+            },
+            rede=getattr(request, "rede", None),
+        )
+        return Response(
+            {
+                "repasse": repasse.pk,
+                "situacao": repasse.situacao,
+                "valor_devido": str(repasse.valor_devido),
+                "hash": repasse.hash_do_calculo,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=True, methods=["post"], url_path="baixar")
     def baixar(self, request, pk=None):
@@ -615,13 +946,21 @@ class RepasseDaApi(RecursoDaApi):
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         repasse = self.get_object()
         marcar_repasse_pago(repasse, request.data.get("valor") or repasse.saldo, request.user)
         repasse.refresh_from_db()
-        return Response({"repasse": repasse.pk, "situacao": repasse.situacao,
-                         "saldo": str(repasse.saldo)}, status=status.HTTP_200_OK)
+        return Response(
+            {"repasse": repasse.pk, "situacao": repasse.situacao, "saldo": str(repasse.saldo)},
+            status=status.HTTP_200_OK,
+        )
 
 
 class MetaDaApi(RecursoDaApi):
@@ -633,8 +972,15 @@ class MetaDaApi(RecursoDaApi):
 
         meta = self.get_object()
         realizado = calcular_realizado(meta)
-        return Response({"meta": meta.pk, "indicador": meta.indicador, "alvo": str(meta.alvo),
-                         "realizado": str(realizado), "atingida": realizado >= meta.alvo})
+        return Response(
+            {
+                "meta": meta.pk,
+                "indicador": meta.indicador,
+                "alvo": str(meta.alvo),
+                "realizado": str(realizado),
+                "atingida": realizado >= meta.alvo,
+            }
+        )
 
 
 class ComunicadoDaApi(RecursoDaApi):
@@ -644,35 +990,58 @@ class ComunicadoDaApi(RecursoDaApi):
     def enviar(self, request, pk=None):
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         comunicado = self.get_object()
         from core.models import Unidade
 
-        unidades = Unidade.objects.filter(pk__in=comunicado.unidade_id and [comunicado.unidade_id]
-                                          or list(Unidade.objects.filter(rede=comunicado.rede)
-                                                  .values_list("pk", flat=True)))
-        return Response({"comunicado": comunicado.pk, "unidades": unidades.count(),
-                         "exigem_confirmacao": comunicado.exige_confirmacao,
-                         "leituras": comunicado.leituras}, status=status.HTTP_200_OK)
+        unidades = Unidade.objects.filter(
+            pk__in=(comunicado.unidade_id and [comunicado.unidade_id])
+            or list(Unidade.objects.filter(rede=comunicado.rede).values_list("pk", flat=True))
+        )
+        return Response(
+            {
+                "comunicado": comunicado.pk,
+                "unidades": unidades.count(),
+                "exigem_confirmacao": comunicado.exige_confirmacao,
+                "leituras": comunicado.leituras,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class WebhookDaApi(RecursoDaApi):
     recurso = next(item for item in RECURSOS if item.slug == "webhooks")
 
     def perform_create(self, serializer):
-        serializer.save(segredo=serializer.validated_data.get("segredo") or __import__(
-            "api.models", fromlist=["WebhookDeSaida"]).WebhookDeSaida.gerar_segredo())
+        serializer.save(
+            segredo=serializer.validated_data.get("segredo")
+            or __import__("api.models", fromlist=["WebhookDeSaida"]).WebhookDeSaida.gerar_segredo()
+        )
 
     @action(detail=True, methods=["get"], url_path="entregas")
     def entregas(self, request, pk=None):
         webhook = self.get_object()
-        return Response([
-            {"entrega": entrega.entrega, "evento": entrega.evento, "situacao": entrega.situacao,
-             "tentativas": entrega.tentativas, "resposta": entrega.resposta,
-             "proxima_tentativa": entrega.proxima_tentativa, "criado_em": entrega.criado_em}
-            for entrega in webhook.entregas.all()[:100]
-        ])
+        return Response(
+            [
+                {
+                    "entrega": entrega.entrega,
+                    "evento": entrega.evento,
+                    "situacao": entrega.situacao,
+                    "tentativas": entrega.tentativas,
+                    "resposta": entrega.resposta,
+                    "proxima_tentativa": entrega.proxima_tentativa,
+                    "criado_em": entrega.criado_em,
+                }
+                for entrega in webhook.entregas.all()[:100]
+            ]
+        )
 
     @action(detail=True, methods=["post"], url_path="reenviar")
     def reenviar(self, request, pk=None):
@@ -680,14 +1049,24 @@ class WebhookDaApi(RecursoDaApi):
 
         webhook = self.get_object()
         identificador = request.data.get("entrega")
-        entrega = webhook.entregas.filter(entrega=identificador).first() if identificador else \
-            webhook.entregas.exclude(situacao="entregue").first()
+        entrega = (
+            webhook.entregas.filter(entrega=identificador).first()
+            if identificador
+            else webhook.entregas.exclude(situacao="entregue").first()
+        )
         if entrega is None:
-            return Response({"title": "Nada para reenviar", "status": 404,
-                             "detail": "Sem entregas pendentes."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"title": "Nada para reenviar", "status": 404, "detail": "Sem entregas pendentes."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         entrega = reenviar(entrega)
-        return Response({"entrega": entrega.entrega, "situacao": entrega.situacao,
-                         "tentativas": entrega.tentativas})
+        return Response(
+            {
+                "entrega": entrega.entrega,
+                "situacao": entrega.situacao,
+                "tentativas": entrega.tentativas,
+            }
+        )
 
 
 class TokenDaApi(RecursoDaApi):
@@ -698,31 +1077,66 @@ class TokenDaApi(RecursoDaApi):
 
         exigido, permitido = self.exigir_escrita()
         if not permitido:
-            return Response({"title": "Escopo insuficiente", "status": 403,
-                             "detail": f"O token precisa de {exigido}."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {
+                    "title": "Escopo insuficiente",
+                    "status": 403,
+                    "detail": f"O token precisa de {exigido}.",
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
         escopos = request.data.get("escopos") or []
         if not escopos:
-            return Response({"title": "Escopos obrigatorios", "status": 400,
-                             "detail": "Informe o menor conjunto de escopos necessarios (RF-API-004)."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {
+                    "title": "Escopos obrigatorios",
+                    "status": 400,
+                    "detail": "Informe o menor conjunto de escopos necessarios (RF-API-004).",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         token, segredo = ApiToken.gerar(
-            rede=getattr(request, "rede", None), nome=request.data.get("nome", "token"),
-            escopos=escopos, criado_por=request.user if request.user.is_authenticated else None,
+            rede=getattr(request, "rede", None),
+            nome=request.data.get("nome", "token"),
+            escopos=escopos,
+            criado_por=request.user if request.user.is_authenticated else None,
         )
-        registrar("criar", "tokens", entidade_id=token.pk,
-                  descricao=f"Token {token.nome!r} criado com escopos {escopos}", request=request)
-        return Response({"id": token.pk, "nome": token.nome, "escopos": token.escopos,
-                         "segredo": segredo, "aviso": "O segredo aparece uma unica vez."},
-                        status=status.HTTP_201_CREATED)
+        registrar(
+            "criar",
+            "tokens",
+            entidade_id=token.pk,
+            descricao=f"Token {token.nome!r} criado com escopos {escopos}",
+            request=request,
+        )
+        return Response(
+            {
+                "id": token.pk,
+                "nome": token.nome,
+                "escopos": token.escopos,
+                "segredo": segredo,
+                "aviso": "O segredo aparece uma unica vez.",
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=["post"], url_path="rotacionar")
     def rotacionar(self, request, pk=None):
         token = self.get_object()
         segredo = token.rotacionar()
-        registrar("rotacionar", "tokens", entidade_id=token.pk,
-                  descricao=f"Token {token.nome!r} rotacionado", request=request)
-        return Response({"id": token.pk, "segredo": segredo,
-                         "aviso": "Guarde agora: o segredo anterior parou de funcionar."})
+        registrar(
+            "rotacionar",
+            "tokens",
+            entidade_id=token.pk,
+            descricao=f"Token {token.nome!r} rotacionado",
+            request=request,
+        )
+        return Response(
+            {
+                "id": token.pk,
+                "segredo": segredo,
+                "aviso": "Guarde agora: o segredo anterior parou de funcionar.",
+            }
+        )
 
 
 class TarefaDaApi(RecursoDaApi):
@@ -734,24 +1148,39 @@ class TarefaDaApi(RecursoDaApi):
 
         tarefa = self.get_object()
         if tarefa.situacao != tarefa.Situacao.CONCLUIDA or not tarefa.arquivo:
-            return Response({"title": "Tarefa sem arquivo", "status": 409,
-                             "detail": f"Situacao atual: {tarefa.get_situacao_display()}.",
-                             "erro": tarefa.erro}, status=status.HTTP_409_CONFLICT)
+            return Response(
+                {
+                    "title": "Tarefa sem arquivo",
+                    "status": 409,
+                    "detail": f"Situacao atual: {tarefa.get_situacao_display()}.",
+                    "erro": tarefa.erro,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
         if tarefa.termina_em and tarefa.termina_em < timezone.now():
-            return Response({"title": "Link expirado", "status": 410,
-                             "detail": "Gere a tarefa novamente."}, status=status.HTTP_410_GONE)
+            return Response(
+                {"title": "Link expirado", "status": 410, "detail": "Gere a tarefa novamente."},
+                status=status.HTTP_410_GONE,
+            )
         caminho = Caminho(tarefa.arquivo)
         if not caminho.exists():
-            return Response({"title": "Arquivo indisponivel", "status": 404}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"title": "Arquivo indisponivel", "status": 404}, status=status.HTTP_404_NOT_FOUND
+            )
         resposta = HttpResponse(caminho.read_bytes(), content_type="text/csv")
         resposta["Content-Disposition"] = f'attachment; filename="tarefa-{tarefa.pk}.csv"'
         return resposta
 
 
 CLASSES = {
-    "alunos": AlunoDaApi, "unidades": UnidadeDaApi, "repasses": RepasseDaApi,
-    "metas": MetaDaApi, "comunicados": ComunicadoDaApi, "webhooks": WebhookDaApi,
-    "tokens": TokenDaApi, "tarefas": TarefaDaApi,
+    "alunos": AlunoDaApi,
+    "unidades": UnidadeDaApi,
+    "repasses": RepasseDaApi,
+    "metas": MetaDaApi,
+    "comunicados": ComunicadoDaApi,
+    "webhooks": WebhookDaApi,
+    "tokens": TokenDaApi,
+    "tarefas": TarefaDaApi,
 }
 
 

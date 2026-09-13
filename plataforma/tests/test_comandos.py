@@ -1,16 +1,15 @@
 """Comandos de gestao da plataforma (o que roda no cron)."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from io import StringIO
 
-import pytest
 from django.core.management import call_command
 from django.utils import timezone
 
 from plataforma.models import Assinatura, EventoCobranca, Fatura, Pacote
 from plataforma.servicos import gerar_fatura
-from plataforma.tests.conftest import criar_assinatura
 
 
 def test_seed_cria_os_tres_pacotes(db):
@@ -40,8 +39,9 @@ def test_seed_cria_trial_para_redes_sem_assinatura(db, rede):
 
 
 def test_seed_respeita_precos_informados(db):
-    call_command("seed_plataforma", "--prata", "149", "--bronze", "249", "--ouro", "499",
-                 stdout=StringIO())
+    call_command(
+        "seed_plataforma", "--prata", "149", "--bronze", "249", "--ouro", "499", stdout=StringIO()
+    )
     assert Pacote.objects.get(codigo="prata").preco_mensal == 149
 
 

@@ -1,4 +1,5 @@
 """Metricas da plataforma: MRR, ARR, churn, ticket medio e distribuicao."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -6,9 +7,8 @@ from decimal import Decimal
 
 from django.utils import timezone
 
-from plataforma.models import Assinatura, StatusFatura
 from plataforma.servicos import gerar_fatura, metricas
-from plataforma.tests.conftest import criar_assinatura, criar_pacote
+from plataforma.tests.conftest import criar_assinatura
 
 
 def test_mrr_normaliza_ciclo_anual(db, rede, outra_rede, pacote_prata, pacote_ouro):

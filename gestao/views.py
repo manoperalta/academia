@@ -1,13 +1,13 @@
 """Painel administrativo do tenant: telas dos 10 modulos do PRD (secao 7.2)."""
+
 from __future__ import annotations
 
 import csv
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import login
 from django.core.exceptions import PermissionDenied
-from django.core.mail import EmailMessage, get_connection
 from django.db.models import Q, Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -22,25 +22,35 @@ from api.auditoria import registrar
 from api.models import RegistroAuditoria
 from aulas.models import Aulas
 from core.models import ConviteEquipe, Unidade, VinculoUsuario
-from core.papeis import Papel
 from core.tenancy import unidades_do_usuario
 from financeiro.models import Despesa, Pagamento, Plano
 from gestao.emails import enviar_email
 from gestao.forms import (
+    AlunoForm,
+    AulaForm,
+    ConfiguracaoForm,
+    ConviteForm,
+    DespesaForm,
+    EmailConfigForm,
+    FichaSaudeForm,
+    IdentidadeForm,
+    NovaContaForm,
+    PagamentoForm,
+    PainelForm,
+    PlanoForm,
+    ProfessorForm,
+    WhatsappConfigForm,
     criar_ou_vincular_usuario,
-    AlunoForm, AulaForm, ConfiguracaoForm, ConviteForm, DespesaForm, EmailConfigForm,
-    FichaSaudeForm, IdentidadeForm, NovaContaForm, PagamentoForm, PainelForm, PlanoForm,
-    ProfessorForm, WhatsappConfigForm,
 )
 from gestao.mixins import EdicaoMixin, PainelMixin
-from plataforma.mixins import ModuloDePacoteMixin
-from plataforma.models import Fatura, ModuloPacote, Pacote
-from plataforma.servicos import modulo_disponivel
 from gestao.permissoes import Modulo, nivel, pode
 from notificacoes.models import ConfiguracaoEmail, ConfiguracaoWhatsapp
 from painel.models import Painel
+from plataforma.mixins import ModuloDePacoteMixin
+from plataforma.models import Fatura, ModuloPacote, Pacote
+from plataforma.servicos import modulo_disponivel
 from professores.models import Professor
-from usuarios.models import FichaSaude, Usuario
+from usuarios.models import Usuario
 
 
 def escopo_unidade(qs, request):
@@ -147,7 +157,9 @@ class CriarPainel(EdicaoMixin, CreateView):
             if not liberado:
                 messages.error(self.request, mensagem)
                 registrar(
-                    "limite", self.entidade, descricao=f"Cadastro recusado pelo limite: {mensagem}",
+                    "limite",
+                    self.entidade,
+                    descricao=f"Cadastro recusado pelo limite: {mensagem}",
                     request=self.request,
                 )
                 return redirect(self.request.path)
@@ -206,8 +218,11 @@ class ArquivarPainel(EdicaoMixin, View):
             objeto.restaurar()
             acao, verbo = "restaurar", "restaurado"
         registrar(
-            acao, self.entidade, entidade_id=objeto.pk,
-            descricao=f"{self.entidade} {objeto} {verbo} via painel", request=request,
+            acao,
+            self.entidade,
+            entidade_id=objeto.pk,
+            descricao=f"{self.entidade} {objeto} {verbo} via painel",
+            request=request,
         )
         messages.success(request, f"{objeto} {verbo}.")
         return redirect(self.url_voltar)
@@ -258,7 +273,9 @@ class ImportarView(PainelMixin, TemplateView):
                 f"{resumo['atualizados']} atualizados, {resumo['ignorados']} ignorados e "
                 f"{resumo['erros']} linhas com erro.",
             )
-            registrar("importar", tipo, descricao=f"Importacao confirmada: {resumo}", request=request)
+            registrar(
+                "importar", tipo, descricao=f"Importacao confirmada: {resumo}", request=request
+            )
             request.session.pop(CHAVE_IMPORTACAO, None)
             return redirect(f"{reverse('gestao:importar')}?tipo={tipo}")
 
@@ -271,9 +288,12 @@ class ImportarView(PainelMixin, TemplateView):
         guardado = request.session.get(CHAVE_IMPORTACAO, {})
         guardado[tipo] = conteudo.decode("utf-8", errors="replace")
         request.session[CHAVE_IMPORTACAO] = guardado
-        registrar("importar", tipo,
-                  descricao=f"Planilha conferida: {resultado.total} linhas analisadas",
-                  request=request)
+        registrar(
+            "importar",
+            tipo,
+            descricao=f"Planilha conferida: {resultado.total} linhas analisadas",
+            request=request,
+        )
         contexto = {
             **self.get_context_data(),
             "linhas_previa": resultado,
@@ -298,12 +318,28 @@ class ImportarModeloView(PainelMixin, View):
         escritor = csv.writer(resposta, delimiter=";")
         if tipo == "professores":
             escritor.writerow(["nome", "email", "telefone", "cpf", "nascimento", "status"])
-            escritor.writerow(["Maria Souza", "maria@exemplo.com", "51999999999",
-                               "123.456.789-09", "10/05/1990", "Ativo"])
+            escritor.writerow(
+                [
+                    "Maria Souza",
+                    "maria@exemplo.com",
+                    "51999999999",
+                    "123.456.789-09",
+                    "10/05/1990",
+                    "Ativo",
+                ]
+            )
         else:
             escritor.writerow(["nome", "email", "telefone", "cpf", "nascimento", "status"])
-            escritor.writerow(["Joao Silva", "joao@exemplo.com", "51988888888",
-                               "111.444.777-35", "22/03/1995", "Ativo"])
+            escritor.writerow(
+                [
+                    "Joao Silva",
+                    "joao@exemplo.com",
+                    "51988888888",
+                    "111.444.777-35",
+                    "22/03/1995",
+                    "Ativo",
+                ]
+            )
         return resposta
 
 
@@ -343,14 +379,17 @@ class MudarPacoteView(PainelMixin, View):
 
         pacote = get_object_or_404(Pacote, pk=pk, ativo=True)
         try:
-            resultado = trocar_pacote_do_tenant(request.rede, pacote, request=request,
-                                               usuario=request.user)
+            resultado = trocar_pacote_do_tenant(
+                request.rede, pacote, request=request, usuario=request.user
+            )
         except CadastroError as erro:
             messages.error(request, str(erro))
             return redirect("gestao:plano")
         fatura = resultado.get("fatura")
         if fatura is not None:
-            messages.success(request, f"{resultado['aviso']} Pix da fatura {fatura.numero} em Meu plano.")
+            messages.success(
+                request, f"{resultado['aviso']} Pix da fatura {fatura.numero} em Meu plano."
+            )
         else:
             messages.success(request, resultado["aviso"])
         return redirect("gestao:plano")
@@ -374,15 +413,19 @@ class VisaoGeralView(PainelMixin, TemplateView):
             alunos_arquivados=escopo_unidade(Usuario.objects.all(), self.request)
             .filter(arquivado_em__isnull=False)
             .count(),
-            professores=escopo_unidade(Professor.objects.filter(status_prof="Ativo"), self.request).count(),
+            professores=escopo_unidade(
+                Professor.objects.filter(status_prof="Ativo"), self.request
+            ).count(),
             aulas=escopo_unidade(Aulas.objects.all(), self.request).count(),
             planos=escopo_unidade(Plano.objects.all(), self.request).count(),
-            receita_mes=pagamentos.filter(
-                status="pago", data_pagamento__gte=inicio_mes
-            ).aggregate(total=Sum("valor_pago"))["total"] or 0,
+            receita_mes=pagamentos.filter(status="pago", data_pagamento__gte=inicio_mes).aggregate(
+                total=Sum("valor_pago")
+            )["total"]
+            or 0,
             a_receber=pagamentos.filter(status="pendente").aggregate(total=Sum("valor_pago"))[
                 "total"
-            ] or 0,
+            ]
+            or 0,
             ultimos_alunos=alunos.order_by("-id")[:5],
             ultimos_pagamentos=pagamentos.select_related("usuario", "plano").order_by("-id")[:5],
             passos=self.passos_do_assistente(self.request),
@@ -397,24 +440,60 @@ class VisaoGeralView(PainelMixin, TemplateView):
         identidade = IdentidadeVisual.todos.filter(rede=rede).first()
         email = ConfiguracaoEmail.todos.filter(rede=rede, ativo=True).first()
         passos = [
-            {"rotulo": "Dados da academia", "feito": bool(config and config.cnpj),
-             "rota": "gestao:identidade", "dica": "CNPJ, endereco e mensagens"},
-            {"rotulo": "Unidade cadastrada", "feito": Unidade.todos.filter(rede=rede).exists(),
-             "rota": "gestao:equipe", "dica": "Matriz ou filial"},
-            {"rotulo": "Identidade visual", "feito": bool(identidade and identidade.logotipo),
-             "rota": "gestao:identidade", "dica": "Logotipo e favicon"},
-            {"rotulo": "Equipe com acesso", "feito": VinculoUsuario.todos.filter(rede=rede).count() > 1,
-             "rota": "gestao:equipe", "dica": "Convide recepcao e professores"},
-            {"rotulo": "Primeiro professor", "feito": Professor.objects.exists(),
-             "rota": "gestao:professor_novo", "dica": "Cadastre quem da as aulas"},
-            {"rotulo": "Primeira aula", "feito": Aulas.objects.exists(),
-             "rota": "gestao:aula_nova", "dica": "Video ou aula presencial"},
-            {"rotulo": "Primeiro plano", "feito": Plano.objects.exists(),
-             "rota": "gestao:plano_novo", "dica": "Valores e periodicidade"},
-            {"rotulo": "Primeiro aluno", "feito": Usuario.objects.exists(),
-             "rota": "gestao:aluno_novo", "dica": "Com acesso ao sistema"},
-            {"rotulo": "E-mail configurado", "feito": bool(email),
-             "rota": "gestao:comunicacao", "dica": "SMTP da academia"},
+            {
+                "rotulo": "Dados da academia",
+                "feito": bool(config and config.cnpj),
+                "rota": "gestao:identidade",
+                "dica": "CNPJ, endereco e mensagens",
+            },
+            {
+                "rotulo": "Unidade cadastrada",
+                "feito": Unidade.todos.filter(rede=rede).exists(),
+                "rota": "gestao:equipe",
+                "dica": "Matriz ou filial",
+            },
+            {
+                "rotulo": "Identidade visual",
+                "feito": bool(identidade and identidade.logotipo),
+                "rota": "gestao:identidade",
+                "dica": "Logotipo e favicon",
+            },
+            {
+                "rotulo": "Equipe com acesso",
+                "feito": VinculoUsuario.todos.filter(rede=rede).count() > 1,
+                "rota": "gestao:equipe",
+                "dica": "Convide recepcao e professores",
+            },
+            {
+                "rotulo": "Primeiro professor",
+                "feito": Professor.objects.exists(),
+                "rota": "gestao:professor_novo",
+                "dica": "Cadastre quem da as aulas",
+            },
+            {
+                "rotulo": "Primeira aula",
+                "feito": Aulas.objects.exists(),
+                "rota": "gestao:aula_nova",
+                "dica": "Video ou aula presencial",
+            },
+            {
+                "rotulo": "Primeiro plano",
+                "feito": Plano.objects.exists(),
+                "rota": "gestao:plano_novo",
+                "dica": "Valores e periodicidade",
+            },
+            {
+                "rotulo": "Primeiro aluno",
+                "feito": Usuario.objects.exists(),
+                "rota": "gestao:aluno_novo",
+                "dica": "Com acesso ao sistema",
+            },
+            {
+                "rotulo": "E-mail configurado",
+                "feito": bool(email),
+                "rota": "gestao:comunicacao",
+                "dica": "SMTP da academia",
+            },
         ]
         feitos = sum(1 for passo in passos if passo["feito"])
         for passo in passos:
@@ -424,18 +503,31 @@ class VisaoGeralView(PainelMixin, TemplateView):
 
 # ===================================================================== MODULOS
 def _colunas_aluno():
-    return [("Nome", "nome"), ("E-mail", "email_user"), ("Telefone", "telefone_user"),
-            ("Status", "status_user"), ("Acesso", "user.username")]
+    return [
+        ("Nome", "nome"),
+        ("E-mail", "email_user"),
+        ("Telefone", "telefone_user"),
+        ("Status", "status_user"),
+        ("Acesso", "user.username"),
+    ]
 
 
 def _colunas_professor():
-    return [("Nome", "nome"), ("E-mail", "email_prof"), ("Telefone", "telefone_prof"),
-            ("Status", "status_prof")]
+    return [
+        ("Nome", "nome"),
+        ("E-mail", "email_prof"),
+        ("Telefone", "telefone_prof"),
+        ("Status", "status_prof"),
+    ]
 
 
 def _colunas_aula():
-    return [("Aula", "nome"), ("Categoria", "categorias_exercicios"),
-            ("Restricao", "restricao"), ("Video", "file_de_video")]
+    return [
+        ("Aula", "nome"),
+        ("Categoria", "categorias_exercicios"),
+        ("Restricao", "restricao"),
+        ("Video", "file_de_video"),
+    ]
 
 
 def _colunas_plano():
@@ -443,8 +535,14 @@ def _colunas_plano():
 
 
 def _colunas_pagamento():
-    return [("Aluno", "usuario.username"), ("Plano", "plano.nome"), ("Valor", "valor_pago"),
-            ("Inicio", "data_inicio"), ("Fim", "data_fim"), ("Status", "status")]
+    return [
+        ("Aluno", "usuario.username"),
+        ("Plano", "plano.nome"),
+        ("Valor", "valor_pago"),
+        ("Inicio", "data_inicio"),
+        ("Fim", "data_fim"),
+        ("Status", "status"),
+    ]
 
 
 class AlunosView(ListaPainel):
@@ -492,8 +590,10 @@ class AlunoDetalheView(PainelMixin, DetailView):
                 else Agendamento.objects.none(),
                 self.request,
             ).order_by("-data_agendamento")[:10],
-            pode_anonimizar=nivel(self.request.user, Modulo.PRIVACIDADE.value,
-                                  rede=self.request.rede) >= 3,
+            pode_anonimizar=nivel(
+                self.request.user, Modulo.PRIVACIDADE.value, rede=self.request.rede
+            )
+            >= 3,
         )
         return contexto
 
@@ -504,8 +604,9 @@ class AlunoDetalheView(PainelMixin, DetailView):
         if impersonacao_ativa(self.request) is not None:
             return None  # suporte nao acessa ficha de saude (PRD 11.4)
         # LGPD art. 11: toda leitura de ficha de saude fica registrada (RNF-006e)
-        registrar_acesso_sensivel(self.request.rede, self.request.user, self.object,
-                                  origem="painel", acao="leitura")
+        registrar_acesso_sensivel(
+            self.request.rede, self.request.user, self.object, origem="painel", acao="leitura"
+        )
         return FichaSaudeForm(instance=ficha)
 
     def post(self, request, *args, **kwargs):
@@ -523,8 +624,13 @@ class AlunoDetalheView(PainelMixin, DetailView):
             nova = form.save(commit=False)
             nova.usuario = self.object
             nova.save()
-            registrar("alterar", "ficha_saude", entidade_id=self.object.pk,
-                      descricao="Ficha de saude atualizada via painel", request=request)
+            registrar(
+                "alterar",
+                "ficha_saude",
+                entidade_id=self.object.pk,
+                descricao="Ficha de saude atualizada via painel",
+                request=request,
+            )
             messages.success(request, "Ficha de saude atualizada.")
             return redirect("gestao:aluno_detalhe", pk=self.object.pk)
         contexto = self.get_context_data(object=self.object, ficha_form=form)
@@ -670,13 +776,16 @@ class AgendamentoConcluir(PainelMixin, View):
     nivel_minimo = "editar"
 
     def post(self, request, pk):
-        agendamento = get_object_or_404(
-            Agendamento.objects, pk=pk
-        )
+        agendamento = get_object_or_404(Agendamento.objects, pk=pk)
         agendamento.status = "Concluido"
         agendamento.save(update_fields=["status"])
-        registrar("alterar", "agendamento", entidade_id=agendamento.pk,
-                  descricao="Check-in realizado no painel", request=request)
+        registrar(
+            "alterar",
+            "agendamento",
+            entidade_id=agendamento.pk,
+            descricao="Check-in realizado no painel",
+            request=request,
+        )
         messages.success(request, "Presenca confirmada.")
         return redirect("gestao:agenda")
 
@@ -694,19 +803,23 @@ class FinanceiroView(PainelMixin, TemplateView):
         inicio_mes = hoje.replace(day=1)
         pagamentos = escopo_unidade(Pagamento.objects.all(), self.request)
         despesas = escopo_unidade(Despesa.objects.all(), self.request)
-        receita_mes = pagamentos.filter(status="pago", data_pagamento__gte=inicio_mes).aggregate(
-            total=Sum("valor_pago")
-        )["total"] or 0
-        despesa_mes = despesas.filter(data__gte=inicio_mes).aggregate(total=Sum("valor"))[
-            "total"
-        ] or 0
+        receita_mes = (
+            pagamentos.filter(status="pago", data_pagamento__gte=inicio_mes).aggregate(
+                total=Sum("valor_pago")
+            )["total"]
+            or 0
+        )
+        despesa_mes = (
+            despesas.filter(data__gte=inicio_mes).aggregate(total=Sum("valor"))["total"] or 0
+        )
         contexto.update(
             receita_mes=receita_mes,
             despesa_mes=despesa_mes,
             resultado_mes=receita_mes - despesa_mes,
             pendentes=pagamentos.filter(status="pendente").aggregate(total=Sum("valor_pago"))[
                 "total"
-            ] or 0,
+            ]
+            or 0,
             vencendo=pagamentos.filter(
                 status="pago", data_fim__gte=hoje, data_fim__lte=hoje + timedelta(days=7)
             ).count(),
@@ -801,8 +914,13 @@ class PagamentoBaixar(PainelMixin, View):
         pagamento.status = "pago"
         pagamento.data_pagamento = timezone.localdate()
         pagamento.save(update_fields=["status", "data_pagamento"])
-        registrar("alterar", "pagamento", entidade_id=pagamento.pk,
-                  descricao="Baixa manual de pagamento no painel", request=request)
+        registrar(
+            "alterar",
+            "pagamento",
+            entidade_id=pagamento.pk,
+            descricao="Baixa manual de pagamento no painel",
+            request=request,
+        )
         messages.success(request, f"Pagamento de {pagamento.usuario} marcado como pago.")
         return redirect("gestao:pagamentos")
 
@@ -811,8 +929,12 @@ class DespesasView(ListaPainel):
     model = Despesa
     modulo = Modulo.FINANCEIRO
     titulo = "Despesas"
-    colunas = [("Descricao", "descricao"), ("Valor", "valor"), ("Data", "data"),
-               ("Categoria", "categoria")]
+    colunas = [
+        ("Descricao", "descricao"),
+        ("Valor", "valor"),
+        ("Data", "data"),
+        ("Categoria", "categoria"),
+    ]
     campo_busca = ("descricao", "categoria")
     url_novo = "gestao:despesa_nova"
     url_editar = "gestao:despesa_editar"
@@ -886,7 +1008,8 @@ class RelatoriosView(PainelMixin, TemplateView):
             inadimplentes=pagamentos.filter(status="pendente").values("usuario").distinct().count(),
             receita_total=pagamentos.filter(status="pago").aggregate(total=Sum("valor_pago"))[
                 "total"
-            ] or 0,
+            ]
+            or 0,
             vencendo_7=pagamentos.filter(
                 status="pago", data_fim__gte=hoje, data_fim__lte=hoje + timedelta(days=7)
             ).count(),
@@ -914,10 +1037,16 @@ class RelatorioAlunosCsv(ModuloDePacoteMixin, PainelMixin, View):
         escritor = csv.writer(resposta, delimiter=";")
         escritor.writerow(["Nome", "E-mail", "Telefone", "CPF/CNPJ", "Status", "Acesso"])
         for aluno in escopo_unidade(Usuario.objects.all(), request).select_related("user"):
-            escritor.writerow([
-                aluno.nome, aluno.email_user, aluno.telefone_user, aluno.cpf_cnpj_user,
-                aluno.status_user, getattr(aluno.user, "username", ""),
-            ])
+            escritor.writerow(
+                [
+                    aluno.nome,
+                    aluno.email_user,
+                    aluno.telefone_user,
+                    aluno.cpf_cnpj_user,
+                    aluno.status_user,
+                    getattr(aluno.user, "username", ""),
+                ]
+            )
         registrar("exportar", "aluno", descricao="Exportacao CSV de alunos", request=request)
         return resposta
 
@@ -933,16 +1062,20 @@ class RelatorioPagamentosCsv(ModuloDePacoteMixin, PainelMixin, View):
         for pagamento in escopo_unidade(Pagamento.objects.all(), request).select_related(
             "usuario", "plano"
         ):
-            escritor.writerow([
-                getattr(pagamento.usuario, "username", ""),
-                getattr(pagamento.plano, "nome", ""),
-                pagamento.valor_pago,
-                pagamento.data_inicio,
-                pagamento.data_fim,
-                pagamento.status,
-                pagamento.data_pagamento,
-            ])
-        registrar("exportar", "pagamento", descricao="Exportacao CSV de pagamentos", request=request)
+            escritor.writerow(
+                [
+                    getattr(pagamento.usuario, "username", ""),
+                    getattr(pagamento.plano, "nome", ""),
+                    pagamento.valor_pago,
+                    pagamento.data_inicio,
+                    pagamento.data_fim,
+                    pagamento.status,
+                    pagamento.data_pagamento,
+                ]
+            )
+        registrar(
+            "exportar", "pagamento", descricao="Exportacao CSV de pagamentos", request=request
+        )
         return resposta
 
 
@@ -956,10 +1089,13 @@ class ComunicacaoView(PainelMixin, View):
         email = ConfiguracaoEmail.todos.filter(rede=request.rede).first()
         whats = ConfiguracaoWhatsapp.todos.filter(rede=request.rede).first()
         return {
-            "painel": True, "titulo": self.titulo, "modulo": self.modulo,
+            "painel": True,
+            "titulo": self.titulo,
+            "modulo": self.modulo,
             "form_email": form_email or EmailConfigForm(instance=email, prefix="email"),
             "form_whats": form_whats or WhatsappConfigForm(instance=whats, prefix="whatsapp"),
-            "config_email": email, "config_whats": whats,
+            "config_email": email,
+            "config_whats": whats,
             "pode_editar": pode(request.user, self.modulo, "editar", rede=request.rede),
         }
 
@@ -976,8 +1112,13 @@ class ComunicacaoView(PainelMixin, View):
             config.rede = request.rede
             config.unidade = request.unidade
             config.save()
-            registrar("alterar", "comunicacao", entidade_id=config.pk,
-                      descricao="Configuracao de e-mail atualizada", request=request)
+            registrar(
+                "alterar",
+                "comunicacao",
+                entidade_id=config.pk,
+                descricao="Configuracao de e-mail atualizada",
+                request=request,
+            )
             messages.success(request, "Configuracao de e-mail salva.")
             return redirect("gestao:comunicacao")
         if "whatsapp-access_token" in request.POST and not modulo_disponivel(
@@ -993,13 +1134,17 @@ class ComunicacaoView(PainelMixin, View):
             config.rede = request.rede
             config.unidade = request.unidade
             config.save()
-            registrar("alterar", "comunicacao", entidade_id=config.pk,
-                      descricao="Configuracao de WhatsApp atualizada", request=request)
+            registrar(
+                "alterar",
+                "comunicacao",
+                entidade_id=config.pk,
+                descricao="Configuracao de WhatsApp atualizada",
+                request=request,
+            )
             messages.success(request, "Configuracao de WhatsApp salva.")
             return redirect("gestao:comunicacao")
         messages.error(request, "Nao foi possivel salvar: confira os campos destacados.")
-        return render(request, self.template_name,
-                      self.contexto(request, form_email, form_whats))
+        return render(request, self.template_name, self.contexto(request, form_email, form_whats))
 
 
 class ComunicacaoTesteView(PainelMixin, View):
@@ -1016,10 +1161,14 @@ class ComunicacaoTesteView(PainelMixin, View):
         corpo = "Este e um e-mail de teste enviado pelo painel da academia."
         try:
             de = enviar_email(request.rede, assunto, corpo, [destino])
-            registrar("enviar", "comunicacao", descricao=f"E-mail de teste para {destino}",
-                      request=request)
+            registrar(
+                "enviar",
+                "comunicacao",
+                descricao=f"E-mail de teste para {destino}",
+                request=request,
+            )
             messages.success(request, f"E-mail de teste enviado para {destino} (remetente {de}).")
-        except Exception as erro:  # noqa: BLE001
+        except Exception as erro:
             messages.error(request, f"Falha ao enviar: {erro}")
         return redirect("gestao:comunicacao")
 
@@ -1034,10 +1183,13 @@ class IdentidadeView(PainelMixin, View):
         config = Configuracao.todos.filter(rede=request.rede).first()
         visual = IdentidadeVisual.todos.filter(rede=request.rede).first()
         return {
-            "painel": True, "titulo": self.titulo, "modulo": self.modulo,
+            "painel": True,
+            "titulo": self.titulo,
+            "modulo": self.modulo,
             "form_config": form_config or ConfiguracaoForm(instance=config, prefix="config"),
             "form_visual": form_visual or IdentidadeForm(instance=visual, prefix="visual"),
-            "config": config, "visual": visual,
+            "config": config,
+            "visual": visual,
             "pode_editar": pode(request.user, self.modulo, "editar", rede=request.rede),
         }
 
@@ -1054,8 +1206,13 @@ class IdentidadeView(PainelMixin, View):
             objeto.rede = request.rede
             objeto.unidade = request.unidade
             objeto.save()
-            registrar("alterar", "configuracao", entidade_id=objeto.pk,
-                      descricao="Dados da academia atualizados", request=request)
+            registrar(
+                "alterar",
+                "configuracao",
+                entidade_id=objeto.pk,
+                descricao="Dados da academia atualizados",
+                request=request,
+            )
             messages.success(request, "Dados da academia salvos.")
             return redirect("gestao:identidade")
         if "visual-logotipo" in request.POST and form_visual.is_valid():
@@ -1063,8 +1220,13 @@ class IdentidadeView(PainelMixin, View):
             objeto.rede = request.rede
             objeto.unidade = request.unidade
             objeto.save()
-            registrar("alterar", "identidade", entidade_id=objeto.pk,
-                      descricao="Identidade visual atualizada", request=request)
+            registrar(
+                "alterar",
+                "identidade",
+                entidade_id=objeto.pk,
+                descricao="Identidade visual atualizada",
+                request=request,
+            )
             messages.success(request, "Identidade visual salva.")
             return redirect("gestao:identidade")
         messages.error(request, "Nao foi possivel salvar: confira os campos destacados.")
@@ -1076,8 +1238,14 @@ class AuditoriaView(ListaPainel):
     model = RegistroAuditoria
     modulo = Modulo.AUDITORIA
     titulo = "Auditoria"
-    colunas = [("Quando", "criado_em"), ("Quem", "usuario.username"), ("Acao", "acao"),
-               ("Entidade", "entidade"), ("Descricao", "descricao"), ("IP", "ip")]
+    colunas = [
+        ("Quando", "criado_em"),
+        ("Quem", "usuario.username"),
+        ("Acao", "acao"),
+        ("Entidade", "entidade"),
+        ("Descricao", "descricao"),
+        ("IP", "ip"),
+    ]
     texto_vazio = "Nenhum evento registrado."
     mostrar_arquivados = False
     paginate_by = 50
@@ -1106,7 +1274,9 @@ class EquipeView(PainelMixin, TemplateView):
             vinculos=VinculoUsuario.todos.filter(rede=self.request.rede)
             .select_related("usuario", "unidade")
             .order_by("papel"),
-            convites=ConviteEquipe.objects.filter(rede=self.request.rede).order_by("-criado_em")[:20],
+            convites=ConviteEquipe.objects.filter(rede=self.request.rede).order_by("-criado_em")[
+                :20
+            ],
             form=ConviteForm(unidades=unidades_do_usuario(self.request.user)),
             unidades=unidades_do_usuario(self.request.user),
         )
@@ -1146,11 +1316,15 @@ class ConviteNovo(EdicaoMixin, CreateView):
                 [convite.email],
             )
             enviado = True
-        except Exception as erro:  # noqa: BLE001
+        except Exception as erro:
             messages.warning(self.request, f"Convite criado, mas o e-mail falhou: {erro}")
-        registrar("criar", "convite", entidade_id=convite.pk,
-                  descricao=f"Convite para {convite.email} ({convite.get_papel_display()})",
-                  request=self.request)
+        registrar(
+            "criar",
+            "convite",
+            entidade_id=convite.pk,
+            descricao=f"Convite para {convite.email} ({convite.get_papel_display()})",
+            request=self.request,
+        )
         if enviado:
             messages.success(self.request, f"Convite enviado para {convite.email}.")
         else:
@@ -1166,8 +1340,13 @@ class ConviteCancelar(EdicaoMixin, View):
         convite = get_object_or_404(ConviteEquipe.objects, pk=pk, rede=request.rede)
         convite.status = ConviteEquipe.Status.CANCELADO
         convite.save(update_fields=["status"])
-        registrar("alterar", "convite", entidade_id=convite.pk,
-                  descricao=f"Convite de {convite.email} cancelado", request=request)
+        registrar(
+            "alterar",
+            "convite",
+            entidade_id=convite.pk,
+            descricao=f"Convite de {convite.email} cancelado",
+            request=request,
+        )
         messages.success(request, "Convite cancelado.")
         return redirect("gestao:equipe")
 
@@ -1185,9 +1364,13 @@ class VinculoAlternar(EdicaoMixin, View):
             return redirect("gestao:equipe")
         vinculo.ativo = not vinculo.ativo
         vinculo.save(update_fields=["ativo"])
-        registrar("alterar", "vinculo", entidade_id=vinculo.pk,
-                  descricao=f"Acesso de {vinculo.usuario} {'ativado' if vinculo.ativo else 'desativado'}",
-                  request=request)
+        registrar(
+            "alterar",
+            "vinculo",
+            entidade_id=vinculo.pk,
+            descricao=f"Acesso de {vinculo.usuario} {'ativado' if vinculo.ativo else 'desativado'}",
+            request=request,
+        )
         messages.success(
             request, f"Acesso de {vinculo.usuario} {'ativado' if vinculo.ativo else 'desativado'}."
         )
@@ -1213,7 +1396,8 @@ class SegurancaView(PainelMixin, TemplateView):
             confirmado_em=getattr(dispositivo, "confirmado_em", None),
             ultimo_uso=getattr(dispositivo, "ultimo_uso_em", None),
             codigos_disponiveis=CodigoRecuperacao.objects.filter(
-                usuario=self.request.user, usado_em__isnull=True).count(),
+                usuario=self.request.user, usado_em__isnull=True
+            ).count(),
             tentativas=TentativaDeLogin.objects.filter(identificador__in=identificadores)[:15],
             recentes=TentativaDeLogin.objects.all()[:10],
         )
@@ -1233,7 +1417,8 @@ class PrivacidadeView(PainelMixin, TemplateView):
 
         contexto = super().get_context_data(**kwargs)
         abertas = SolicitacaoTitular.objects.filter(
-            rede=self.request.rede, situacao=SolicitacaoTitular.Situacao.ABERTA)
+            rede=self.request.rede, situacao=SolicitacaoTitular.Situacao.ABERTA
+        )
         contexto.update(
             solicitacoes=SolicitacaoTitular.objects.filter(rede=self.request.rede)[:25],
             abertas=abertas.count(),
@@ -1261,13 +1446,20 @@ class SolicitacaoTitularView(PainelMixin, View):
             messages.error(request, "Informe o nome do titular.")
             return redirect("gestao:privacidade")
         pedido = SolicitacaoTitular.objects.create(
-            rede=request.rede, titular_nome=nome,
+            rede=request.rede,
+            titular_nome=nome,
             titular_email=(request.POST.get("titular_email") or "").strip(),
-            tipo=tipo, descricao=(request.POST.get("descricao") or "").strip(),
+            tipo=tipo,
+            descricao=(request.POST.get("descricao") or "").strip(),
             prazo_em=prazo_do_pedido(),
         )
-        registrar("criar", "solicitacao_titular", entidade_id=pedido.pk,
-                  descricao=f"Pedido de {pedido.get_tipo_display()} do titular {nome}", request=request)
+        registrar(
+            "criar",
+            "solicitacao_titular",
+            entidade_id=pedido.pk,
+            descricao=f"Pedido de {pedido.get_tipo_display()} do titular {nome}",
+            request=request,
+        )
         messages.success(request, f"Pedido registrado. Prazo legal até {pedido.prazo_em:%d/%m/%Y}.")
         return redirect("gestao:privacidade")
 
@@ -1284,9 +1476,13 @@ class ConcluirSolicitacaoView(PainelMixin, View):
         pedido.resposta = (request.POST.get("resposta") or "").strip()
         pedido.concluida_em = timezone.now()
         pedido.save(update_fields=["situacao", "resposta", "concluida_em", "atualizado_em"])
-        registrar("alterar", "solicitacao_titular", entidade_id=pedido.pk,
-                  descricao=f"Pedido de {pedido.get_tipo_display()} -> {pedido.get_situacao_display()}",
-                  request=request)
+        registrar(
+            "alterar",
+            "solicitacao_titular",
+            entidade_id=pedido.pk,
+            descricao=f"Pedido de {pedido.get_tipo_display()} -> {pedido.get_situacao_display()}",
+            request=request,
+        )
         messages.success(request, "Pedido atualizado.")
         return redirect("gestao:privacidade")
 
@@ -1302,8 +1498,13 @@ class ExportarTitularView(PainelMixin, View):
 
         aluno = get_object_or_404(Usuario.todos, pk=pk, rede=request.rede)
         conteudo = exportar_titular_zip(request.rede, aluno)
-        registrar("exportar", "titular", entidade_id=aluno.pk,
-                  descricao=f"Dados do titular {aluno.nome} exportados (LGPD)", request=request)
+        registrar(
+            "exportar",
+            "titular",
+            entidade_id=aluno.pk,
+            descricao=f"Dados do titular {aluno.nome} exportados (LGPD)",
+            request=request,
+        )
         resposta = HttpResponse(conteudo, content_type="application/zip")
         resposta["Content-Disposition"] = f'attachment; filename="dados-titular-{aluno.pk}.zip"'
         return resposta
@@ -1322,8 +1523,12 @@ class AnonimizarTitularView(PainelMixin, View):
         if (request.POST.get("confirmacao") or "").strip().upper() != "ANONIMIZAR":
             messages.error(request, "Para confirmar, digite ANONIMIZAR no campo de confirmação.")
             return redirect("gestao:aluno_detalhe", pk=aluno.pk)
-        resultado = anonimizar_titular(request.rede, aluno, usuario=request.user,
-                                       motivo=(request.POST.get("motivo") or "").strip())
+        resultado = anonimizar_titular(
+            request.rede,
+            aluno,
+            usuario=request.user,
+            motivo=(request.POST.get("motivo") or "").strip(),
+        )
         messages.success(
             request,
             f"Titular anonimizado ({resultado['marcador']}). Os pagamentos foram preservados por "
@@ -1368,15 +1573,18 @@ class VerificarDominioView(PainelMixin, View):
             rede.dominio_status = "pendente_dns"
             rede.save(update_fields=["dominio", "dominio_status", "atualizado_em"])
         resultado = verificar_dominio(rede, forcar=True)
-        registrar("alterar", "dominio", entidade_id=rede.pk,
-                  descricao=f"Verificacao de dominio {rede.dominio}: {resultado['mensagem'][:120]}",
-                  request=request)
+        registrar(
+            "alterar",
+            "dominio",
+            entidade_id=rede.pk,
+            descricao=f"Verificacao de dominio {rede.dominio}: {resultado['mensagem'][:120]}",
+            request=request,
+        )
         if resultado["ok"]:
             messages.success(request, "Domínio confirmado! Agora vamos emitir o certificado.")
         else:
             messages.warning(request, resultado["mensagem"])
         return redirect("gestao:dominio")
-
 
 
 class ConviteAceitarView(View):
@@ -1389,27 +1597,35 @@ class ConviteAceitarView(View):
 
     def get(self, request, token):
         convite = self._convite(token)
-        return render(request, self.template_name, {
-            "convite": convite, "valido": convite.esta_valido(),
-            "form": NovaContaForm(), "logado": request.user.is_authenticated,
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "convite": convite,
+                "valido": convite.esta_valido(),
+                "form": NovaContaForm(),
+                "logado": request.user.is_authenticated,
+            },
+        )
 
     def post(self, request, token):
         convite = self._convite(token)
         if not convite.esta_valido():
-            return render(request, self.template_name,
-                          {"convite": convite, "valido": False, "form": NovaContaForm()})
+            return render(
+                request,
+                self.template_name,
+                {"convite": convite, "valido": False, "form": NovaContaForm()},
+            )
         if request.user.is_authenticated:
             convite.aceitar(request.user)
             messages.success(request, "Convite aceito. Bem-vindo(a)!")
             return redirect("gestao:visao_geral")
         form = NovaContaForm(request.POST)
         if not form.is_valid():
-            return render(request, self.template_name,
-                          {"convite": convite, "valido": True, "form": form})
-        usuario, _ = criar_ou_vincular_usuario(
-            convite.email, form.cleaned_data["senha"], {}
-        )
+            return render(
+                request, self.template_name, {"convite": convite, "valido": True, "form": form}
+            )
+        usuario, _ = criar_ou_vincular_usuario(convite.email, form.cleaned_data["senha"], {})
         if usuario is None:
             messages.error(request, "Nao foi possivel criar o acesso.")
             return redirect("login")

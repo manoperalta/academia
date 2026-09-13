@@ -1,13 +1,37 @@
 """Validacoes do cadastro publico (CNPJ numerico e alfanumerico, slug)."""
+
 from __future__ import annotations
 
 import re
 import unicodedata
 
 SLUGS_RESERVADOS = {
-    "www", "api", "admin", "app", "apps", "gestao", "plataforma", "painel", "academia",
-    "static", "media", "docs", "help", "suporte", "mail", "blog", "site", "sistema",
-    "conta", "contas", "login", "cadastro", "planos", "sobre", "contato", "status",
+    "www",
+    "api",
+    "admin",
+    "app",
+    "apps",
+    "gestao",
+    "plataforma",
+    "painel",
+    "academia",
+    "static",
+    "media",
+    "docs",
+    "help",
+    "suporte",
+    "mail",
+    "blog",
+    "site",
+    "sistema",
+    "conta",
+    "contas",
+    "login",
+    "cadastro",
+    "planos",
+    "sobre",
+    "contato",
+    "status",
 }
 
 PESOS_CNPJ = ([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])

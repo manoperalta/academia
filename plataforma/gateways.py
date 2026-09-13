@@ -1,4 +1,5 @@
 """Gateway de pagamento: Asaas (real) e modo simulado (sem credencial)."""
+
 from __future__ import annotations
 
 import logging
@@ -58,7 +59,9 @@ class GatewayAsaas(GatewayBase):
         "producao": "https://api.asaas.com/v3",
     }
 
-    def __init__(self, api_key: str, ambiente: str = "sandbox", base_url: str = "", timeout: int = 20):
+    def __init__(
+        self, api_key: str, ambiente: str = "sandbox", base_url: str = "", timeout: int = 20
+    ):
         self.api_key = api_key
         self.base_url = (base_url or self.BASES.get(ambiente) or self.BASES["sandbox"]).rstrip("/")
         self.timeout = timeout
@@ -81,7 +84,7 @@ class GatewayAsaas(GatewayBase):
                     "User-Agent": "SafeStack-Academia/1.0",
                 },
             )
-        except Exception as erro:  # noqa: BLE001 - qualquer falha de rede vira indisponibilidade
+        except Exception as erro:
             raise GatewayError(f"falha de rede ao chamar {url}: {erro}") from erro
         if resposta.status_code >= 400:
             raise GatewayError(f"Asaas {resposta.status_code}: {resposta.text[:300]}")

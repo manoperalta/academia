@@ -3,6 +3,7 @@
 Reune as regras de RNF-009, RNF-010 e RNF-006 (LGPD) num so lugar, para o
 middleware, as views e os testes usarem a mesma fonte de verdade.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -89,7 +90,8 @@ def iniciar_2fa(usuario):
 
     segredo = totp.gerar_segredo()
     dispositivo, _ = Dispositivo2FA.objects.update_or_create(
-        usuario=usuario, defaults={"segredo": segredo, "confirmado_em": None},
+        usuario=usuario,
+        defaults={"segredo": segredo, "confirmado_em": None},
     )
     return dispositivo
 
@@ -121,7 +123,9 @@ def desativar_2fa(usuario) -> None:
     CodigoRecuperacao.objects.filter(usuario=usuario).delete()
 
 
-def gerar_codigos_de_recuperacao(usuario, quantidade: int = MAXIMO_DE_CODIGOS_DE_RECUPERACAO) -> list[str]:
+def gerar_codigos_de_recuperacao(
+    usuario, quantidade: int = MAXIMO_DE_CODIGOS_DE_RECUPERACAO
+) -> list[str]:
     """Devolve os codigos em texto puro UMA vez; guarda apenas o hash."""
     from governanca.models import CodigoRecuperacao
 
@@ -130,7 +134,8 @@ def gerar_codigos_de_recuperacao(usuario, quantidade: int = MAXIMO_DE_CODIGOS_DE
     for _ in range(quantidade):
         codigo = f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper()
         CodigoRecuperacao.objects.create(
-            usuario=usuario, hash_codigo=CodigoRecuperacao.gerar_hash(codigo),
+            usuario=usuario,
+            hash_codigo=CodigoRecuperacao.gerar_hash(codigo),
         )
         codigos.append(codigo)
     return codigos
@@ -143,7 +148,9 @@ def usar_codigo_de_recuperacao(usuario, codigo: str) -> bool:
     if not normalizado:
         return False
     registro = CodigoRecuperacao.objects.filter(
-        usuario=usuario, hash_codigo=CodigoRecuperacao.gerar_hash(normalizado), usado_em__isnull=True,
+        usuario=usuario,
+        hash_codigo=CodigoRecuperacao.gerar_hash(normalizado),
+        usado_em__isnull=True,
     ).first()
     if registro is None:
         return False
@@ -181,7 +188,9 @@ def caminho_e_do_tenant(caminho: str, rede) -> bool:
     """Confere se o arquivo esta no namespace do cliente (nunca aceita subir de pasta)."""
     if not caminho or not rede:
         return False
-    partes = [pedaco for pedaco in str(caminho).replace("\\", "/").split("/") if pedaco not in ("", ".")]
+    partes = [
+        pedaco for pedaco in str(caminho).replace("\\", "/").split("/") if pedaco not in ("", ".")
+    ]
     if any(pedaco == ".." for pedaco in partes):
         return False
     return len(partes) >= 2 and partes[0] == "redes" and partes[1] == prefixo_de_midia(rede)
@@ -215,11 +224,14 @@ def registrar_acesso_sensivel(rede, usuario, titular, origem="painel", acao="lei
 
     try:
         return AcessoDadoSensivel.objects.create(
-            rede=rede, usuario=usuario if getattr(usuario, "pk", None) else None,
+            rede=rede,
+            usuario=usuario if getattr(usuario, "pk", None) else None,
             titular_nome=getattr(titular, "nome", str(titular))[:150],
-            usuario_id_titular=getattr(titular, "pk", None), origem=origem, acao=acao,
+            usuario_id_titular=getattr(titular, "pk", None),
+            origem=origem,
+            acao=acao,
         )
-    except Exception as erro:  # noqa: BLE001 - auditoria nunca derruba a tela
+    except Exception as erro:
         logger.warning("falha ao registrar acesso a dado sensivel: %s", erro)
         return None
 

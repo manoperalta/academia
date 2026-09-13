@@ -1,4 +1,5 @@
 """Fixtures da API v1 (fase 7)."""
+
 from __future__ import annotations
 
 import pytest
@@ -13,7 +14,8 @@ SENHA = "SenhaForteTeste123"
 @pytest.fixture
 def admin_da_rede_senha(db, rede):
     usuario = get_user_model().objects.create_user(
-        username="admin.api", password=SENHA, email="admin.api@academia.com.br")
+        username="admin.api", password=SENHA, email="admin.api@academia.com.br"
+    )
     VinculoUsuario.todos.create(usuario=usuario, rede=rede, papel=Papel.ADMIN_REDE, ativo=True)
     return usuario, SENHA
 
@@ -31,16 +33,27 @@ def receita(db, rede):
 
     hoje = timezone.localdate()
     unidade = Unidade.objects.create(rede=rede, nome="Unidade API", codigo="api", status="ativa")
-    plano = Plano.objects.create(rede=rede, unidade=unidade, nome="Mensal API", tipo="mensal",
-                                 valor=Decimal("150.00"))
+    plano = Plano.objects.create(
+        rede=rede, unidade=unidade, nome="Mensal API", tipo="mensal", valor=Decimal("150.00")
+    )
     for posicao in range(3):
         login = get_user_model().objects.create_user(
-            username=f"aluno.api.{posicao}", password=SENHA, email=f"api{posicao}@x.com")
-        aluno = Usuario.todos.create(rede=rede, unidade=unidade, user=login,
-                                     nome=f"Aluno API {posicao}", status_user="Ativo")
-        Pagamento.objects.create(rede=rede, unidade=unidade, usuario=login, plano=plano,
-                                 valor_pago=Decimal("150.00"), data_pagamento=hoje,
-                                 data_inicio=hoje, data_fim=hoje + timedelta(days=30), status="pago")
+            username=f"aluno.api.{posicao}", password=SENHA, email=f"api{posicao}@x.com"
+        )
+        aluno = Usuario.todos.create(
+            rede=rede, unidade=unidade, user=login, nome=f"Aluno API {posicao}", status_user="Ativo"
+        )
+        Pagamento.objects.create(
+            rede=rede,
+            unidade=unidade,
+            usuario=login,
+            plano=plano,
+            valor_pago=Decimal("150.00"),
+            data_pagamento=hoje,
+            data_inicio=hoje,
+            data_fim=hoje + timedelta(days=30),
+            status="pago",
+        )
     return {"unidade": unidade, "plano": plano}
 
 
@@ -50,7 +63,8 @@ def outras_redes(db):
     from usuarios.models import Usuario
 
     outra = Rede.todos.create(nome="Outra Academia", slug="outra-academia", status="ativo")
-    login = get_user_model().objects.create_user(username="aluno.outra", password=SENHA,
-                                                 email="outra@x.com")
+    login = get_user_model().objects.create_user(
+        username="aluno.outra", password=SENHA, email="outra@x.com"
+    )
     Usuario.todos.create(rede=outra, user=login, nome="Outra Aluna", status_user="Ativo")
     return [outra]

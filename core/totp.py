@@ -3,6 +3,7 @@
 Usado no 2FA do painel (RNF-009). Compatível com Google Authenticator, Authy,
 1Password e afins (SHA-1, 6 digitos, janela de 30s).
 """
+
 from __future__ import annotations
 
 import base64
@@ -36,13 +37,23 @@ def _codigo_do_contador(segredo: str, contador: int, digitos: int) -> str:
     return str(numero % (10**digitos)).zfill(digitos)
 
 
-def codigo_atual(segredo: str, instante: float | None = None, digitos: int = DIGITOS_PADRAO,
-                 janela: int = JANELA_PADRAO) -> str:
+def codigo_atual(
+    segredo: str,
+    instante: float | None = None,
+    digitos: int = DIGITOS_PADRAO,
+    janela: int = JANELA_PADRAO,
+) -> str:
     return _codigo_do_contador(segredo, _contador(instante, janela), digitos)
 
 
-def validar(segredo: str, codigo: str, instante: float | None = None, digitos: int = DIGITOS_PADRAO,
-            janela: int = JANELA_PADRAO, tolerancia: int = 1) -> bool:
+def validar(
+    segredo: str,
+    codigo: str,
+    instante: float | None = None,
+    digitos: int = DIGITOS_PADRAO,
+    janela: int = JANELA_PADRAO,
+    tolerancia: int = 1,
+) -> bool:
     """Aceita o codigo atual e os vizinhos (+-tolerancia janelas) para tolerar relogio atrasado."""
     codigo = (codigo or "").strip().replace(" ", "")
     if not codigo.isdigit() or len(codigo) != digitos:
@@ -54,9 +65,16 @@ def validar(segredo: str, codigo: str, instante: float | None = None, digitos: i
     )
 
 
-def uri_otpauth(segredo: str, conta: str, emissor: str = "Academia SaaS",
-                digitos: int = DIGITOS_PADRAO, janela: int = JANELA_PADRAO) -> str:
+def uri_otpauth(
+    segredo: str,
+    conta: str,
+    emissor: str = "Academia SaaS",
+    digitos: int = DIGITOS_PADRAO,
+    janela: int = JANELA_PADRAO,
+) -> str:
     """URI para o app autenticador (mostrada como QR ou digitada a mao)."""
     rotulo = quote(f"{emissor}:{conta}")
-    parametros = f"secret={segredo}&issuer={quote(emissor)}&algorithm=SHA1&digits={digitos}&period={janela}"
+    parametros = (
+        f"secret={segredo}&issuer={quote(emissor)}&algorithm=SHA1&digits={digitos}&period={janela}"
+    )
     return f"otpauth://totp/{rotulo}?{parametros}"

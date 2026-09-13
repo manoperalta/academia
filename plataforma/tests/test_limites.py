@@ -1,17 +1,18 @@
 """Limites do pacote: contagem, bloqueio no teto, avisos e feature flags."""
+
 from __future__ import annotations
 
-from decimal import Decimal
-
-import pytest
 from django.urls import reverse
 
 from api.models import RegistroAuditoria
-from core.models import VinculoUsuario
 from notificacoes.models import ConfiguracaoWhatsapp
 from plataforma.models import Assinatura, ModuloPacote
 from plataforma.servicos import (
-    alertas_de_limite, limites_efetivos, modulo_disponivel, pode_cadastrar, situacao_do_tenant,
+    alertas_de_limite,
+    limites_efetivos,
+    modulo_disponivel,
+    pode_cadastrar,
+    situacao_do_tenant,
     uso_do_tenant,
 )
 from plataforma.tests.conftest import criar_alunos, criar_assinatura
@@ -78,8 +79,12 @@ def test_painel_recusa_cadastro_no_teto(cliente_logado, rede, assinatura):
     criar_alunos(rede, 100)
     resposta = cliente_logado.post(
         reverse("gestao:aluno_novo"),
-        {"nome": "Aluno Excedente", "email_user": "excedente@exemplo.com",
-         "telefone_user": "51", "status_user": "Ativo"},
+        {
+            "nome": "Aluno Excedente",
+            "email_user": "excedente@exemplo.com",
+            "telefone_user": "51",
+            "status_user": "Ativo",
+        },
     )
     assert resposta.status_code == 302
     assert not Usuario.objects.filter(email_user="excedente@exemplo.com").exists()
@@ -90,8 +95,12 @@ def test_painel_permite_cadastro_abaixo_do_teto(cliente_logado, rede, assinatura
     criar_alunos(rede, 99)
     cliente_logado.post(
         reverse("gestao:aluno_novo"),
-        {"nome": "Aluno Noventa e Nove", "email_user": "ultimo@exemplo.com",
-         "telefone_user": "51", "status_user": "Ativo"},
+        {
+            "nome": "Aluno Noventa e Nove",
+            "email_user": "ultimo@exemplo.com",
+            "telefone_user": "51",
+            "status_user": "Ativo",
+        },
     )
     assert Usuario.objects.filter(email_user="ultimo@exemplo.com").exists()
 
@@ -118,8 +127,11 @@ def test_modulo_do_pacote(db, rede, pacote_bronze, pacote_prata):
 def test_whatsapp_bloqueado_sem_modulo(cliente_logado, rede, assinatura):
     resposta = cliente_logado.post(
         reverse("gestao:comunicacao"),
-        {"whatsapp-access_token": "token-fake", "whatsapp-phone_number_id": "123",
-         "whatsapp-ativo": "on"},
+        {
+            "whatsapp-access_token": "token-fake",
+            "whatsapp-phone_number_id": "123",
+            "whatsapp-ativo": "on",
+        },
     )
     assert resposta.status_code == 302
     assert not ConfiguracaoWhatsapp.todos.filter(rede=rede).exists()

@@ -1,4 +1,5 @@
 """Webhooks de saida: assinatura HMAC, reentrega com backoff e log (RF-API-001/002/003)."""
+
 from __future__ import annotations
 
 import json
@@ -19,22 +20,35 @@ TEMPO_LIMITE = 10
 
 #: Eventos publicados (RF-API-001).
 EVENTOS = {
-    "aluno.criado", "aluno.inativado", "matricula.criada", "contrato.cancelado",
-    "cobranca.gerada", "pagamento.confirmado", "pagamento.estornado", "checkin.realizado",
-    "avaliacao.criada", "limite.pacote_atingido", "unidade.criada", "repasse.emitido",
-    "fatura_plataforma.paga", "tenant.suspenso",
+    "aluno.criado",
+    "aluno.inativado",
+    "matricula.criada",
+    "contrato.cancelado",
+    "cobranca.gerada",
+    "pagamento.confirmado",
+    "pagamento.estornado",
+    "checkin.realizado",
+    "avaliacao.criada",
+    "limite.pacote_atingido",
+    "unidade.criada",
+    "repasse.emitido",
+    "fatura_plataforma.paga",
+    "tenant.suspenso",
 }
 
 
 def _postar(url: str, corpo: bytes, cabecalhos: dict, timeout: int = TEMPO_LIMITE):
     requisicao = urllib.request.Request(url, data=corpo, headers=cabecalhos, method="POST")
-    with urllib.request.urlopen(requisicao, timeout=timeout) as resposta:  # noqa: S310 - url do cliente
+    with urllib.request.urlopen(requisicao, timeout=timeout) as resposta:
         return resposta.status, resposta.read()[:400].decode("utf-8", "replace")
 
 
 def enfileirar_entrega(webhook: WebhookDeSaida, evento: str, payload: dict) -> EntregaDeWebhook:
     return EntregaDeWebhook.objects.create(
-        webhook=webhook, evento=evento, entrega=secrets.token_hex(16), payload=payload,
+        webhook=webhook,
+        evento=evento,
+        entrega=secrets.token_hex(16),
+        payload=payload,
     )
 
 
@@ -45,8 +59,11 @@ def disparar_evento(evento: str, payload: dict, rede=None) -> list[EntregaDeWebh
     webhooks = WebhookDeSaida.objects.filter(estado=WebhookDeSaida.Estado.ATIVO).filter(
         Q(rede=rede) | Q(rede__isnull=True)
     )
-    entregas = [enfileirar_entrega(webhook, evento, payload)
-                for webhook in webhooks if webhook.escuta(evento)]
+    entregas = [
+        enfileirar_entrega(webhook, evento, payload)
+        for webhook in webhooks
+        if webhook.escuta(evento)
+    ]
     return entregas
 
 
@@ -54,9 +71,15 @@ def entregar(entrega: EntregaDeWebhook, agora=None) -> EntregaDeWebhook:
     """Tenta uma entrega; em falha agenda a proxima tentativa com backoff."""
     agora = agora or timezone.now()
     webhook = entrega.webhook
-    corpo = json.dumps({"evento": entrega.evento, "entrega": entrega.entrega,
-                        "enviado_em": agora.isoformat(), "dados": entrega.payload},
-                       ensure_ascii=False).encode("utf-8")
+    corpo = json.dumps(
+        {
+            "evento": entrega.evento,
+            "entrega": entrega.entrega,
+            "enviado_em": agora.isoformat(),
+            "dados": entrega.payload,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
     momento = int(time.time())
     cabecalhos = {
         "Content-Type": "application/json",
@@ -88,17 +111,22 @@ def entregar(entrega: EntregaDeWebhook, agora=None) -> EntregaDeWebhook:
         else:
             entrega.situacao = EntregaDeWebhook.Situacao.DESISTIU
             entrega.proxima_tentativa = None
-    entrega.save(update_fields=["tentativas", "situacao", "resposta", "proxima_tentativa",
-                                "entregue_em"])
+    entrega.save(
+        update_fields=["tentativas", "situacao", "resposta", "proxima_tentativa", "entregue_em"]
+    )
     return entrega
 
 
 def entregar_pendentes(limite: int = 50, agora=None) -> dict:
     """Processa o que esta na hora: primeiro as entregas vencidas."""
     agora = agora or timezone.now()
-    pendentes = EntregaDeWebhook.objects.select_related("webhook").filter(
-        situacao__in=[EntregaDeWebhook.Situacao.PENDENTE, EntregaDeWebhook.Situacao.FALHOU],
-    ).filter(Q(proxima_tentativa__isnull=True) | Q(proxima_tentativa__lte=agora))[:limite]
+    pendentes = (
+        EntregaDeWebhook.objects.select_related("webhook")
+        .filter(
+            situacao__in=[EntregaDeWebhook.Situacao.PENDENTE, EntregaDeWebhook.Situacao.FALHOU],
+        )
+        .filter(Q(proxima_tentativa__isnull=True) | Q(proxima_tentativa__lte=agora))[:limite]
+    )
     entregues = falhas = 0
     for entrega in pendentes:
         entrega = entregar(entrega, agora=agora)

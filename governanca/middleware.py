@@ -1,4 +1,5 @@
 """Middlewares de governanca: 2FA obrigatorio, metricas por cliente e log com contexto."""
+
 from __future__ import annotations
 
 import logging
@@ -8,14 +9,23 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from core.seguranca import (
-    dois_fatores_ativo, exigir_2fa_para, sessao_verificada,
+    dois_fatores_ativo,
+    exigir_2fa_para,
+    sessao_verificada,
 )
 
 logger = logging.getLogger("governanca")
 
 #: rotas que nunca passam pelo desafio de 2FA (login, arquivos e a propria pagina do fator)
 CAMINHOS_LIVRES = (
-    "/entrar/", "/2fa/", "/status/", "/midia/", "/static/", "/media/", "/api/", "/admin/",
+    "/entrar/",
+    "/2fa/",
+    "/status/",
+    "/midia/",
+    "/static/",
+    "/media/",
+    "/api/",
+    "/admin/",
     "/.well-known/",
 )
 
@@ -38,7 +48,9 @@ class DoisFatoresMiddleware:
         if exigir_2fa_para(usuario) and not dois_fatores_ativo(usuario):
             return redirect(f"{reverse('governanca:dois_fatores_cadastrar')}?obrigatorio=1")
         if dois_fatores_ativo(usuario) and not sessao_verificada(request):
-            return redirect(f"{reverse('governanca:dois_fatores')}?proximo={request.get_full_path()}")
+            return redirect(
+                f"{reverse('governanca:dois_fatores')}?proximo={request.get_full_path()}"
+            )
         return self.get_response(request)
 
 
@@ -59,11 +71,15 @@ class MetricasMiddleware:
             registrar_requisicao(rede, resposta.status_code, duracao_ms)
             if resposta.status_code >= 500:
                 registrar_erro(
-                    rede, request.path, request.method, resposta.status_code,
-                    tipo="ErroInterno", mensagem="resposta 5xx",
+                    rede,
+                    request.path,
+                    request.method,
+                    resposta.status_code,
+                    tipo="ErroInterno",
+                    mensagem="resposta 5xx",
                     usuario=getattr(request, "user", None),
                 )
-        except Exception as erro:  # noqa: BLE001 - observabilidade nunca derruba a resposta
+        except Exception as erro:
             logger.debug("falha ao registrar metrica: %s", erro)
         return resposta
 
@@ -75,12 +91,16 @@ class MetricasMiddleware:
             from governanca.servicos import registrar_erro
 
             registrar_erro(
-                getattr(request, "rede", None), request.path, request.method, 500,
-                tipo=type(excecao).__name__, mensagem=str(excecao),
+                getattr(request, "rede", None),
+                request.path,
+                request.method,
+                500,
+                tipo=type(excecao).__name__,
+                mensagem=str(excecao),
                 traceback_curto="".join(traceback.format_exception(excecao))[-4000:],
                 usuario=getattr(request, "user", None),
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
         return None
 
@@ -97,6 +117,6 @@ class FiltroDeContextoDeLog(logging.Filter):
             record.tenant_id = getattr(rede, "pk", None) or "-"
             record.tenant = getattr(rede, "slug", None) or "-"
             record.usuario = getattr(usuario, "username", None) or "-"
-        except Exception:  # noqa: BLE001
+        except Exception:
             record.tenant_id, record.tenant, record.usuario = "-", "-", "-"
         return True

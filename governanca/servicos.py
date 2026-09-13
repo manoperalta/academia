@@ -1,4 +1,5 @@
 """Servicos de governanca: dominio, midia, backup, observabilidade e LGPD."""
+
 from __future__ import annotations
 
 import csv
@@ -24,8 +25,13 @@ from django.utils import timezone
 from core.models import Rede, StatusCertificado, StatusDominio
 from core.seguranca import prefixo_de_midia
 from governanca.models import (
-    AcessoDadoSensivel, ErroTenant, MetricaTenant, RegraRetencao, RegistroBackup,
-    SolicitacaoTitular, TentativaDeLogin,
+    AcessoDadoSensivel,
+    ErroTenant,
+    MetricaTenant,
+    RegistroBackup,
+    RegraRetencao,
+    SolicitacaoTitular,
+    TentativaDeLogin,
 )
 
 logger = logging.getLogger("governanca")
@@ -43,7 +49,9 @@ def dominio_base() -> str:
     """Dominio onde vive o subdominio de cada cliente."""
     from plataforma.models import ConfiguracaoPlataforma
 
-    return (getattr(ConfiguracaoPlataforma.obter(), "dominio_base", "") or "").strip() or "academia.safestack.com.br"
+    return (
+        getattr(ConfiguracaoPlataforma.obter(), "dominio_base", "") or ""
+    ).strip() or "academia.safestack.com.br"
 
 
 def subdominio_da(rede) -> str:
@@ -127,14 +135,17 @@ def _checar_arquivo_no_dominio(dominio: str, token: str) -> tuple[bool, str]:
         try:
             resposta = requests.get(
                 f"{esquema}://{dominio}/.well-known/academia-verificacao.txt",
-                timeout=TEMPO_LIMITE_HTTP, allow_redirects=True,
+                timeout=TEMPO_LIMITE_HTTP,
+                allow_redirects=True,
             )
-        except Exception:  # noqa: BLE001 - qualquer falha de rede vale "ainda nao"
+        except Exception:
             continue
         if resposta.status_code == 200 and token.strip() in resposta.text:
             return True, f"token encontrado em {esquema}://{dominio}"
-    return False, ("nao encontrei o arquivo de verificacao no dominio. Publique o conteudo do "
-                   "token em /.well-known/academia-verificacao.txt")
+    return False, (
+        "nao encontrei o arquivo de verificacao no dominio. Publique o conteudo do "
+        "token em /.well-known/academia-verificacao.txt"
+    )
 
 
 def _checar_txt(dominio: str, token: str) -> tuple[bool, str]:
@@ -145,10 +156,14 @@ def _checar_txt(dominio: str, token: str) -> tuple[bool, str]:
         return False, "verificacao por DNS indisponivel nesta instalacao (use o arquivo de texto)"
     try:
         respostas = dns.resolver.resolve(f"_academia-verificacao.{dominio}", "TXT", lifetime=6)
-    except Exception:  # noqa: BLE001 - dominio sem TXT ainda
+    except Exception:
         return False, "nao encontrei o registro TXT _academia-verificacao"
     for item in respostas:
-        texto = b"".join(item.strings).decode("utf-8", errors="replace") if hasattr(item, "strings") else str(item)
+        texto = (
+            b"".join(item.strings).decode("utf-8", errors="replace")
+            if hasattr(item, "strings")
+            else str(item)
+        )
         if token in texto:
             return True, "registro TXT confirmado"
     return False, "o registro TXT existe, mas com valor diferente do token"
@@ -160,7 +175,11 @@ def verificar_dominio(rede, forcar: bool = False) -> dict:
         rede.dominio_status = StatusDominio.NAO_CONFIGURADO
         rede.dominio_diagnostico = "sem dominio proprio configurado"
         rede.save(update_fields=["dominio_status", "dominio_diagnostico", "atualizado_em"])
-        return {"ok": False, "mensagem": "Sem dominio proprio configurado.", "status": rede.dominio_status}
+        return {
+            "ok": False,
+            "mensagem": "Sem dominio proprio configurado.",
+            "status": rede.dominio_status,
+        }
 
     if not forcar and rede.dominio_status == StatusDominio.PRONTO:
         return {"ok": True, "mensagem": "Dominio verificado.", "status": rede.dominio_status}
@@ -185,10 +204,22 @@ def verificar_dominio(rede, forcar: bool = False) -> dict:
     else:
         rede.dominio_status = StatusDominio.PENDENTE_DNS
         rede.dominio_diagnostico = mensagem
-    rede.save(update_fields=["dominio_status", "dominio_verificado_em", "dominio_diagnostico",
-                             "certificado_status", "certificado_erro", "atualizado_em"])
-    return {"ok": confere, "mensagem": mensagem, "status": rede.dominio_status,
-            "instrucoes": instrucoes_de_dns(rede)}
+    rede.save(
+        update_fields=[
+            "dominio_status",
+            "dominio_verificado_em",
+            "dominio_diagnostico",
+            "certificado_status",
+            "certificado_erro",
+            "atualizado_em",
+        ]
+    )
+    return {
+        "ok": confere,
+        "mensagem": mensagem,
+        "status": rede.dominio_status,
+        "instrucoes": instrucoes_de_dns(rede),
+    }
 
 
 def config_do_router(rede) -> str:
@@ -200,7 +231,7 @@ def config_do_router(rede) -> str:
         f"http:\n"
         f"  routers:\n"
         f"    tenant-{rede.pk}:\n"
-        f"      rule: \"{regras}\"\n"
+        f'      rule: "{regras}"\n'
         f"      entryPoints: [websecure]\n"
         f"      service: tenant-{rede.pk}\n"
         f"      tls:\n"
@@ -211,7 +242,7 @@ def config_do_router(rede) -> str:
         f"    tenant-{rede.pk}:\n"
         f"      loadBalancer:\n"
         f"        servers:\n"
-        f"          - url: \"http://{rede.slug}-web:8000\"\n"
+        f'          - url: "http://{rede.slug}-web:8000"\n'
     )
 
 
@@ -225,8 +256,13 @@ def estado_do_provisionamento(rede) -> dict:
         }
     ]
     if not rede.dominio:
-        passos.append({"nome": "Dominio proprio", "situacao": "opcional",
-                       "detalhe": "Voce pode usar o dominio da SafeStack ou trazer o seu."})
+        passos.append(
+            {
+                "nome": "Dominio proprio",
+                "situacao": "opcional",
+                "detalhe": "Voce pode usar o dominio da SafeStack ou trazer o seu.",
+            }
+        )
     else:
         if rede.dominio_status == StatusDominio.PRONTO:
             situacao = "pronto"
@@ -244,21 +280,39 @@ def estado_do_provisionamento(rede) -> dict:
 
         certificado = rede.certificado_status
         if certificado == StatusCertificado.EMITIDO:
-            passos.append({"nome": "Certificado (cadeado)", "situacao": "pronto",
-                           "detalhe": f"Emitido em {rede.certificado_emitido_em:%d/%m/%Y}."
-                           if rede.certificado_emitido_em else "Emitido."})
+            passos.append(
+                {
+                    "nome": "Certificado (cadeado)",
+                    "situacao": "pronto",
+                    "detalhe": f"Emitido em {rede.certificado_emitido_em:%d/%m/%Y}."
+                    if rede.certificado_emitido_em
+                    else "Emitido.",
+                }
+            )
         elif certificado == StatusCertificado.ERRO:
-            passos.append({"nome": "Certificado (cadeado)", "situacao": "erro",
-                           "detalhe": rede.certificado_erro or
-                           "Falha ao emitir o certificado. Vamos reemitir automaticamente."})
+            passos.append(
+                {
+                    "nome": "Certificado (cadeado)",
+                    "situacao": "erro",
+                    "detalhe": rede.certificado_erro
+                    or "Falha ao emitir o certificado. Vamos reemitir automaticamente.",
+                }
+            )
         else:
-            passos.append({"nome": "Certificado (cadeado)", "situacao": "aguardando",
-                           "detalhe": "Emitimos assim que o DNS estiver apontando."})
+            passos.append(
+                {
+                    "nome": "Certificado (cadeado)",
+                    "situacao": "aguardando",
+                    "detalhe": "Emitimos assim que o DNS estiver apontando.",
+                }
+            )
 
     pronto = all(passo["situacao"] in {"pronto", "opcional"} for passo in passos)
     return {
         "pronto": pronto,
-        "resumo": "Tudo pronto." if pronto else "Ainda falta um passo para o seu endereco funcionar.",
+        "resumo": "Tudo pronto."
+        if pronto
+        else "Ainda falta um passo para o seu endereco funcionar.",
         "passos": passos,
         "hosts": hosts_da_rede(rede),
         "certificado": rede.get_certificado_status_display(),
@@ -272,8 +326,11 @@ def reemitir_certificado(rede) -> dict:
     rede.certificado_status = StatusCertificado.EMITINDO
     rede.certificado_erro = ""
     rede.save(update_fields=["certificado_status", "certificado_erro", "atualizado_em"])
-    return {"ok": True, "mensagem": "Certificado marcado para reemissao. O proxy vai pedir de novo.",
-            "config": config_do_router(rede)}
+    return {
+        "ok": True,
+        "mensagem": "Certificado marcado para reemissao. O proxy vai pedir de novo.",
+        "config": config_do_router(rede),
+    }
 
 
 # ==================================================================== MIDIA (RNF-010)
@@ -311,8 +368,11 @@ def mover_midia_para_namespace(dry_run: bool = True) -> dict:
 def _rede_pelo_conteudo(relativo: str):
     """Descobre de quem e o arquivo procurando o caminho em qualquer campo de arquivo."""
     for modelo in apps.get_models():
-        campos = [campo for campo in modelo._meta.get_fields()
-                  if getattr(campo, "get_internal_type", lambda: "")() in {"FileField", "ImageField"}]
+        campos = [
+            campo
+            for campo in modelo._meta.get_fields()
+            if getattr(campo, "get_internal_type", lambda: "")() in {"FileField", "ImageField"}
+        ]
         if not campos:
             continue
         for campo in campos:
@@ -327,10 +387,15 @@ def _reescrever_caminhos(antigo: str, novo: str) -> int:
     """Atualiza no banco os caminhos dos arquivos movidos."""
     atualizados = 0
     for modelo in apps.get_models():
-        campos = [campo for campo in modelo._meta.get_fields()
-                  if getattr(campo, "get_internal_type", lambda: "")() in {"FileField", "ImageField"}]
+        campos = [
+            campo
+            for campo in modelo._meta.get_fields()
+            if getattr(campo, "get_internal_type", lambda: "")() in {"FileField", "ImageField"}
+        ]
         for campo in campos:
-            atualizados += modelo._default_manager.filter(**{campo.name: antigo}).update(**{campo.name: novo})
+            atualizados += modelo._default_manager.filter(**{campo.name: antigo}).update(
+                **{campo.name: novo}
+            )
     return atualizados
 
 
@@ -368,10 +433,12 @@ def _dump_logico() -> bytes:
             continue
         try:
             dados = serializers.serialize("json", modelo._default_manager.all())
-        except Exception:  # noqa: BLE001 - tabela sem leitura nao impede o backup
+        except Exception:
             continue
         partes.append(dados)
-    return ("[" + ",".join(parte.strip("[]") for parte in partes if parte.strip("[]")) + "]").encode()
+    return (
+        "[" + ",".join(parte.strip("[]") for parte in partes if parte.strip("[]")) + "]"
+    ).encode()
 
 
 def _dump_com_pg_dump() -> bytes:
@@ -386,8 +453,12 @@ def _ambiente_do_banco() -> dict:
 
     ambiente = os.environ.copy()
     configuracao = connection.settings_dict
-    for chave, valor in (("PGHOST", configuracao.get("HOST")), ("PGPORT", configuracao.get("PORT")),
-                         ("PGUSER", configuracao.get("USER")), ("PGPASSWORD", configuracao.get("PASSWORD"))):
+    for chave, valor in (
+        ("PGHOST", configuracao.get("HOST")),
+        ("PGPORT", configuracao.get("PORT")),
+        ("PGUSER", configuracao.get("USER")),
+        ("PGPASSWORD", configuracao.get("PASSWORD")),
+    ):
         if valor:
             ambiente[chave] = str(valor)
     return ambiente
@@ -399,8 +470,11 @@ def executar_backup(metodo: str = "auto", agora=None) -> RegistroBackup:
     destino = pasta_de_backup()
     nome = f"banco-{agora:%Y%m%d-%H%M%S}.json.gz"
     caminho = destino / nome
-    registro = RegistroBackup.objects.create(arquivo=str(caminho), tipo=RegistroBackup.Tipo.BANCO,
-                                            retencao_ate=(agora + timedelta(days=DIAS_DE_RETENCAO)).date())
+    registro = RegistroBackup.objects.create(
+        arquivo=str(caminho),
+        tipo=RegistroBackup.Tipo.BANCO,
+        retencao_ate=(agora + timedelta(days=DIAS_DE_RETENCAO)).date(),
+    )
     try:
         if metodo == "pg_dump" or (metodo == "auto" and shutil.which("pg_dump")):
             conteudo = _dump_com_pg_dump()
@@ -413,7 +487,7 @@ def executar_backup(metodo: str = "auto", agora=None) -> RegistroBackup:
         registro.sha256 = _sha256(caminho)
         registro.situacao = RegistroBackup.Situacao.OK
         registro.save(update_fields=["tamanho_bytes", "sha256", "situacao"])
-    except Exception as erro:  # noqa: BLE001 - falha de backup precisa ficar registrada
+    except Exception as erro:
         registro.situacao = RegistroBackup.Situacao.FALHOU
         registro.erro = str(erro)[:2000]
         registro.save(update_fields=["situacao", "erro"])
@@ -425,15 +499,20 @@ def backup_vai_rodar_hoje(agora=None) -> bool:
     """Evita dois backups no mesmo dia (a rotina roda de hora em hora)."""
     hoje = (agora or timezone.now()).date()
     return not RegistroBackup.objects.filter(
-        tipo=RegistroBackup.Tipo.BANCO, criado_em__date=hoje,
+        tipo=RegistroBackup.Tipo.BANCO,
+        criado_em__date=hoje,
         situacao=RegistroBackup.Situacao.OK,
     ).exists()
 
 
 def verificar_backup(registro: RegistroBackup | None = None) -> dict:
     """Restauracao de teste: confere arquivo, hash e conteudo legivel (RNF-005)."""
-    registro = registro or RegistroBackup.objects.filter(
-        tipo=RegistroBackup.Tipo.BANCO).order_by("-criado_em").first()
+    registro = (
+        registro
+        or RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO)
+        .order_by("-criado_em")
+        .first()
+    )
     if registro is None:
         return {"ok": False, "detalhe": "nenhum backup registrado"}
     caminho = Path(registro.arquivo)
@@ -456,7 +535,7 @@ def verificar_backup(registro: RegistroBackup | None = None) -> dict:
                 registro.verificacao = f"backup logico legivel com {linhas} registros"
             else:
                 registro.verificacao = f"dump SQL legivel ({len(conteudo)} bytes)"
-        except Exception as erro:  # noqa: BLE001
+        except Exception as erro:
             problemas.append(f"nao consegui ler o conteudo: {erro}")
     registro.verificado_em = timezone.now()
     registro.verificacao = "; ".join(problemas) if problemas else registro.verificacao
@@ -469,17 +548,22 @@ def exportar_tenant(rede) -> RegistroBackup:
     agora = timezone.now()
     destino = pasta_de_backup()
     caminho = destino / f"tenant-{rede.slug}-{agora:%Y%m%d-%H%M%S}.json"
-    registro = RegistroBackup.objects.create(arquivo=str(caminho), tipo=RegistroBackup.Tipo.TENANT,
-                                            rede=rede,
-                                            retencao_ate=(agora + timedelta(days=DIAS_DE_RETENCAO)).date())
+    registro = RegistroBackup.objects.create(
+        arquivo=str(caminho),
+        tipo=RegistroBackup.Tipo.TENANT,
+        rede=rede,
+        retencao_ate=(agora + timedelta(days=DIAS_DE_RETENCAO)).date(),
+    )
     try:
         dados = _dados_do_tenant(rede)
-        caminho.write_bytes(json.dumps(dados, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2).encode())
+        caminho.write_bytes(
+            json.dumps(dados, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2).encode()
+        )
         registro.tamanho_bytes = caminho.stat().st_size
         registro.sha256 = _sha256(caminho)
         registro.situacao = RegistroBackup.Situacao.OK
         registro.save(update_fields=["tamanho_bytes", "sha256", "situacao"])
-    except Exception as erro:  # noqa: BLE001
+    except Exception as erro:
         registro.situacao = RegistroBackup.Situacao.FALHOU
         registro.erro = str(erro)[:2000]
         registro.save(update_fields=["situacao", "erro"])
@@ -497,8 +581,16 @@ def _modelos_com_rede() -> list:
 
 
 def _dados_do_tenant(rede) -> dict:
-    dados = {"rede": {"nome": rede.nome, "slug": rede.slug, "cnpj": rede.cnpj,
-                      "criado_em": rede.criado_em}, "exportado_em": timezone.now(), "tabelas": {}}
+    dados = {
+        "rede": {
+            "nome": rede.nome,
+            "slug": rede.slug,
+            "cnpj": rede.cnpj,
+            "criado_em": rede.criado_em,
+        },
+        "exportado_em": timezone.now(),
+        "tabelas": {},
+    }
     for modelo in _modelos_com_rede():
         registros = list(modelo._default_manager.filter(rede=rede).values())
         chave = f"{modelo._meta.app_label}.{modelo._meta.model_name}"
@@ -508,7 +600,9 @@ def _dados_do_tenant(rede) -> dict:
 
 def aplicar_retencao_de_backups(dry_run: bool = True) -> dict:
     """Mantem 7 diarios + 4 semanais e apaga o resto (RNF-005)."""
-    backups = list(RegistroBackup.objects.filter(situacao=RegistroBackup.Situacao.OK).order_by("-criado_em"))
+    backups = list(
+        RegistroBackup.objects.filter(situacao=RegistroBackup.Situacao.OK).order_by("-criado_em")
+    )
     hoje = timezone.now().date()
     recentes = [b for b in backups if (hoje - b.criado_em.date()).days <= LIMITE_DIARIOS]
     antigos = [b for b in backups if b not in recentes]
@@ -525,8 +619,12 @@ def aplicar_retencao_de_backups(dry_run: bool = True) -> dict:
             caminho = Path(backup.arquivo)
             caminho.unlink(missing_ok=True)
             backup.delete()
-    return {"mantidos": len(recentes) + len(semanais), "apagados": 0 if dry_run else len(remover),
-            "detalhes": detalhes, "dry_run": dry_run}
+    return {
+        "mantidos": len(recentes) + len(semanais),
+        "apagados": 0 if dry_run else len(remover),
+        "detalhes": detalhes,
+        "dry_run": dry_run,
+    }
 
 
 def prazo_do_pedido(hoje=None):
@@ -543,8 +641,10 @@ def _hora_cheia(inicio=None):
 def registrar_requisicao(rede, status_code: int, duracao_ms: int) -> None:
     """Conta a requisicao no cache; a agregacao horaria persiste no banco."""
     chave = CHAVE_METRICAS.format(rede=rede.pk if rede else 0, hora=_hora_cheia().timestamp())
-    dados = cache.get(chave, {"requisicoes": 0, "erros_5xx": 0, "erros_4xx": 0,
-                              "tempo_total_ms": 0, "tempo_max_ms": 0})
+    dados = cache.get(
+        chave,
+        {"requisicoes": 0, "erros_5xx": 0, "erros_4xx": 0, "tempo_total_ms": 0, "tempo_max_ms": 0},
+    )
     dados["requisicoes"] += 1
     dados["tempo_total_ms"] += duracao_ms
     dados["tempo_max_ms"] = max(dados["tempo_max_ms"], duracao_ms)
@@ -567,10 +667,13 @@ def agregar_metricas(quando=None) -> int:
         if not dados or not dados["requisicoes"]:
             continue
         MetricaTenant.objects.update_or_create(
-            rede=rede, inicio=quando,
+            rede=rede,
+            inicio=quando,
             defaults={
-                "requisicoes": dados["requisicoes"], "erros_5xx": dados["erros_5xx"],
-                "erros_4xx": dados["erros_4xx"], "tempo_total_ms": dados["tempo_total_ms"],
+                "requisicoes": dados["requisicoes"],
+                "erros_5xx": dados["erros_5xx"],
+                "erros_4xx": dados["erros_4xx"],
+                "tempo_total_ms": dados["tempo_total_ms"],
                 "tempo_max_ms": dados["tempo_max_ms"],
             },
         )
@@ -579,16 +682,29 @@ def agregar_metricas(quando=None) -> int:
     return gravadas
 
 
-def registrar_erro(rede, rota: str, metodo: str, status: int, tipo: str = "", mensagem: str = "",
-                   traceback_curto: str = "", usuario=None) -> ErroTenant | None:
+def registrar_erro(
+    rede,
+    rota: str,
+    metodo: str,
+    status: int,
+    tipo: str = "",
+    mensagem: str = "",
+    traceback_curto: str = "",
+    usuario=None,
+) -> ErroTenant | None:
     """Guarda o erro 5xx do cliente, sem deixar o mesmo erro inundar a lista."""
     chave = f"erro:{rede.pk if rede else 0}:{rota[:60]}:{tipo[:40]}"
     if cache.get(chave):
         return None
     cache.set(chave, 1, 300)
     return ErroTenant.objects.create(
-        rede=rede, rota=rota[:200], metodo=metodo[:10], status=status, tipo=tipo[:120],
-        mensagem=mensagem[:2000], traceback_curto=traceback_curto[-4000:],
+        rede=rede,
+        rota=rota[:200],
+        metodo=metodo[:10],
+        status=status,
+        tipo=tipo[:120],
+        mensagem=mensagem[:2000],
+        traceback_curto=traceback_curto[-4000:],
         usuario=usuario if getattr(usuario, "pk", None) else None,
     )
 
@@ -603,13 +719,21 @@ def resumo_de_saude(horas: int = 24) -> dict:
         erros = sum(m.erros_5xx for m in metricas)
         tempo_medio = (sum(m.tempo_total_ms for m in metricas) / requisicoes) if requisicoes else 0
         ultimo_erro = ErroTenant.objects.filter(rede=rede).order_by("-criado_em").first()
-        linhas.append({
-            "rede": rede, "requisicoes": requisicoes, "erros_5xx": erros,
-            "tempo_medio_ms": int(tempo_medio), "ultimo_erro": ultimo_erro,
-            "alerta": erros >= LIMIAR_ALERTA_5XX,
-        })
-    return {"linhas": sorted(linhas, key=lambda linha: linha["erros_5xx"], reverse=True),
-            "horas": horas, "sem_metricas": not any(linha["requisicoes"] for linha in linhas)}
+        linhas.append(
+            {
+                "rede": rede,
+                "requisicoes": requisicoes,
+                "erros_5xx": erros,
+                "tempo_medio_ms": int(tempo_medio),
+                "ultimo_erro": ultimo_erro,
+                "alerta": erros >= LIMIAR_ALERTA_5XX,
+            }
+        )
+    return {
+        "linhas": sorted(linhas, key=lambda linha: linha["erros_5xx"], reverse=True),
+        "horas": horas,
+        "sem_metricas": not any(linha["requisicoes"] for linha in linhas),
+    }
 
 
 def alertas_pendentes() -> list[str]:
@@ -618,9 +742,13 @@ def alertas_pendentes() -> list[str]:
     saude = resumo_de_saude()
     for linha in saude["linhas"]:
         if linha["alerta"]:
-            alertas.append(f"{linha['rede'].nome}: {linha['erros_5xx']} erros 5xx em {saude['horas']}h")
+            alertas.append(
+                f"{linha['rede'].nome}: {linha['erros_5xx']} erros 5xx em {saude['horas']}h"
+            )
 
-    ultimo = RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO).order_by("-criado_em").first()
+    ultimo = (
+        RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO).order_by("-criado_em").first()
+    )
     if ultimo is None:
         alertas.append("nenhum backup do banco registrado")
     elif ultimo.situacao == RegistroBackup.Situacao.FALHOU:
@@ -676,21 +804,41 @@ def dados_do_titular(rede, aluno) -> dict:
     }
     if usuario is not None:
         campos_pagamento = _campos_existentes(
-            Pagamento, ["id", "valor", "data_pagamento", "data_inicio", "data_fim", "status",
-                        "plano", "link_pagamento"])
+            Pagamento,
+            [
+                "id",
+                "valor",
+                "data_pagamento",
+                "data_inicio",
+                "data_fim",
+                "status",
+                "plano",
+                "link_pagamento",
+            ],
+        )
         dados["pagamentos"] = list(
             Pagamento.objects.filter(usuario=usuario, rede=rede).values(*campos_pagamento)
         )
         campos_agendamento = _campos_existentes(
-            Agendamento, ["id", "data_agendamento", "status", "painel"])
+            Agendamento, ["id", "data_agendamento", "status", "painel"]
+        )
         dados["agendamentos"] = list(
             Agendamento.objects.filter(aluno=usuario, rede=rede).values(*campos_agendamento)
         )
         ficha = _ficha_do_aluno(aluno)
         if ficha is not None:
             campos_ficha = _campos_existentes(
-                type(ficha), ["peso", "altura", "restricoes", "prescricoes", "obs",
-                              "usa_medicamento", "qual_medicamento"])
+                type(ficha),
+                [
+                    "peso",
+                    "altura",
+                    "restricoes",
+                    "prescricoes",
+                    "obs",
+                    "usa_medicamento",
+                    "qual_medicamento",
+                ],
+            )
             dados["ficha_saude"] = {campo: getattr(ficha, campo) for campo in campos_ficha}
     return dados
 
@@ -700,7 +848,7 @@ def _ficha_do_aluno(aluno):
         from usuarios.models import FichaSaude
 
         return FichaSaude.todos.filter(usuario=aluno).first()
-    except Exception:  # noqa: BLE001 - ficha pode nao existir
+    except Exception:
         return None
 
 
@@ -709,12 +857,17 @@ def exportar_titular_zip(rede, aluno) -> bytes:
     dados = dados_do_titular(rede, aluno)
     memoria = io.BytesIO()
     with zipfile.ZipFile(memoria, "w", zipfile.ZIP_DEFLATED) as pacote:
-        pacote.writestr("dados.json", json.dumps(dados, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2))
-        pacote.writestr("leia-me.txt", (
-            "Este pacote conteudo os dados que a academia guarda sobre voce.\n"
-            "dados.json  -> cadastro, pagamentos, agendamentos e ficha de saude\n"
-            "pagamentos.csv -> a mesma lista de pagamentos em planilha\n"
-        ))
+        pacote.writestr(
+            "dados.json", json.dumps(dados, cls=DjangoJSONEncoder, ensure_ascii=False, indent=2)
+        )
+        pacote.writestr(
+            "leia-me.txt",
+            (
+                "Este pacote conteudo os dados que a academia guarda sobre voce.\n"
+                "dados.json  -> cadastro, pagamentos, agendamentos e ficha de saude\n"
+                "pagamentos.csv -> a mesma lista de pagamentos em planilha\n"
+            ),
+        )
         if dados["pagamentos"]:
             saida = io.StringIO()
             escritor = csv.DictWriter(saida, fieldnames=list(dados["pagamentos"][0].keys()))
@@ -729,10 +882,15 @@ def anonimizar_titular(rede, aluno, usuario=None, motivo: str = "") -> dict:
     marcador = f"ANONIMIZADO-{aluno.pk}"
     with transaction.atomic():
         aluno.nome = marcador
-        for campo, valor in (("email_user", f"{marcador.lower()}@anonimizado.local"),
-                             ("telefone_user", ""), ("cpf_cnpj_user", ""),
-                             ("endereco_user", ""), ("numero_end_user", ""),
-                             ("bairro_user", ""), ("cep_user", "")):
+        for campo, valor in (
+            ("email_user", f"{marcador.lower()}@anonimizado.local"),
+            ("telefone_user", ""),
+            ("cpf_cnpj_user", ""),
+            ("endereco_user", ""),
+            ("numero_end_user", ""),
+            ("bairro_user", ""),
+            ("cep_user", ""),
+        ):
             if hasattr(aluno, campo):
                 setattr(aluno, campo, valor)
         if hasattr(aluno, "data_nasc"):
@@ -757,8 +915,12 @@ def anonimizar_titular(rede, aluno, usuario=None, motivo: str = "") -> dict:
             usuario_login.save()
     from api.auditoria import registrar
 
-    registrar("anonimizar", "titular", entidade_id=aluno.pk,
-              descricao=f"Titular {marcador} anonimizado. Pagamentos preservados por obrigacao fiscal. {motivo}".strip())
+    registrar(
+        "anonimizar",
+        "titular",
+        entidade_id=aluno.pk,
+        descricao=f"Titular {marcador} anonimizado. Pagamentos preservados por obrigacao fiscal. {motivo}".strip(),
+    )
     return {"ok": True, "pagamentos_preservados": True, "marcador": marcador}
 
 
@@ -784,9 +946,13 @@ def aplicar_retencao(hoje=None, dry_run: bool = True) -> dict:
         if quantidade and not dry_run and regra.acao != RegraRetencao.Acao.CONSERVAR:
             consulta.delete()
         if quantidade:
-            resultado["regras"].append({
-                "entidade": regra.entidade, "prazo_dias": regra.prazo_dias,
-                "acao": regra.get_acao_display(), "registros": quantidade,
-                "base_legal": regra.base_legal_efetiva,
-            })
+            resultado["regras"].append(
+                {
+                    "entidade": regra.entidade,
+                    "prazo_dias": regra.prazo_dias,
+                    "acao": regra.get_acao_display(),
+                    "registros": quantidade,
+                    "base_legal": regra.base_legal_efetiva,
+                }
+            )
     return resultado

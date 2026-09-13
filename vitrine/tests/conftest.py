@@ -1,4 +1,5 @@
 """Fixtures do site publico e do cadastro self-service."""
+
 from __future__ import annotations
 
 import pytest
@@ -11,7 +12,9 @@ def cnpj_valido(base: str = "11222333", ordem: str = "0001") -> str:
     pesos = ([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2], [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2])
 
     def digito(parcial: str, pesos_do_digito) -> str:
-        soma = sum(int(numero) * peso for numero, peso in zip(parcial, pesos_do_digito, strict=True))
+        soma = sum(
+            int(numero) * peso for numero, peso in zip(parcial, pesos_do_digito, strict=True)
+        )
         resto = soma % 11
         return "0" if resto < 2 else str(11 - resto)
 
@@ -23,10 +26,18 @@ def cnpj_valido(base: str = "11222333", ordem: str = "0001") -> str:
 @pytest.fixture
 def pacotes_publicos(db):
     prata = criar_pacote("prata", "Prata", 100, 5, 1, "125.00", ["impressao_pdf"])
-    bronze = criar_pacote("bronze", "Bronze", 150, 10, 1, "99.00",
-                          ["whatsapp", "relatorios_avancados"])
-    ouro = criar_pacote("ouro", "Ouro", None, None, None, "199.00",
-                        ["whatsapp", "relatorios_avancados", "api", "multi_unidade"])
+    bronze = criar_pacote(
+        "bronze", "Bronze", 150, 10, 1, "99.00", ["whatsapp", "relatorios_avancados"]
+    )
+    ouro = criar_pacote(
+        "ouro",
+        "Ouro",
+        None,
+        None,
+        None,
+        "199.00",
+        ["whatsapp", "relatorios_avancados", "api", "multi_unidade"],
+    )
     return {"prata": prata, "bronze": bronze, "ouro": ouro}
 
 

@@ -1,4 +1,5 @@
 """JWT HS256 proprio (sem dependencia externa) para a API v1 (PRD 20.2)."""
+
 from __future__ import annotations
 
 import base64
@@ -36,18 +37,35 @@ def _assinar(cabecalho: str, corpo: str) -> str:
     return _b64(hmac.new(_segredo(), mensagem, hashlib.sha256).digest())
 
 
-def emitir(subject: str, escopos=None, tipo: str = "acesso", validade: int | None = None,
-           extra: dict | None = None) -> str:
+def emitir(
+    subject: str,
+    escopos=None,
+    tipo: str = "acesso",
+    validade: int | None = None,
+    extra: dict | None = None,
+) -> str:
     agora = int(time.time())
-    validade = validade if validade is not None else (
-        VALIDADE_DO_ACESSO if tipo == "acesso" else VALIDADE_DA_RENOVACAO
+    validade = (
+        validade
+        if validade is not None
+        else (VALIDADE_DO_ACESSO if tipo == "acesso" else VALIDADE_DA_RENOVACAO)
     )
     cabecalho = _b64(json.dumps({"alg": ALGORITMO, "typ": "JWT"}, separators=(",", ":")).encode())
-    corpo = _b64(json.dumps(
-        {"sub": str(subject), "iss": EMISSOR, "iat": agora, "exp": agora + validade,
-         "tipo": tipo, "escopos": list(escopos or []), **(extra or {})},
-        separators=(",", ":"), sort_keys=True,
-    ).encode())
+    corpo = _b64(
+        json.dumps(
+            {
+                "sub": str(subject),
+                "iss": EMISSOR,
+                "iat": agora,
+                "exp": agora + validade,
+                "tipo": tipo,
+                "escopos": list(escopos or []),
+                **(extra or {}),
+            },
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode()
+    )
     return f"{cabecalho}.{corpo}.{_assinar(cabecalho, corpo)}"
 
 

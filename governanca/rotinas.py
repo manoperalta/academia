@@ -1,4 +1,5 @@
 """Rotinas periodicas (jobs) com dry-run, registro de resultado e alerta em falha."""
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,10 @@ def _rotina_metricas(dry_run: bool) -> str:
 
 def _rotina_backup(dry_run: bool) -> str:
     from governanca.servicos import (
-        aplicar_retencao_de_backups, backup_vai_rodar_hoje, executar_backup, verificar_backup,
+        aplicar_retencao_de_backups,
+        backup_vai_rodar_hoje,
+        executar_backup,
+        verificar_backup,
     )
 
     if dry_run:
@@ -34,7 +38,7 @@ def _rotina_backup(dry_run: bool) -> str:
         raise RuntimeError(f"backup falhou: {registro.erro[:200]}")
     verificacao = verificar_backup(registro)
     aplicar_retencao_de_backups(dry_run=False)
-    return (f"backup {registro.tamanho_mb} MB verificado: {verificacao['detalhe']}")
+    return f"backup {registro.tamanho_mb} MB verificado: {verificacao['detalhe']}"
 
 
 def _rotina_faturas(dry_run: bool) -> str:
@@ -61,9 +65,11 @@ def _rotina_repasses(dry_run: bool) -> str:
     if dry_run:
         return "emitiria os repasses do mes por unidade"
     resultado = emitir_repasses_do_mes()
-    return (f"{len(resultado['emitidos'])} repasse(s) do periodo "
-            f"{resultado['inicio']:%d/%m} a {resultado['fim']:%d/%m}; "
-            f"{len(resultado['erros'])} unidade(s) sem regra")
+    return (
+        f"{len(resultado['emitidos'])} repasse(s) do periodo "
+        f"{resultado['inicio']:%d/%m} a {resultado['fim']:%d/%m}; "
+        f"{len(resultado['erros'])} unidade(s) sem regra"
+    )
 
 
 def _rotina_retencao(dry_run: bool) -> str:
@@ -72,7 +78,9 @@ def _rotina_retencao(dry_run: bool) -> str:
     resultado = aplicar_retencao(dry_run=dry_run)
     if not resultado["regras"]:
         return "nada vencido para expurgar"
-    return "; ".join(f"{regra['entidade']}: {regra['registros']} registro(s)" for regra in resultado["regras"])
+    return "; ".join(
+        f"{regra['entidade']}: {regra['registros']} registro(s)" for regra in resultado["regras"]
+    )
 
 
 def _rotina_dominios(dry_run: bool) -> str:
@@ -116,8 +124,10 @@ def _rotina_tarefas(dry_run: bool) -> str:
     if dry_run:
         return "processaria a fila de relatorios/importacoes"
     resultado = processar_pendentes()
-    return (f"{resultado['concluidas']} tarefa(s) concluida(s), {resultado['falhas']} falha(s), "
-            f"{resultado['arquivos_expirados']} arquivo(s) expirado(s)")
+    return (
+        f"{resultado['concluidas']} tarefa(s) concluida(s), {resultado['falhas']} falha(s), "
+        f"{resultado['arquivos_expirados']} arquivo(s) expirado(s)"
+    )
 
 
 def _rotina_webhooks(dry_run: bool) -> str:
@@ -126,8 +136,10 @@ def _rotina_webhooks(dry_run: bool) -> str:
     if dry_run:
         return "entregaria os webhooks pendentes"
     resultado = entregar_pendentes()
-    return (f"{resultado['entregues']} entrega(s) ok, {resultado['falhas']} com falha "
-            f"(reentrega agendada com backoff)")
+    return (
+        f"{resultado['entregues']} entrega(s) ok, {resultado['falhas']} com falha "
+        f"(reentrega agendada com backoff)"
+    )
 
 
 #: nome -> (periodicidade, descricao, funcao)
@@ -142,7 +154,11 @@ ROTINAS = {
     "metas": ("dia", "Recalcula o realizado das metas da rede", _rotina_metas),
     "atrasos": ("dia", "Marca repasses vencidos como atrasados", _rotina_atrasos),
     "tarefas": ("hora", "Processa a fila de tarefas assincronas da API", _rotina_tarefas),
-    "webhooks": ("hora", "Entrega os webhooks de saida pendentes (com reentrega)", _rotina_webhooks),
+    "webhooks": (
+        "hora",
+        "Entrega os webhooks de saida pendentes (com reentrega)",
+        _rotina_webhooks,
+    ),
 }
 
 
@@ -151,7 +167,8 @@ def sincronizar_rotinas() -> int:
     criadas = 0
     for nome, (periodicidade, descricao, _funcao) in ROTINAS.items():
         _rotina, criada = RotinaAgendada.objects.update_or_create(
-            nome=nome, defaults={"periodicidade": periodicidade, "descricao": descricao},
+            nome=nome,
+            defaults={"periodicidade": periodicidade, "descricao": descricao},
         )
         criadas += int(criada)
     return criadas
@@ -165,7 +182,9 @@ def rotinas_devidas(agora=None) -> list[RotinaAgendada]:
             devidas.append(rotina)
             continue
         intervalos = {"hora": 3600, "dia": 86400, "semana": 604800, "mes": 2592000}
-        if (agora - rotina.ultima_execucao).total_seconds() >= intervalos.get(rotina.periodicidade, 86400):
+        if (agora - rotina.ultima_execucao).total_seconds() >= intervalos.get(
+            rotina.periodicidade, 86400
+        ):
             devidas.append(rotina)
     return devidas
 
@@ -189,18 +208,41 @@ def executar_rotinas(dry_run: bool = False, somente: str = "", agora=None) -> di
             detalhe = funcao(simulado)
             situacao = RotinaAgendada.Situacao.OK
             erro = ""
-        except Exception as excecao:  # noqa: BLE001 - uma rotina nao derruba as outras
-            detalhe, situacao, erro = str(excecao)[:400], RotinaAgendada.Situacao.FALHOU, str(excecao)
+        except Exception as excecao:
+            detalhe, situacao, erro = (
+                str(excecao)[:400],
+                RotinaAgendada.Situacao.FALHOU,
+                str(excecao),
+            )
             logger.error("rotina %s falhou: %s", rotina.nome, excecao)
         duracao = int((time.monotonic() - inicio) * 1000)
-        resultados.append({"rotina": rotina.nome, "situacao": situacao, "detalhe": detalhe,
-                           "simulado": simulado, "duracao_ms": duracao, "erro": erro})
+        resultados.append(
+            {
+                "rotina": rotina.nome,
+                "situacao": situacao,
+                "detalhe": detalhe,
+                "simulado": simulado,
+                "duracao_ms": duracao,
+                "erro": erro,
+            }
+        )
         if not dry_run and not simulado:
             rotina.ultima_execucao = timezone.now()
             rotina.ultima_situacao = situacao
             rotina.ultimo_resultado = detalhe
             rotina.duracao_ms = duracao
-            rotina.save(update_fields=["ultima_execucao", "ultima_situacao", "ultimo_resultado",
-                                       "duracao_ms"])
-    return {"dry_run": dry_run, "executadas": resultados,
-            "falhas": [item for item in resultados if item["situacao"] == RotinaAgendada.Situacao.FALHOU]}
+            rotina.save(
+                update_fields=[
+                    "ultima_execucao",
+                    "ultima_situacao",
+                    "ultimo_resultado",
+                    "duracao_ms",
+                ]
+            )
+    return {
+        "dry_run": dry_run,
+        "executadas": resultados,
+        "falhas": [
+            item for item in resultados if item["situacao"] == RotinaAgendada.Situacao.FALHOU
+        ],
+    }

@@ -1,4 +1,5 @@
 """Rotas do site publico (raiz do dominio)."""
+
 from django.urls import path
 
 from vitrine import views

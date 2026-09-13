@@ -1,4 +1,5 @@
 """Telas do painel: LGPD, dominio, seguranca e o painel da plataforma (Fase 5)."""
+
 from __future__ import annotations
 
 import pytest
@@ -19,11 +20,14 @@ def cliente_plataforma(db):
     from governanca.models import Dispositivo2FA
 
     equipe = get_user_model().objects.create_user(
-        username="equipe.governanca", password="SenhaForteTeste123",
-        email="equipe@safestack.com.br", is_staff=True,
+        username="equipe.governanca",
+        password="SenhaForteTeste123",
+        email="equipe@safestack.com.br",
+        is_staff=True,
     )
-    Dispositivo2FA.objects.create(usuario=equipe, segredo="JBSWY3DPEHPK3PXP",
-                                  confirmado_em=timezone.now())
+    Dispositivo2FA.objects.create(
+        usuario=equipe, segredo="JBSWY3DPEHPK3PXP", confirmado_em=timezone.now()
+    )
     cliente = Client()
     cliente.force_login(equipe)
     sessao = cliente.session
@@ -35,8 +39,10 @@ def cliente_plataforma(db):
 @pytest.fixture
 def cliente_recepcao(db, rede):
     usuario = get_user_model().objects.create_user(
-        username="recepcao.governanca", password="SenhaForteTeste123",
-        email="recepcao@academia.com.br")
+        username="recepcao.governanca",
+        password="SenhaForteTeste123",
+        email="recepcao@academia.com.br",
+    )
     VinculoUsuario.todos.create(usuario=usuario, rede=rede, papel=Papel.RECEPCAO, ativo=True)
     cliente = Client()
     cliente.force_login(usuario)
@@ -44,9 +50,11 @@ def cliente_recepcao(db, rede):
 
 
 def test_painel_do_cliente_tem_privacidade_dominio_e_seguranca(cliente_governanca):
-    for rota, marca in (("gestao:privacidade", "Pedidos de titulares"),
-                        ("gestao:dominio", "Endereço do seu painel"),
-                        ("gestao:seguranca", "duas etapas")):
+    for rota, marca in (
+        ("gestao:privacidade", "Pedidos de titulares"),
+        ("gestao:dominio", "Endereço do seu painel"),
+        ("gestao:seguranca", "duas etapas"),
+    ):
         resposta = cliente_governanca.get(reverse(rota))
         assert resposta.status_code == 200, rota
         assert marca in resposta.content.decode(), rota
@@ -61,10 +69,12 @@ def test_verificacao_de_dominio_pelo_painel(cliente_governanca, rede, monkeypatc
     import governanca.servicos as servicos
 
     monkeypatch.setattr(servicos, "_checar_txt", lambda dominio, valor: (False, "sem TXT"))
-    monkeypatch.setattr(servicos, "_checar_arquivo_no_dominio",
-                        lambda dominio, valor: (True, "token encontrado"))
-    resposta = cliente_governanca.post(reverse("gestao:dominio_verificar"),
-                                      {"dominio": "academia.exemplo.com.br"})
+    monkeypatch.setattr(
+        servicos, "_checar_arquivo_no_dominio", lambda dominio, valor: (True, "token encontrado")
+    )
+    resposta = cliente_governanca.post(
+        reverse("gestao:dominio_verificar"), {"dominio": "academia.exemplo.com.br"}
+    )
     assert resposta.status_code == 302
     rede.refresh_from_db()
     assert rede.dominio == "academia.exemplo.com.br"
@@ -72,7 +82,12 @@ def test_verificacao_de_dominio_pelo_painel(cliente_governanca, rede, monkeypatc
 
 
 def test_plataforma_telas_de_governanca(cliente_plataforma):
-    for rota in ("plataforma:saude", "plataforma:backups", "plataforma:dominios", "plataforma:lgpd"):
+    for rota in (
+        "plataforma:saude",
+        "plataforma:backups",
+        "plataforma:dominios",
+        "plataforma:lgpd",
+    ):
         assert cliente_plataforma.get(reverse(rota)).status_code == 200, rota
 
 
@@ -92,8 +107,9 @@ def test_acao_de_backup_pela_tela(cliente_plataforma, settings, tmp_path):
 
 def test_exportar_cliente_pela_tela(cliente_plataforma, settings, tmp_path, rede):
     settings.BACKUP_DIR = tmp_path
-    resposta = cliente_plataforma.post(reverse("plataforma:backups_acao"),
-                                      {"acao": "exportar", "rede": rede.pk})
+    resposta = cliente_plataforma.post(
+        reverse("plataforma:backups_acao"), {"acao": "exportar", "rede": rede.pk}
+    )
     assert resposta.status_code == 302
     assert RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.TENANT, rede=rede).exists()
 
@@ -102,9 +118,12 @@ def test_verificar_dominio_pela_plataforma(cliente_plataforma, rede, monkeypatch
     import governanca.servicos as servicos
 
     monkeypatch.setattr(servicos, "_checar_txt", lambda dominio, valor: (False, "sem TXT"))
-    monkeypatch.setattr(servicos, "_checar_arquivo_no_dominio", lambda dominio, valor: (False, "nada"))
-    resposta = cliente_plataforma.post(reverse("plataforma:dominios_acao", args=[rede.pk]),
-                                      {"acao": "verificar"})
+    monkeypatch.setattr(
+        servicos, "_checar_arquivo_no_dominio", lambda dominio, valor: (False, "nada")
+    )
+    resposta = cliente_plataforma.post(
+        reverse("plataforma:dominios_acao", args=[rede.pk]), {"acao": "verificar"}
+    )
     assert resposta.status_code == 302
 
 

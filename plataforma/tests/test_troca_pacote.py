@@ -1,7 +1,7 @@
 """Troca de pacote pelo cliente: upgrade imediato, downgrade agendado e limites."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -10,10 +10,12 @@ from django.utils import timezone
 
 from plataforma.models import Assinatura, Fatura
 from plataforma.servicos import (
-    aplicar_trocas_agendadas, gerar_fatura, situacao_do_tenant, trocar_pacote_do_tenant,
+    aplicar_trocas_agendadas,
+    situacao_do_tenant,
+    trocar_pacote_do_tenant,
     uso_do_tenant,
 )
-from plataforma.tests.conftest import criar_alunos, criar_assinatura, criar_pacote
+from plataforma.tests.conftest import criar_alunos, criar_assinatura
 
 
 @pytest.fixture
@@ -25,10 +27,13 @@ def cliente_recepcao(db, rede):
     from core.models import VinculoUsuario
 
     usuario = get_user_model().objects.create_user(
-        username="recepcao.teste", password="SenhaRecepcao123", email="recepcao@exemplo.com",
+        username="recepcao.teste",
+        password="SenhaRecepcao123",
+        email="recepcao@exemplo.com",
     )
-    VinculoUsuario.todos.create(usuario=usuario, rede=rede, unidade=None, papel="recepcao",
-                                ativo=True)
+    VinculoUsuario.todos.create(
+        usuario=usuario, rede=rede, unidade=None, papel="recepcao", ativo=True
+    )
     cliente = Client()
     cliente.force_login(usuario)
     return cliente
@@ -52,7 +57,7 @@ def test_downgrade_fica_agendado_e_avisa_o_excesso(db, rede, pacote_bronze, paco
     resultado = trocar_pacote_do_tenant(rede, pacote_prata)
     assinatura.refresh_from_db()
     assert resultado["tipo"] == "downgrade"
-    assert assinatura.pacote == pacote_bronze          # ainda nao mudou
+    assert assinatura.pacote == pacote_bronze  # ainda nao mudou
     assert assinatura.pacote_agendado == pacote_prata  # vale na renovacao
     assert "acima do novo limite" in resultado["aviso"]
     assert "nada e apagado" in resultado["aviso"].lower() or "Nada e apagado" in resultado["aviso"]

@@ -1,4 +1,5 @@
 """Mixins do painel: permissao por modulo, unidade atual e contexto comum."""
+
 from __future__ import annotations
 
 from django.contrib.auth.mixins import LoginRequiredMixin

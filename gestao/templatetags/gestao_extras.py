@@ -1,4 +1,5 @@
 """Filtros usados pelos templates genericos do painel."""
+
 from __future__ import annotations
 
 from django import template

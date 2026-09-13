@@ -1,14 +1,14 @@
 """Painel da rede: consolidado, unidades, repasses, governanca, comunicados e onboarding."""
+
 from __future__ import annotations
 
 import csv
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -18,14 +18,33 @@ from gestao.permissoes import Modulo
 from gestao.views import ListaPainel, PainelMixin
 from rede import forms as formularios
 from rede.models import (
-    Comunicado, ImplantacaoDeUnidade, LeituraDeComunicado, Meta, PoliticaDaRede, RegraDeRepasse,
-    Repasse, SolicitacaoDeAprovacao, TemplateDeUnidade, TransferenciaDeAluno,
+    Comunicado,
+    ImplantacaoDeUnidade,
+    LeituraDeComunicado,
+    Meta,
+    RegraDeRepasse,
+    Repasse,
+    SolicitacaoDeAprovacao,
+    TemplateDeUnidade,
+    TransferenciaDeAluno,
 )
 from rede.servicos import (
-    ErroDeRede, aplicar_template, atualizar_atrasados, atualizar_metas, comparativo_entre_unidades,
-    conferir_repasse, consolidado_da_rede, distribuir_catalogo, emitir_repasse, emitir_repasses_do_mes,
-    encerrar_unidade, marcar_item_do_checklist, marcar_repasse_pago, periodo_do_mes, politica,
-    regra_para, relatorio_de_repasses, transferir_alunos,
+    ErroDeRede,
+    aplicar_template,
+    atualizar_atrasados,
+    atualizar_metas,
+    conferir_repasse,
+    consolidado_da_rede,
+    distribuir_catalogo,
+    emitir_repasses_do_mes,
+    encerrar_unidade,
+    marcar_item_do_checklist,
+    marcar_repasse_pago,
+    periodo_do_mes,
+    politica,
+    regra_para,
+    relatorio_de_repasses,
+    transferir_alunos,
 )
 
 ZERO = 0
@@ -69,7 +88,9 @@ class FormularioDaRede(PainelMixin, View):
         return base
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, self.montar(self.get_form(), self.contexto_extra()))
+        return render(
+            request, self.template_name, self.montar(self.get_form(), self.contexto_extra())
+        )
 
     def contexto_extra(self):
         return {}
@@ -77,8 +98,12 @@ class FormularioDaRede(PainelMixin, View):
     def post(self, request, *args, **kwargs):
         formulario = self.get_form(request.POST)
         if not formulario.is_valid():
-            return render(request, self.template_name, self.montar(formulario, self.contexto_extra()))
-        self.salvar(formulario.cleaned_data if hasattr(formulario, "cleaned_data") else None, formulario)
+            return render(
+                request, self.template_name, self.montar(formulario, self.contexto_extra())
+            )
+        self.salvar(
+            formulario.cleaned_data if hasattr(formulario, "cleaned_data") else None, formulario
+        )
         messages.success(request, self.mensagem_de_sucesso)
         return redirect(self.sucesso_url)
 
@@ -104,9 +129,12 @@ class RedePainelView(PainelMixin, TemplateView):
             fim=fim,
             consolidado=consolidado_da_rede(rede, inicio, fim),
             metas=list(Meta.objects.filter(rede=rede, inicio__gte=inicio, fim__lte=fim)),
-            repasses_atrasados=Repasse.objects.filter(rede=rede, situacao=Repasse.Situacao.ATRASADO),
+            repasses_atrasados=Repasse.objects.filter(
+                rede=rede, situacao=Repasse.Situacao.ATRASADO
+            ),
             aprovacoes_pendentes=SolicitacaoDeAprovacao.objects.filter(
-                rede=rede, situacao=SolicitacaoDeAprovacao.Situacao.PENDENTE),
+                rede=rede, situacao=SolicitacaoDeAprovacao.Situacao.PENDENTE
+            ),
             comunicados_abertos=Comunicado.objects.filter(rede=rede, ativo=True)[:5],
             travas=__import__("rede.servicos", fromlist=["travas_vigentes"]).travas_vigentes(rede),
         )
@@ -117,8 +145,14 @@ class UnidadesView(ListaPainel):
     model = Unidade
     modulo = Modulo.UNIDADES
     titulo = "Unidades"
-    colunas = [("Unidade", "nome"), ("Código", "codigo"), ("Tipo", "tipo"), ("Cidade", "cidade"),
-               ("UF", "uf"), ("Status", "status")]
+    colunas = [
+        ("Unidade", "nome"),
+        ("Código", "codigo"),
+        ("Tipo", "tipo"),
+        ("Cidade", "cidade"),
+        ("UF", "uf"),
+        ("Status", "status"),
+    ]
     campo_busca = ("nome", "codigo", "cidade")
     ordenacao = ("nome",)
     url_novo = "rede:unidade_criar"
@@ -142,8 +176,10 @@ def pode_criar_unidade(rede) -> tuple[bool, str]:
     atuais = Unidade.objects.filter(rede=rede).exclude(status="inativa").count()
     if atuais < limite:
         return True, ""
-    return False, (f"O pacote {assinatura.pacote.nome} inclui {limite} unidade(s) e você já tem {atuais}. "
-                   f"Fale com a SafeStack para adicionar uma unidade ou mudar de pacote.")
+    return False, (
+        f"O pacote {assinatura.pacote.nome} inclui {limite} unidade(s) e você já tem {atuais}. "
+        f"Fale com a SafeStack para adicionar uma unidade ou mudar de pacote."
+    )
 
 
 class UnidadeCriarView(FormularioDaRede):
@@ -165,8 +201,13 @@ class UnidadeCriarView(FormularioDaRede):
         unidade = formulario.save(commit=False)
         unidade.rede = self.request.rede
         unidade.save()
-        registrar("criar", "unidade", entidade_id=unidade.pk,
-                  descricao=f"Unidade {unidade.nome} criada", request=self.request)
+        registrar(
+            "criar",
+            "unidade",
+            entidade_id=unidade.pk,
+            descricao=f"Unidade {unidade.nome} criada",
+            request=self.request,
+        )
 
 
 class UnidadeEditarView(FormularioDaRede):
@@ -183,13 +224,21 @@ class UnidadeEditarView(FormularioDaRede):
     def salvar(self, dados, formulario):
         unidade = formulario.save(commit=False)
         politica_da_rede = politica(self.request.rede)
-        if (unidade.sobrescrever_branding and not politica_da_rede.permitir_sobrescrita_branding):
+        if unidade.sobrescrever_branding and not politica_da_rede.permitir_sobrescrita_branding:
             unidade.sobrescrever_branding = False
-            messages.warning(self.request, "A rede não permite que a unidade sobrescreva a marca "
-                                           "(RF-RED-013); o kit da rede segue valendo.")
+            messages.warning(
+                self.request,
+                "A rede não permite que a unidade sobrescreva a marca "
+                "(RF-RED-013); o kit da rede segue valendo.",
+            )
         unidade.save()
-        registrar("alterar", "unidade", entidade_id=unidade.pk,
-                  descricao=f"Unidade {unidade.nome} atualizada", request=self.request)
+        registrar(
+            "alterar",
+            "unidade",
+            entidade_id=unidade.pk,
+            descricao=f"Unidade {unidade.nome} atualizada",
+            request=self.request,
+        )
 
 
 class UnidadeEncerrarView(PainelMixin, View):
@@ -201,7 +250,9 @@ class UnidadeEncerrarView(PainelMixin, View):
     def post(self, request, pk):
         unidade = get_object_or_404(Unidade, pk=pk, rede=request.rede)
         destino_id = request.POST.get("destino") or None
-        destino = Unidade.objects.filter(pk=destino_id, rede=request.rede).first() if destino_id else None
+        destino = (
+            Unidade.objects.filter(pk=destino_id, rede=request.rede).first() if destino_id else None
+        )
         if (request.POST.get("confirmacao") or "").strip().upper() != "ENCERRAR":
             messages.error(request, "Para confirmar, digite ENCERRAR no campo de confirmação.")
             return redirect("rede:unidades")
@@ -226,29 +277,40 @@ class AplicarTemplateView(PainelMixin, View):
     template_name = "rede/onboarding.html"
 
     def get(self, request):
-        implantacoes = ImplantacaoDeUnidade.objects.filter(unidade__rede=request.rede).select_related(
-            "unidade", "template")
-        return render(request, self.template_name, {
-            "titulo": "Onboarding de unidade",
-            "modulo": Modulo.UNIDADES.value,
-            "unidades": Unidade.objects.filter(rede=request.rede),
-            "templates": TemplateDeUnidade.objects.filter(rede=request.rede, ativo=True),
-            "implantacoes": implantacoes,
-        })
+        implantacoes = ImplantacaoDeUnidade.objects.filter(
+            unidade__rede=request.rede
+        ).select_related("unidade", "template")
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Onboarding de unidade",
+                "modulo": Modulo.UNIDADES.value,
+                "unidades": Unidade.objects.filter(rede=request.rede),
+                "templates": TemplateDeUnidade.objects.filter(rede=request.rede, ativo=True),
+                "implantacoes": implantacoes,
+            },
+        )
 
     def post(self, request):
         if request.POST.get("item_id"):
             implantacao = get_object_or_404(
-                ImplantacaoDeUnidade, pk=request.POST.get("implantacao"), unidade__rede=request.rede)
-            marcar_item_do_checklist(implantacao, int(request.POST["item_id"]),
-                                     concluido=request.POST.get("concluido") == "1")
+                ImplantacaoDeUnidade, pk=request.POST.get("implantacao"), unidade__rede=request.rede
+            )
+            marcar_item_do_checklist(
+                implantacao,
+                int(request.POST["item_id"]),
+                concluido=request.POST.get("concluido") == "1",
+            )
             return redirect("rede:unidade_template")
         unidade = get_object_or_404(Unidade, pk=request.POST.get("unidade"), rede=request.rede)
         template = TemplateDeUnidade.objects.filter(
-            pk=request.POST.get("template") or None, rede=request.rede).first()
+            pk=request.POST.get("template") or None, rede=request.rede
+        ).first()
         implantacao = aplicar_template(unidade, template, usuario=request.user)
-        messages.success(request, f"Template aplicado em {unidade.nome} "
-                                  f"({implantacao.progresso}% do checklist).")
+        messages.success(
+            request, f"Template aplicado em {unidade.nome} ({implantacao.progresso}% do checklist)."
+        )
         return redirect("rede:unidade_template")
 
 
@@ -256,15 +318,24 @@ class MetasView(ListaPainel):
     model = Meta
     modulo = Modulo.REDE
     titulo = "Metas"
-    colunas = [("Período", "inicio"), ("Unidade", "unidade"), ("Indicador", "indicador"),
-               ("Alvo", "alvo"), ("Realizado", "realizado")]
+    colunas = [
+        ("Período", "inicio"),
+        ("Unidade", "unidade"),
+        ("Indicador", "indicador"),
+        ("Alvo", "alvo"),
+        ("Realizado", "realizado"),
+    ]
     ordenacao = ("-inicio", "-pk")
     url_novo = "rede:meta_criar"
     mostrar_arquivados = False
 
     def get_queryset(self):
         atualizar_metas(self.request.rede)
-        return Meta.objects.filter(rede=self.request.rede).select_related("unidade").order_by("-inicio")
+        return (
+            Meta.objects.filter(rede=self.request.rede)
+            .select_related("unidade")
+            .order_by("-inicio")
+        )
 
 
 class MetaCriarView(FormularioDaRede):
@@ -285,9 +356,15 @@ class RepassesView(ListaPainel):
     modulo = Modulo.REPASSES
     titulo = "Repasses e royalties"
     subtitulo = "Memória de cálculo auditável por unidade e período"
-    colunas = [("Período", "inicio"), ("Unidade", "unidade"), ("Base", "base"),
-               ("Base de cálculo", "base_de_calculo"), ("Devido", "valor_devido"),
-               ("Pago", "valor_pago"), ("Situação", "situacao")]
+    colunas = [
+        ("Período", "inicio"),
+        ("Unidade", "unidade"),
+        ("Base", "base"),
+        ("Base de cálculo", "base_de_calculo"),
+        ("Devido", "valor_devido"),
+        ("Pago", "valor_pago"),
+        ("Situação", "situacao"),
+    ]
     ordenacao = ("-inicio", "unidade__nome")
     url_detalhe = "rede:repasse_detalhe"
     mostrar_arquivados = False
@@ -299,9 +376,12 @@ class RepassesView(ListaPainel):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         inicio, fim = _periodo_do_pedido(self.request)
-        contexto.update(relatorio=relatorio_de_repasses(self.request.rede, inicio, fim),
-                        inicio=inicio, fim=fim,
-                        tem_regra=RegraDeRepasse.objects.filter(rede=self.request.rede, ativo=True).exists())
+        contexto.update(
+            relatorio=relatorio_de_repasses(self.request.rede, inicio, fim),
+            inicio=inicio,
+            fim=fim,
+            tem_regra=RegraDeRepasse.objects.filter(rede=self.request.rede, ativo=True).exists(),
+        )
         return contexto
 
 
@@ -325,29 +405,48 @@ class RepasseAcaoView(PainelMixin, View):
                 for unidade in unidades:
                     try:
                         calculo = calcular_repasse(unidade, inicio, fim)
-                        previas.append({"unidade": unidade.nome, "valor": calculo["valor_devido"],
-                                        "base": calculo["base_de_calculo"],
-                                        "linhas": len(calculo["linhas"])})
+                        previas.append(
+                            {
+                                "unidade": unidade.nome,
+                                "valor": calculo["valor_devido"],
+                                "base": calculo["base_de_calculo"],
+                                "linhas": len(calculo["linhas"]),
+                            }
+                        )
                     except ErroDeRede as erro:
                         previas.append({"unidade": unidade.nome, "valor": None, "erro": str(erro)})
                 contexto = " · ".join(
-                    f"{item['unidade']}: R$ {item['valor']}" if item.get("valor") is not None
-                    else f"{item['unidade']}: {item['erro']}" for item in previas
+                    f"{item['unidade']}: R$ {item['valor']}"
+                    if item.get("valor") is not None
+                    else f"{item['unidade']}: {item['erro']}"
+                    for item in previas
                 )
-                messages.info(request, f"Prévia ({inicio:%d/%m} a {fim:%d/%m}, nada gravado): {contexto}")
+                messages.info(
+                    request, f"Prévia ({inicio:%d/%m} a {fim:%d/%m}, nada gravado): {contexto}"
+                )
             elif acao == "emitir":
                 resultado = emitir_repasses_do_mes(request.rede, referencia=fim)
                 messages.success(
                     request,
                     f"{len(resultado['emitidos'])} repasse(s) emitido(s), total R$ {resultado['total']}."
-                    + (f" {len(resultado['erros'])} unidade(s) sem regra." if resultado["erros"] else ""),
+                    + (
+                        f" {len(resultado['erros'])} unidade(s) sem regra."
+                        if resultado["erros"]
+                        else ""
+                    ),
                 )
             elif acao == "atrasados":
-                messages.success(request, f"{atualizar_atrasados(request.rede)} repasse(s) marcado(s) "
-                                          "como atrasado.")
+                messages.success(
+                    request,
+                    f"{atualizar_atrasados(request.rede)} repasse(s) marcado(s) como atrasado.",
+                )
             elif acao == "pagar":
-                repasse = get_object_or_404(Repasse, pk=request.POST.get("repasse"), rede=request.rede)
-                marcar_repasse_pago(repasse, request.POST.get("valor") or repasse.saldo, request.user)
+                repasse = get_object_or_404(
+                    Repasse, pk=request.POST.get("repasse"), rede=request.rede
+                )
+                marcar_repasse_pago(
+                    repasse, request.POST.get("valor") or repasse.saldo, request.user
+                )
                 messages.success(request, f"Baixa registrada em {repasse.unidade.nome}.")
         except ErroDeRede as erro:
             messages.error(request, str(erro))
@@ -379,14 +478,30 @@ class RepasseCsvView(PainelMixin, View):
     def get(self, request, pk):
         repasse = get_object_or_404(Repasse, pk=pk, rede=request.rede)
         resposta = HttpResponse(content_type="text/csv")
-        resposta["Content-Disposition"] = f'attachment; filename="repasse-{repasse.unidade.slug if hasattr(repasse.unidade, "slug") else repasse.pk}.csv"'
+        resposta["Content-Disposition"] = (
+            f'attachment; filename="repasse-{repasse.unidade.slug if hasattr(repasse.unidade, "slug") else repasse.pk}.csv"'
+        )
         escritor = csv.writer(resposta)
-        escritor.writerow(["Demonstrativo de repasse", repasse.unidade.nome, f"{repasse.inicio:%d/%m/%Y} a {repasse.fim:%d/%m/%Y}"])
+        escritor.writerow(
+            [
+                "Demonstrativo de repasse",
+                repasse.unidade.nome,
+                f"{repasse.inicio:%d/%m/%Y} a {repasse.fim:%d/%m/%Y}",
+            ]
+        )
         escritor.writerow([])
         escritor.writerow(["Ordem", "Tipo", "Descrição", "Base", "Percentual (%)", "Valor"])
         for item in repasse.itens.all():
-            escritor.writerow([item.ordem, item.get_tipo_display(), item.descricao, item.base,
-                               item.percentual, item.valor])
+            escritor.writerow(
+                [
+                    item.ordem,
+                    item.get_tipo_display(),
+                    item.descricao,
+                    item.base,
+                    item.percentual,
+                    item.valor,
+                ]
+            )
         escritor.writerow([])
         escritor.writerow(["", "", "Total devido", "", "", repasse.valor_devido])
         escritor.writerow(["", "", "Hash do cálculo", "", "", repasse.hash_do_calculo])
@@ -398,9 +513,15 @@ class RegrasDeRepasseView(ListaPainel):
     modulo = Modulo.REPASSES
     titulo = "Regras de repasse"
     subtitulo = "Percentual, base de cálculo, exclusões e piso mínimo"
-    colunas = [("Unidade", "unidade"), ("Tipo", "tipo"), ("Percentual (%)", "percentual"),
-               ("Base", "base"), ("Fundo (%)", "fundo_de_marketing"), ("Vencimento", "dia_de_vencimento"),
-               ("Ativa", "ativo")]
+    colunas = [
+        ("Unidade", "unidade"),
+        ("Tipo", "tipo"),
+        ("Percentual (%)", "percentual"),
+        ("Base", "base"),
+        ("Fundo (%)", "fundo_de_marketing"),
+        ("Vencimento", "dia_de_vencimento"),
+        ("Ativa", "ativo"),
+    ]
     ordenacao = ("unidade__nome", "-criado_em")
     url_novo = "rede:regra_criar"
     url_editar = "rede:regra_editar"
@@ -421,8 +542,13 @@ class RegraCriarView(FormularioDaRede):
         regra = formulario.save(commit=False)
         regra.rede = self.request.rede
         regra.save()
-        registrar("criar", "regra_de_repasse", entidade_id=regra.pk,
-                  descricao=f"Regra de repasse criada ({regra.get_tipo_display()})", request=self.request)
+        registrar(
+            "criar",
+            "regra_de_repasse",
+            entidade_id=regra.pk,
+            descricao=f"Regra de repasse criada ({regra.get_tipo_display()})",
+            request=self.request,
+        )
 
 
 class RegraEditarView(FormularioDaRede):
@@ -449,28 +575,47 @@ class GovernancaView(PainelMixin, View):
 
     def get(self, request):
         politica_da_rede = politica(request.rede)
-        return render(request, self.template_name, {
-            "titulo": "Governança da rede",
-            "modulo": Modulo.GOVERNANCA.value,
-            "form": formularios.PoliticaDaRedeForm(instance=politica_da_rede),
-            "politica": politica_da_rede,
-            "travas": __import__("rede.servicos", fromlist=["travas_vigentes"]).travas_vigentes(request.rede),
-            "unidades": Unidade.objects.filter(rede=request.rede),
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Governança da rede",
+                "modulo": Modulo.GOVERNANCA.value,
+                "form": formularios.PoliticaDaRedeForm(instance=politica_da_rede),
+                "politica": politica_da_rede,
+                "travas": __import__("rede.servicos", fromlist=["travas_vigentes"]).travas_vigentes(
+                    request.rede
+                ),
+                "unidades": Unidade.objects.filter(rede=request.rede),
+            },
+        )
 
     def post(self, request):
         politica_da_rede = politica(request.rede)
         formulario = formularios.PoliticaDaRedeForm(request.POST, instance=politica_da_rede)
         if not formulario.is_valid():
-            return render(request, self.template_name, {
-                "titulo": "Governança da rede", "modulo": Modulo.GOVERNANCA.value,
-                "form": formulario, "politica": politica_da_rede,
-                "travas": __import__("rede.servicos", fromlist=["travas_vigentes"]).travas_vigentes(request.rede),
-                "unidades": Unidade.objects.filter(rede=request.rede),
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    "titulo": "Governança da rede",
+                    "modulo": Modulo.GOVERNANCA.value,
+                    "form": formulario,
+                    "politica": politica_da_rede,
+                    "travas": __import__(
+                        "rede.servicos", fromlist=["travas_vigentes"]
+                    ).travas_vigentes(request.rede),
+                    "unidades": Unidade.objects.filter(rede=request.rede),
+                },
+            )
         formulario.save()
-        registrar("alterar", "politica_da_rede", entidade_id=politica_da_rede.pk,
-                  descricao="Política da rede atualizada", request=request)
+        registrar(
+            "alterar",
+            "politica_da_rede",
+            entidade_id=politica_da_rede.pk,
+            descricao="Política da rede atualizada",
+            request=request,
+        )
         messages.success(request, "Política da rede atualizada.")
         return redirect("rede:governanca")
 
@@ -479,8 +624,13 @@ class ComunicadosView(ListaPainel):
     model = Comunicado
     modulo = Modulo.COMUNICADOS
     titulo = "Comunicados"
-    colunas = [("Quando", "criado_em"), ("Título", "titulo"), ("Público", "publico"),
-               ("Unidade", "unidade"), ("Ativo", "ativo")]
+    colunas = [
+        ("Quando", "criado_em"),
+        ("Título", "titulo"),
+        ("Público", "publico"),
+        ("Unidade", "unidade"),
+        ("Ativo", "ativo"),
+    ]
     ordenacao = ("-criado_em", "-pk")
     url_novo = "rede:comunicado_criar"
     mostrar_arquivados = False
@@ -490,8 +640,11 @@ class ComunicadosView(ListaPainel):
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
-        lidos = set(LeituraDeComunicado.objects.filter(
-            usuario=self.request.user).values_list("comunicado_id", flat=True))
+        lidos = set(
+            LeituraDeComunicado.objects.filter(usuario=self.request.user).values_list(
+                "comunicado_id", flat=True
+            )
+        )
         contexto["lidos"] = lidos
         return contexto
 
@@ -516,7 +669,8 @@ class LerComunicadoView(PainelMixin, View):
     def post(self, request, pk):
         comunicado = get_object_or_404(Comunicado, pk=pk, rede=request.rede)
         LeituraDeComunicado.objects.get_or_create(
-            comunicado=comunicado, usuario=request.user,
+            comunicado=comunicado,
+            usuario=request.user,
             defaults={"unidade": getattr(request, "unidade", None)},
         )
         messages.success(request, "Leitura confirmada.")
@@ -528,13 +682,21 @@ class AprovacoesView(ListaPainel):
     modulo = Modulo.APROVACOES
     titulo = "Alçadas e aprovações"
     subtitulo = "Operações sensíveis que dependem da rede (RF-RED-018)"
-    colunas = [("Quando", "criado_em"), ("Tipo", "tipo"), ("Título", "titulo"),
-               ("Unidade", "unidade"), ("Valor", "valor"), ("Situação", "situacao")]
+    colunas = [
+        ("Quando", "criado_em"),
+        ("Tipo", "tipo"),
+        ("Título", "titulo"),
+        ("Unidade", "unidade"),
+        ("Valor", "valor"),
+        ("Situação", "situacao"),
+    ]
     ordenacao = ("-criado_em", "-pk")
     mostrar_arquivados = False
 
     def get_queryset(self):
-        return SolicitacaoDeAprovacao.objects.filter(rede=self.request.rede).select_related("unidade")
+        return SolicitacaoDeAprovacao.objects.filter(rede=self.request.rede).select_related(
+            "unidade"
+        )
 
 
 class DecidirAprovacaoView(PainelMixin, View):
@@ -545,9 +707,13 @@ class DecidirAprovacaoView(PainelMixin, View):
         pedido = get_object_or_404(SolicitacaoDeAprovacao, pk=pk, rede=request.rede)
         aprovar = request.POST.get("decisao") == "aprovar"
         pedido.decidir(request.user, aprovar, (request.POST.get("justificativa") or "").strip())
-        registrar("decidir", "aprovacao", entidade_id=pedido.pk,
-                  descricao=f"{pedido.get_tipo_display()}: {'aprovada' if aprovar else 'recusada'}",
-                  request=request)
+        registrar(
+            "decidir",
+            "aprovacao",
+            entidade_id=pedido.pk,
+            descricao=f"{pedido.get_tipo_display()}: {'aprovada' if aprovar else 'recusada'}",
+            request=request,
+        )
         messages.success(request, f"Solicitação {'aprovada' if aprovar else 'recusada'}.")
         return redirect("rede:aprovacoes")
 
@@ -560,29 +726,45 @@ class CatalogoView(PainelMixin, View):
     template_name = "rede/catalogo.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            "titulo": "Catálogo da rede",
-            "modulo": Modulo.CATALOGO.value,
-            "form": formularios.DistribuicaoForm(rede=request.rede),
-            "distribuicoes": __import__("rede.models", fromlist=["DistribuicaoDeCatalogo"])
-            .DistribuicaoDeCatalogo.objects.filter(rede=request.rede)[:10],
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Catálogo da rede",
+                "modulo": Modulo.CATALOGO.value,
+                "form": formularios.DistribuicaoForm(rede=request.rede),
+                "distribuicoes": __import__(
+                    "rede.models", fromlist=["DistribuicaoDeCatalogo"]
+                ).DistribuicaoDeCatalogo.objects.filter(rede=request.rede)[:10],
+            },
+        )
 
     def post(self, request):
         formulario = formularios.DistribuicaoForm(request.POST, rede=request.rede)
         if not formulario.is_valid():
-            return render(request, self.template_name, {
-                "titulo": "Catálogo da rede", "modulo": Modulo.CATALOGO.value, "form": formulario,
-                "distribuicoes": [],
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    "titulo": "Catálogo da rede",
+                    "modulo": Modulo.CATALOGO.value,
+                    "form": formulario,
+                    "distribuicoes": [],
+                },
+            )
         distribuicao = distribuir_catalogo(
-            request.rede, formulario.cleaned_data["referencia"],
-            formulario.cleaned_data["unidades"], usuario=request.user,
+            request.rede,
+            formulario.cleaned_data["referencia"],
+            formulario.cleaned_data["unidades"],
+            usuario=request.user,
         )
         copias = len(distribuicao.resultado.get("copias", []))
         messages.success(request, f"Distribuído para {copias} unidade(s).")
         for erro in distribuicao.resultado.get("erros", [])[:5]:
-            messages.warning(request, f"{erro}" if isinstance(erro, str) else f"{erro['unidade']}: {erro['erro']}")
+            messages.warning(
+                request,
+                f"{erro}" if isinstance(erro, str) else f"{erro['unidade']}: {erro['erro']}",
+            )
         return redirect("rede:catalogo")
 
 
@@ -594,21 +776,32 @@ class TransferenciasView(PainelMixin, View):
     template_name = "rede/transferencias.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            "titulo": "Transferência de alunos",
-            "modulo": Modulo.UNIDADES.value,
-            "form": formularios.TransferenciaForm(rede=request.rede),
-            "historico": TransferenciaDeAluno.objects.filter(
-                rede=request.rede).select_related("aluno", "origem", "destino")[:15],
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Transferência de alunos",
+                "modulo": Modulo.UNIDADES.value,
+                "form": formularios.TransferenciaForm(rede=request.rede),
+                "historico": TransferenciaDeAluno.objects.filter(rede=request.rede).select_related(
+                    "aluno", "origem", "destino"
+                )[:15],
+            },
+        )
 
     def post(self, request):
         formulario = formularios.TransferenciaForm(request.POST, rede=request.rede)
         if not formulario.is_valid():
-            return render(request, self.template_name, {
-                "titulo": "Transferência de alunos", "modulo": Modulo.UNIDADES.value,
-                "form": formulario, "historico": [],
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    "titulo": "Transferência de alunos",
+                    "modulo": Modulo.UNIDADES.value,
+                    "form": formulario,
+                    "historico": [],
+                },
+            )
         origem = formulario.cleaned_data["origem"]
         destino = formulario.cleaned_data["destino"]
         from usuarios.models import Usuario
@@ -617,10 +810,13 @@ class TransferenciasView(PainelMixin, View):
         if request.POST.get("confirmacao", "").strip().upper() != "TRANSFERIR":
             messages.error(request, "Para confirmar, digite TRANSFERIR no campo de confirmação.")
             return redirect("rede:transferencias")
-        resultado = transferir_alunos(alunos, destino, formulario.cleaned_data.get("motivo", ""),
-                                      usuario=request.user)
-        messages.success(request, f"{resultado['transferidos']} aluno(s) transferido(s) "
-                                  f"(lote {resultado['lote']}).")
+        resultado = transferir_alunos(
+            alunos, destino, formulario.cleaned_data.get("motivo", ""), usuario=request.user
+        )
+        messages.success(
+            request,
+            f"{resultado['transferidos']} aluno(s) transferido(s) (lote {resultado['lote']}).",
+        )
         return redirect("rede:transferencias")
 
 
@@ -632,12 +828,16 @@ class ImportarDaRedeView(PainelMixin, View):
     template_name = "rede/importar.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            "titulo": "Importar para a rede",
-            "modulo": Modulo.UNIDADES.value,
-            "form": formularios.ImportacaoDaRedeForm(),
-            "relatorio": None,
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Importar para a rede",
+                "modulo": Modulo.UNIDADES.value,
+                "form": formularios.ImportacaoDaRedeForm(),
+                "relatorio": None,
+            },
+        )
 
     def post(self, request):
         from gestao.importacao import analisar_aplicar_multiunidade
@@ -647,7 +847,9 @@ class ImportarDaRedeView(PainelMixin, View):
         if formulario.is_valid():
             conteudo = formulario.cleaned_data["arquivo"].read()
             relatorio = analisar_aplicar_multiunidade(
-                conteudo, request.rede, tipo=formulario.cleaned_data["tipo"],
+                conteudo,
+                request.rede,
+                tipo=formulario.cleaned_data["tipo"],
                 atualizar_existentes=formulario.cleaned_data.get("atualizar_existentes", False),
                 dry_run=request.POST.get("acao") != "importar",
             )
@@ -655,11 +857,15 @@ class ImportarDaRedeView(PainelMixin, View):
                 messages.success(request, relatorio["mensagem"])
             else:
                 messages.info(request, "Conferência pronta — nada foi gravado ainda.")
-        return render(request, self.template_name, {
-            "titulo": "Importar para a rede",
-            "modulo": Modulo.UNIDADES.value,
-            "form": formulario,
-            "relatorio": relatorio,
-            "conferindo": request.POST.get("acao") != "importar",
-            "arquivo_em_memoria": request.POST.get("arquivo_em_memoria", ""),
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "titulo": "Importar para a rede",
+                "modulo": Modulo.UNIDADES.value,
+                "form": formulario,
+                "relatorio": relatorio,
+                "conferindo": request.POST.get("acao") != "importar",
+                "arquivo_em_memoria": request.POST.get("arquivo_em_memoria", ""),
+            },
+        )

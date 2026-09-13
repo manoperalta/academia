@@ -1,8 +1,8 @@
 """Tarefas assincronas: relatorio, importacao, exportacao e LGPD (RF-API-012/015/016)."""
+
 from __future__ import annotations
 
 import csv
-import io
 import json
 from datetime import timedelta
 from pathlib import Path
@@ -30,7 +30,9 @@ def enfileirar(tipo: str, rede=None, parametros=None, usuario=None, token=None) 
     if tipo not in TarefaAssincrona.Tipo.values:
         raise TarefaDesconhecida(tipo)
     return TarefaAssincrona.objects.create(
-        rede=rede, tipo=tipo, parametros=parametros or {},
+        rede=rede,
+        tipo=tipo,
+        parametros=parametros or {},
         solicitado_por=usuario if getattr(usuario, "pk", None) else None,
         token=token if getattr(token, "pk", None) else None,
     )
@@ -59,33 +61,53 @@ def _relatorio(conteudo: dict) -> dict:
     fim = _data_iso(conteudo["fim"])
     consolidado = consolidado_da_rede(rede, inicio, fim)
     linhas = [
-        ["Unidade", "Recebido", "A receber", "Inadimplencia %", "Alunos ativos", "Ticket medio",
-         "Repasse", "Despesas"],
+        [
+            "Unidade",
+            "Recebido",
+            "A receber",
+            "Inadimplencia %",
+            "Alunos ativos",
+            "Ticket medio",
+            "Repasse",
+            "Despesas",
+        ],
         *[
-            [linha["unidade"].nome, str(linha["recebido"]), str(linha["em_aberto"]),
-             str(linha["inadimplencia"]), linha["alunos_ativos"], str(linha["ticket_medio"]),
-             str(linha["repasse"]), str(linha["despesas"])]
+            [
+                linha["unidade"].nome,
+                str(linha["recebido"]),
+                str(linha["em_aberto"]),
+                str(linha["inadimplencia"]),
+                linha["alunos_ativos"],
+                str(linha["ticket_medio"]),
+                str(linha["repasse"]),
+                str(linha["despesas"]),
+            ]
             for linha in comparativo_entre_unidades(rede, inicio, fim)
         ],
         [],
         ["Total recebido", str(consolidado["recebido"])],
         ["Resultado", str(consolidado["resultado"])],
     ]
-    return {"tipo": "relatorio_rede", "linhas": linhas,
-            "resumo": {"recebido": str(consolidado["recebido"]),
-                       "resultado": str(consolidado["resultado"]),
-                       "unidades": consolidado["unidades"]}}
+    return {
+        "tipo": "relatorio_rede",
+        "linhas": linhas,
+        "resumo": {
+            "recebido": str(consolidado["recebido"]),
+            "resultado": str(consolidado["resultado"]),
+            "unidades": consolidado["unidades"],
+        },
+    }
 
 
 def _exportacao(conteudo: dict) -> dict:
     from django.apps import apps
 
-    from core.models import Rede
-
     rede = _resolver_rede(conteudo)
     if conteudo.get("recurso") == "webhooks":
-        linhas = [["evento", "entrega", "situacao", "tentativas"],
-                  *[list(item) for item in conteudo.get("linhas", [])]]
+        linhas = [
+            ["evento", "entrega", "situacao", "tentativas"],
+            *[list(item) for item in conteudo.get("linhas", [])],
+        ]
         return {"tipo": "exportacao_webhooks", "linhas": linhas}
     tabelas = {}
     for modelo in apps.get_models():
@@ -108,26 +130,47 @@ def _lgpd(conteudo: dict) -> dict:
         raise ValueError("titular nao encontrado para a tarefa de LGPD")
     if conteudo.get("acao") == "anonimizar":
         resultado = anonimizar_titular(rede, aluno, usuario=conteudo.get("usuario"))
-        return {"tipo": "lgpd_anonimizacao", "linhas": [["acao", "resultado"],
-                                                        ["anonimizar", resultado.get("titular", "ok")]]}
+        return {
+            "tipo": "lgpd_anonimizacao",
+            "linhas": [["acao", "resultado"], ["anonimizar", resultado.get("titular", "ok")]],
+        }
     dados = dados_do_titular(rede, aluno)
-    return {"tipo": "lgpd_exportacao", "linhas": [["campo", "valor"],
-                                                  *[[chave, json.dumps(valor, ensure_ascii=False)[:200]]
-                                                    for chave, valor in dados.items()]]}
+    return {
+        "tipo": "lgpd_exportacao",
+        "linhas": [
+            ["campo", "valor"],
+            *[
+                [chave, json.dumps(valor, ensure_ascii=False)[:200]]
+                for chave, valor in dados.items()
+            ],
+        ],
+    }
 
 
 def _importacao(conteudo: dict) -> dict:
     from gestao.importacao import analisar_aplicar_multiunidade
 
     resultado = analisar_aplicar_multiunidade(
-        conteudo["conteudo"], _resolver_rede(conteudo), tipo=conteudo.get("tipo", "alunos"),
+        conteudo["conteudo"],
+        _resolver_rede(conteudo),
+        tipo=conteudo.get("tipo", "alunos"),
         dry_run=bool(conteudo.get("dry_run")),
     )
-    return {"tipo": "importacao", "linhas": [["unidade", "criados", "erros"],
-                                             *[[nome, dados["criados"], len(dados["erros"])]
-                                               for nome, dados in resultado["por_unidade"].items()]],
-            "resumo": {"criados": resultado["criados"], "erros": resultado["erros"],
-                       "dry_run": bool(conteudo.get("dry_run"))}}
+    return {
+        "tipo": "importacao",
+        "linhas": [
+            ["unidade", "criados", "erros"],
+            *[
+                [nome, dados["criados"], len(dados["erros"])]
+                for nome, dados in resultado["por_unidade"].items()
+            ],
+        ],
+        "resumo": {
+            "criados": resultado["criados"],
+            "erros": resultado["erros"],
+            "dry_run": bool(conteudo.get("dry_run")),
+        },
+    }
 
 
 EXECUTORES = {
@@ -158,7 +201,7 @@ def executar(tarefa: TarefaAssincrona) -> TarefaAssincrona:
         tarefa.progresso = 100
         tarefa.situacao = TarefaAssincrona.Situacao.CONCLUIDA
         tarefa.termina_em = timezone.now() + VALIDADE_DO_ARQUIVO
-    except Exception as excecao:  # noqa: BLE001 - a falha precisa ficar visivel no job
+    except Exception as excecao:
         tarefa.situacao = TarefaAssincrona.Situacao.FALHOU
         tarefa.erro = str(excecao)[:1000]
         tarefa.progresso = 100

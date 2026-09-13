@@ -1,4 +1,5 @@
 """Fixtures da governanca (Fase 5)."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -27,10 +28,14 @@ def cache_limpo():
 def usuario_governanca(db, rede):
     """Dono da academia com senha conhecida e vinculo ativo."""
     usuario = get_user_model().objects.create_user(
-        username="dono.governanca", password=SENHA, email="dono@academia.com.br",
+        username="dono.governanca",
+        password=SENHA,
+        email="dono@academia.com.br",
     )
     VinculoUsuario.todos.get_or_create(
-        usuario=usuario, rede=rede, defaults={"papel": Papel.ADMIN_REDE, "ativo": True},
+        usuario=usuario,
+        rede=rede,
+        defaults={"papel": Papel.ADMIN_REDE, "ativo": True},
     )
     return usuario
 
@@ -45,7 +50,10 @@ def cliente_governanca(db, usuario_governanca):
 @pytest.fixture
 def staff_sem_2fa(db):
     usuario = get_user_model().objects.create_user(
-        username="equipe.plataforma", password=SENHA, email="equipe@safestack.com.br", is_staff=True,
+        username="equipe.plataforma",
+        password=SENHA,
+        email="equipe@safestack.com.br",
+        is_staff=True,
     )
     cliente = Client()
     cliente.force_login(usuario)
@@ -74,16 +82,29 @@ def aluno_com_login(db, rede):
     from usuarios.models import FichaSaude, Usuario
 
     login = get_user_model().objects.create_user(
-        username="aluno.governanca", password=SENHA, email="aluno@exemplo.com",
+        username="aluno.governanca",
+        password=SENHA,
+        email="aluno@exemplo.com",
     )
     aluno = Usuario.todos.create(
-        rede=rede, user=login, nome="Ana Aluna", email_user="ana@exemplo.com",
-        telefone_user="51999990000", cpf_cnpj_user="111.444.777-35",
-        data_nasc="1990-05-10", status_user="Ativo",
+        rede=rede,
+        user=login,
+        nome="Ana Aluna",
+        email_user="ana@exemplo.com",
+        telefone_user="51999990000",
+        cpf_cnpj_user="111.444.777-35",
+        data_nasc="1990-05-10",
+        status_user="Ativo",
     )
-    FichaSaude.todos.create(rede=rede, usuario=aluno, peso=Decimal("62.5"),
-                            altura=Decimal("1.68"), restricoes="joelho",
-                            obs="faz musculacao", usa_medicamento=False)
+    FichaSaude.todos.create(
+        rede=rede,
+        usuario=aluno,
+        peso=Decimal("62.5"),
+        altura=Decimal("1.68"),
+        restricoes="joelho",
+        obs="faz musculacao",
+        usa_medicamento=False,
+    )
 
     campos = {campo.name for campo in Pagamento._meta.get_fields()}
     dados = {"rede": rede, "usuario": login}
@@ -101,6 +122,7 @@ def aluno_com_login(db, rede):
         dados["status"] = "pago"
     if "plano" in campos:
         dados["plano"] = None
-    pagamento = Pagamento.objects.create(**{chave: valor for chave, valor in dados.items()
-                                            if valor is not None or chave == "plano"})
+    pagamento = Pagamento.objects.create(
+        **{chave: valor for chave, valor in dados.items() if valor is not None or chave == "plano"}
+    )
     return {"aluno": aluno, "login": login, "pagamento": pagamento}

@@ -1,16 +1,18 @@
 """Segundo fator: ativacao, desafio, codigos de recuperacao e obrigatoriedade."""
+
 from __future__ import annotations
 
-import pytest
-from django.core import mail
 from django.urls import reverse
 
 from core import totp
 from core.seguranca import (
-    confirmar_2fa, desativar_2fa, dois_fatores_ativo, gerar_codigos_de_recuperacao, iniciar_2fa,
+    confirmar_2fa,
+    desativar_2fa,
+    dois_fatores_ativo,
+    gerar_codigos_de_recuperacao,
+    iniciar_2fa,
     validar_segundo_fator,
 )
-from governanca.tests.conftest import SENHA
 from governanca.models import CodigoRecuperacao, Dispositivo2FA
 
 
@@ -25,12 +27,15 @@ def test_ativar_e_validar(db, usuario_governanca):
 
 def test_codigos_de_recuperacao_uso_unico(db, usuario_governanca):
     iniciar_2fa(usuario_governanca)
-    confirmar_2fa(usuario_governanca, totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo))
+    confirmar_2fa(
+        usuario_governanca,
+        totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo),
+    )
     codigos = gerar_codigos_de_recuperacao(usuario_governanca)
     assert len(codigos) == 8
     assert CodigoRecuperacao.objects.filter(usuario=usuario_governanca).count() == 8
     assert validar_segundo_fator(usuario_governanca, codigos[0]) is True
-    assert validar_segundo_fator(usuario_governanca, codigos[0]) is False   # uso unico
+    assert validar_segundo_fator(usuario_governanca, codigos[0]) is False  # uso unico
     assert validar_segundo_fator(usuario_governanca, codigos[1]) is True
     assert validar_segundo_fator(usuario_governanca, "AAAA-BBBB") is False
     usados = CodigoRecuperacao.objects.filter(usuario=usuario_governanca, usado_em__isnull=False)
@@ -40,7 +45,10 @@ def test_codigos_de_recuperacao_uso_unico(db, usuario_governanca):
 
 def test_desativar_remove_dispositivo_e_codigos(db, usuario_governanca):
     iniciar_2fa(usuario_governanca)
-    confirmar_2fa(usuario_governanca, totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo))
+    confirmar_2fa(
+        usuario_governanca,
+        totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo),
+    )
     gerar_codigos_de_recuperacao(usuario_governanca)
     desativar_2fa(usuario_governanca)
     assert Dispositivo2FA.objects.filter(usuario=usuario_governanca).count() == 0
@@ -50,7 +58,10 @@ def test_desativar_remove_dispositivo_e_codigos(db, usuario_governanca):
 
 def test_desafio_bloqueia_painel_ate_confirmar(cliente_governanca, usuario_governanca):
     iniciar_2fa(usuario_governanca)
-    confirmar_2fa(usuario_governanca, totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo))
+    confirmar_2fa(
+        usuario_governanca,
+        totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo),
+    )
     resposta = cliente_governanca.get(reverse("gestao:visao_geral"))
     assert resposta.status_code == 302
     assert reverse("governanca:dois_fatores") in resposta.url
@@ -61,9 +72,14 @@ def test_desafio_bloqueia_painel_ate_confirmar(cliente_governanca, usuario_gover
     errado = cliente_governanca.post(reverse("governanca:dois_fatores"), {"codigo": "000000"})
     assert errado.status_code == 200 and "invalido" in errado.content.decode().lower()
     # codigo certo libera e a sessao fica marcada
-    certo = cliente_governanca.post(reverse("governanca:dois_fatores"), {
-        "codigo": totp.codigo_atual(Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo),
-    })
+    certo = cliente_governanca.post(
+        reverse("governanca:dois_fatores"),
+        {
+            "codigo": totp.codigo_atual(
+                Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo
+            ),
+        },
+    )
     assert certo.status_code == 302
     assert cliente_governanca.get(reverse("gestao:visao_geral")).status_code == 200
 
@@ -79,8 +95,9 @@ def test_ativacao_pelo_painel_entrega_codigos(cliente_governanca, usuario_govern
     pagina = cliente_governanca.get(reverse("governanca:dois_fatores_cadastrar"))
     assert pagina.status_code == 200
     segredo = Dispositivo2FA.objects.get(usuario=usuario_governanca).segredo
-    resposta = cliente_governanca.post(reverse("governanca:dois_fatores_cadastrar"),
-                                    {"codigo": totp.codigo_atual(segredo)})
+    resposta = cliente_governanca.post(
+        reverse("governanca:dois_fatores_cadastrar"), {"codigo": totp.codigo_atual(segredo)}
+    )
     assert resposta.status_code == 200
     assert "recuperação" in resposta.content.decode().lower()
     assert CodigoRecuperacao.objects.filter(usuario=usuario_governanca).count() == 8

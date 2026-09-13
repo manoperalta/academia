@@ -1,4 +1,5 @@
 """Move a midia antiga para o namespace de cada cliente (RNF-010)."""
+
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand
@@ -16,7 +17,8 @@ class Command(BaseCommand):
         resultado = mover_midia_para_namespace(dry_run=not options["aplicar"])
         self.stdout.write(
             f"{'Movidos' if not resultado['dry_run'] else 'Moveria'}: {resultado['movidos']} "
-            f"arquivo(s); ignorados: {resultado['ignorados']}.")
+            f"arquivo(s); ignorados: {resultado['ignorados']}."
+        )
         for detalhe in resultado["detalhes"][:40]:
             self.stdout.write(f"  - {detalhe}")
         if resultado["dry_run"]:

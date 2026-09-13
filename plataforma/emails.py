@@ -3,6 +3,7 @@
 Usa as configuracoes de e-mail do proprio projeto (env EMAIL_*), porque o tenant
 recem-criado ainda nao tem SMTP proprio configurado.
 """
+
 from __future__ import annotations
 
 import logging
@@ -25,7 +26,7 @@ def enviar_email_plataforma(assunto: str, corpo: str, destinatarios) -> bool:
     remetente = getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@safestack.com.br")
     try:
         send_mail(assunto, corpo, remetente, destinos, fail_silently=False)
-    except Exception as erro:  # noqa: BLE001 - falha de e-mail nao derruba o cadastro
+    except Exception as erro:
         logger.warning("falha ao enviar e-mail da plataforma (%s): %s", assunto, erro)
         return False
     return True

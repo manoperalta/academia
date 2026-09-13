@@ -1,8 +1,9 @@
 """Paginas publicas: home, planos, cadastro self-service, ajuda e contato."""
+
 from __future__ import annotations
 
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -50,23 +51,46 @@ class AjudaView(BasePublica):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         contexto["topicos"] = [
-            {"titulo": "Primeiros passos",
-             "itens": ["Criar a conta e definir a senha pelo link recebido por e-mail",
-                       "Preencher os dados da academia e enviar o logo",
-                       "Cadastrar professores e planos",
-                       "Importar alunos por planilha CSV"]},
-            {"titulo": "Alunos e agenda",
-             "itens": ["Ficha do aluno com historico de pagamentos e presenca",
-                       "Aulas em video e paineis de treino", "Check-in na recepcao"]},
-            {"titulo": "Financeiro",
-             "itens": ["Planos e valores", "Lancar pagamento e dar baixa",
-                       "Relatorios e exportacao CSV"]},
-            {"titulo": "Plano e cobranca",
-             "itens": ["Ver uso e limites em Meu plano", "Trocar de pacote a qualquer momento",
-                       "Faturas e Pix copia e cola"]},
-            {"titulo": "Equipe e acessos",
-             "itens": ["Convidar recepcao, professores e financeiro",
-                       "Cada pessoa ve apenas o que o papel dela permite"]},
+            {
+                "titulo": "Primeiros passos",
+                "itens": [
+                    "Criar a conta e definir a senha pelo link recebido por e-mail",
+                    "Preencher os dados da academia e enviar o logo",
+                    "Cadastrar professores e planos",
+                    "Importar alunos por planilha CSV",
+                ],
+            },
+            {
+                "titulo": "Alunos e agenda",
+                "itens": [
+                    "Ficha do aluno com historico de pagamentos e presenca",
+                    "Aulas em video e paineis de treino",
+                    "Check-in na recepcao",
+                ],
+            },
+            {
+                "titulo": "Financeiro",
+                "itens": [
+                    "Planos e valores",
+                    "Lancar pagamento e dar baixa",
+                    "Relatorios e exportacao CSV",
+                ],
+            },
+            {
+                "titulo": "Plano e cobranca",
+                "itens": [
+                    "Ver uso e limites em Meu plano",
+                    "Trocar de pacote a qualquer momento",
+                    "Faturas e Pix copia e cola",
+                ],
+            },
+            {
+                "titulo": "Equipe e acessos",
+                "itens": [
+                    "Convidar recepcao, professores e financeiro",
+                    "Cada pessoa ve apenas o que o papel dela permite",
+                ],
+            },
         ]
         return contexto
 
@@ -84,24 +108,39 @@ class ContatoView(BasePublica):
 
         form = ContatoForm(request.POST)
         if not form.is_valid():
-            return render(request, self.template_name, {
-                **self.get_context_data(), "form": form,
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    **self.get_context_data(),
+                    "form": form,
+                },
+            )
         dados = form.cleaned_data
         configuracao = ConfiguracaoPlataforma.obter()
         destino = configuracao.email_financeiro or configuracao.nome_emitente
         enviar_email_plataforma(
             f"Contato pelo site: {dados['nome']}",
-            "\n".join([
-                f"Nome: {dados['nome']}", f"E-mail: {dados['email']}",
-                f"Telefone: {dados.get('telefone') or '-'}",
-                f"Academia: {dados.get('academia') or '-'}", "", dados["mensagem"],
-            ]),
+            "\n".join(
+                [
+                    f"Nome: {dados['nome']}",
+                    f"E-mail: {dados['email']}",
+                    f"Telefone: {dados.get('telefone') or '-'}",
+                    f"Academia: {dados.get('academia') or '-'}",
+                    "",
+                    dados["mensagem"],
+                ]
+            ),
             [destino] if "@" in str(destino) else [],
         )
-        return render(request, self.template_name, {
-            **self.get_context_data(), "enviado": True,
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                **self.get_context_data(),
+                "enviado": True,
+            },
+        )
 
 
 class CadastroView(BasePublica):
@@ -125,22 +164,39 @@ class CadastroView(BasePublica):
         pacote = pacotes_publicos().filter(codigo=codigo).first()
         form = CadastroPublicoForm(request.POST, pacote=pacote)
         if not form.is_valid():
-            return render(request, self.template_name, {
-                **self.get_context_data(), "form": form, "pacote_escolhido": pacote,
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    **self.get_context_data(),
+                    "form": form,
+                    "pacote_escolhido": pacote,
+                },
+            )
         dados = form.cleaned_data
         try:
             resultado = cadastrar_tenant_publico(
-                nome=dados["nome"], slug=dados["slug"], cnpj=dados.get("cnpj", ""),
-                responsavel=dados.get("responsavel", ""), email=dados["email"],
-                telefone=dados.get("telefone", ""), pacote=pacote,
-                modalidade=dados["modalidade"], request=request,
+                nome=dados["nome"],
+                slug=dados["slug"],
+                cnpj=dados.get("cnpj", ""),
+                responsavel=dados.get("responsavel", ""),
+                email=dados["email"],
+                telefone=dados.get("telefone", ""),
+                pacote=pacote,
+                modalidade=dados["modalidade"],
+                request=request,
             )
         except CadastroError as erro:
             form.add_error(None, str(erro))
-            return render(request, self.template_name, {
-                **self.get_context_data(), "form": form, "pacote_escolhido": pacote,
-            })
+            return render(
+                request,
+                self.template_name,
+                {
+                    **self.get_context_data(),
+                    "form": form,
+                    "pacote_escolhido": pacote,
+                },
+            )
         request.session[CHAVE_CADASTRO] = {
             "rede": resultado["rede"].pk,
             "fatura": getattr(resultado["fatura"], "pk", None),

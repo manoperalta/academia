@@ -1,4 +1,5 @@
 """Roda as rotinas periodicas (cron): metricas, backup, faturas, regua, repasses e expurgo."""
+
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand
@@ -20,7 +21,9 @@ class Command(BaseCommand):
             return
         for item in resultado["executadas"]:
             prefixo = "SIMULA" if item["simulado"] else item["situacao"].upper()
-            self.stdout.write(f"[{prefixo}] {item['rotina']} ({item['duracao_ms']} ms): {item['detalhe']}")
+            self.stdout.write(
+                f"[{prefixo}] {item['rotina']} ({item['duracao_ms']} ms): {item['detalhe']}"
+            )
         if resultado["falhas"]:
             self.stderr.write(self.style.ERROR(f"{len(resultado['falhas'])} rotina(s) falharam"))
         else:
