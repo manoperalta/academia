@@ -70,6 +70,7 @@ LOCAIS = [
     "relatorios",
     "notificacoes",
     "documentos",
+    "conta",
     "portal_do_aluno",
     "painel_do_professor",
     "treinos",

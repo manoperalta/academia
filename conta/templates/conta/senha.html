@@ -1,0 +1,18 @@
+{% extends "conta/base.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Alterar senha</h1>
+<div class="rounded-xl bg-white p-4 shadow">
+  <form method="post">
+    {% csrf_token %}
+    {% for campo in form %}
+    <label class="mt-3 block text-xs text-slate-600">{{ campo.label }}
+      <input type="password" name="{{ campo.name }}" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      {% if campo.errors %}<span class="mt-1 block text-xs text-rose-600">{{ campo.errors|join:", " }}</span>{% endif %}
+      {% if campo.help_text %}<span class="mt-1 block text-xs text-slate-400">{{ campo.help_text }}</span>{% endif %}
+    </label>
+    {% endfor %}
+    <button class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Alterar senha</button>
+  </form>
+  <p class="mt-3 text-xs text-slate-500">Esqueceu a senha? <a class="text-sky-700 underline" href="{% url 'conta:senha_redefinir' %}">Redefinir por e-mail</a>.</p>
+</div>
+{% endblock %}

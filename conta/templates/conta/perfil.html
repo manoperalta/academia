@@ -1,0 +1,34 @@
+{% extends "conta/base.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Meu perfil</h1>
+<div class="rounded-xl bg-white p-4 shadow">
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid gap-3 sm:grid-cols-3">
+      <label class="text-xs text-slate-600">Nome
+        <input name="nome" value="{% if aluno %}{{ aluno.nome }}{% elif professor %}{{ professor.nome }}{% endif %}" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </label>
+      <label class="text-xs text-slate-600">E-mail
+        <input name="email" value="{{ request.user.email|default:'' }}" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </label>
+      <label class="text-xs text-slate-600">Telefone
+        <input name="telefone" value="{% if aluno %}{{ aluno.telefone_user }}{% elif professor %}{{ professor.telefone_prof }}{% endif %}" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </label>
+    </div>
+    <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Salvar</button>
+  </form>
+  <p class="mt-3 text-xs text-slate-500">
+    Login: {{ request.user.username }}
+    {% if aluno %}· aluno da rede{% elif professor %}· professor{% else %}· equipe{% endif %}
+  </p>
+</div>
+
+<div class="mt-4 rounded-xl bg-white p-4 text-sm text-slate-600 shadow">
+  {% if aluno %}
+  <p>Aluno: as preferências de aviso e o download dos seus dados ficam no <a class="text-sky-700 underline" href="{% url 'portal:perfil' %}">portal do aluno</a>.</p>
+  {% endif %}
+  {% if professor %}
+  <p>Professor: sua agenda, treinos e comissões ficam na <a class="text-sky-700 underline" href="{% url 'professor:agenda' %}">área do professor</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

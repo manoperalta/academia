@@ -1,0 +1,44 @@
+{% extends "conta/base.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Suporte</h1>
+
+<form method="post" class="mb-4 rounded-xl bg-white p-4 shadow">
+  {% csrf_token %}
+  <h2 class="text-sm font-semibold">Abrir chamado</h2>
+  <div class="mt-2 grid gap-3 sm:grid-cols-3">
+    <label class="text-xs text-slate-600 sm:col-span-2">Título
+      <input name="titulo" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <label class="text-xs text-slate-600">Categoria
+      <select name="categoria" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for valor, rotulo in categorias %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-xs text-slate-600">Prioridade
+      <select name="prioridade" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for valor, rotulo in prioridades %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-xs text-slate-600 sm:col-span-3">O que aconteceu
+      <textarea name="descricao" rows="3" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+    </label>
+  </div>
+  <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Abrir chamado</button>
+</form>
+
+<div class="space-y-3">
+  {% for chamado in chamados %}
+  <a class="block rounded-xl bg-white p-4 shadow" href="{% url 'conta:chamado' chamado.pk %}">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <p class="font-medium">{{ chamado.titulo }}</p>
+        <p class="text-xs text-slate-500">{{ chamado.get_categoria_display }} · {{ chamado.get_prioridade_display }} · aberto em {{ chamado.criado_em|date:"d/m/Y" }}</p>
+      </div>
+      <span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{{ chamado.get_situacao_display }}</span>
+    </div>
+  </a>
+  {% empty %}
+  <div class="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow">Nenhum chamado seu.</div>
+  {% endfor %}
+</div>
+{% endblock %}

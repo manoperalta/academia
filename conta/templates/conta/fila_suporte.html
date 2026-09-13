@@ -1,0 +1,62 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Suporte</h2>
+  <p class="text-xs text-slate-500">
+    {{ resumo.abertos }} aberto(s) · {{ resumo.urgentes }} urgente(s) · {{ resumo.resolvidos }} resolvido(s)
+    {% if resumo.horas_medias %}· tempo médio de resolução {{ resumo.horas_medias }} h{% endif %}
+  </p>
+</div>
+
+<div class="space-y-3">
+  {% for chamado in chamados %}
+  <div class="rounded-xl bg-white p-4 shadow">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <p class="font-medium">{{ chamado.titulo }}</p>
+        <p class="text-xs text-slate-500">
+          {{ chamado.get_categoria_display }} · {{ chamado.get_prioridade_display }} ·
+          {{ chamado.unidade.nome|default:"rede" }} ·
+          aberto por {{ chamado.aberto_por|default:"—" }} em {{ chamado.criado_em|date:"d/m/Y H:i" }}
+        </p>
+        <p class="mt-1 text-sm text-slate-700">{{ chamado.descricao }}</p>
+      </div>
+      <span class="rounded bg-slate-100 px-2 py-0.5 text-xs">{{ chamado.get_situacao_display }}</span>
+    </div>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      <form method="post" action="{% url 'conta:responder_chamado' chamado.pk %}" class="flex flex-wrap items-end gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="responder">
+        <input name="texto" placeholder="resposta ao solicitante" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <label class="flex items-center gap-1 text-xs text-slate-600">
+          <input type="checkbox" name="interna"> nota interna
+        </label>
+        <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white">Responder</button>
+      </form>
+      <form method="post" action="{% url 'conta:responder_chamado' chamado.pk %}" class="flex items-end gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="situacao">
+        <label class="text-xs text-slate-600">Situação
+          <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="em_andamento">em andamento</option>
+            <option value="aguardando">aguardando o solicitante</option>
+            <option value="resolvido">resolvido</option>
+            <option value="fechado">fechado</option>
+          </select>
+        </label>
+        <button class="rounded-lg border border-slate-300 px-3 py-2 text-sm">Aplicar</button>
+      </form>
+    </div>
+    {% if chamado.mensagens.all %}
+    <ul class="mt-3 space-y-1 text-xs text-slate-600">
+      {% for mensagem in chamado.mensagens.all %}
+      <li>{{ mensagem.criado_em|date:"d/m H:i" }} · {{ mensagem.autor|default:"—" }}{% if mensagem.interna %} (interna){% endif %}: {{ mensagem.texto }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% empty %}
+  <div class="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow">Nenhum chamado aberto.</div>
+  {% endfor %}
+</div>
+{% endblock %}

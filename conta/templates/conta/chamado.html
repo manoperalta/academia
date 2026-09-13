@@ -1,0 +1,30 @@
+{% extends "conta/base.html" %}
+{% block conteudo %}
+<h1 class="mb-1 text-lg font-semibold">{{ chamado.titulo }}</h1>
+<p class="mb-3 text-xs text-slate-500">{{ chamado.get_categoria_display }} · {{ chamado.get_prioridade_display }}
+  · {{ chamado.get_situacao_display }} · aberto em {{ chamado.criado_em|date:"d/m/Y H:i" }}</p>
+
+<div class="rounded-xl bg-white p-4 shadow">
+  <p class="text-sm text-slate-700">{{ chamado.descricao }}</p>
+  <ol class="mt-4 space-y-3">
+    {% for mensagem in mensagens_do_chamado %}
+    <li class="border-l-2 border-slate-200 pl-3">
+      <p class="text-xs text-slate-500">{{ mensagem.autor|default:"suporte" }} · {{ mensagem.criado_em|date:"d/m/Y H:i" }}</p>
+      <p class="text-sm text-slate-800">{{ mensagem.texto }}</p>
+    </li>
+    {% empty %}
+    <li class="text-sm text-slate-500">Ainda sem resposta.</li>
+    {% endfor %}
+  </ol>
+</div>
+
+{% if chamado.esta_aberto %}
+<form method="post" class="mt-4 rounded-xl bg-white p-4 shadow">
+  {% csrf_token %}
+  <label class="block text-xs text-slate-600">Complementar
+    <textarea name="texto" rows="2" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+  </label>
+  <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Enviar</button>
+</form>
+{% endif %}
+{% endblock %}

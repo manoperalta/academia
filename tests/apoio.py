@@ -128,6 +128,8 @@ def modelos_sem_rede_em_modelos():
         "api.webhookdesaida",
         "api.entregadewebhook",
         "api.tarefaassincrona",
+        "conta.mensagemdochamado",
+        "conta.chamadodesuporte",
         "portal_do_aluno.listadeespera",
         "portal_do_aluno.preferenciadenotificacao",
         "painel_do_professor.substituicaodeturna",

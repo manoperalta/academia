@@ -1,0 +1,29 @@
+{% extends "conta/base.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Sessões ativas</h1>
+<div class="rounded-xl bg-white p-4 shadow">
+  <table class="min-w-full text-sm">
+    <thead class="text-left text-xs text-slate-500">
+      <tr><th class="py-2">Sessão</th><th class="py-2">Expira em</th><th class="py-2"></th></tr>
+    </thead>
+    <tbody>
+      {% for sessao in sessoes %}
+      <tr class="border-t border-slate-100">
+        <td class="py-2 text-slate-600">{{ sessao.chave|slice:":12" }}…</td>
+        <td class="py-2 text-slate-600">{{ sessao.expira_em|date:"d/m/Y H:i" }}</td>
+        <td class="py-2 text-right">
+          {% if sessao.atual %}<span class="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">este aparelho</span>{% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="py-4 text-center text-sm text-slate-500">Nenhuma sessão registrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <form method="post" class="mt-4">
+    {% csrf_token %}
+    <button class="rounded-lg border border-rose-300 px-4 py-2 text-sm text-rose-700">Sair dos outros aparelhos</button>
+  </form>
+  <p class="mt-2 text-xs text-slate-500">A sessão que você está usando agora continua ativa.</p>
+</div>
+{% endblock %}
