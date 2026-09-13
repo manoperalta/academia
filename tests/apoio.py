@@ -111,6 +111,13 @@ def modelos_sem_rede_em_modelos():
     from core.models import TenantModel
 
     ignorados = {
+        "remuneracao.regradecomissao",
+        "remuneracao.apuracaodecomissao",
+        "gamificacao.regradepontos",
+        "gamificacao.saldodepontos",
+        "gamificacao.conquista",
+        "nps.pesquisa",
+        "area_do_aluno.checkindoaluno",
         "remuneracao.itemdecomissao",
         "gamificacao.lancamentodepontos",
         "gamificacao.conquistadoaluno",
