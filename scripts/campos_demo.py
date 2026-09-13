@@ -13,15 +13,31 @@ def campos(rotulo: str) -> None:
 
 
 for rotulo in [
-    "core.Rede", "core.Unidade", "core.VinculoUsuario", "core.RegistroAuditoria",
-    "usuarios.Usuario", "usuarios.FichaSaude", "professores.Professor",
-    "financeiro.Plano", "financeiro.Pagamento", "agendamento.Agendamento", "painel.Painel",
-    "painel.PainelItem", "aulas.Aulas", "notificacoes.Notificacao",
-    "treinos.Treino", "treinos.ExercicioDoTreino", "treinos.AvaliacaoFisica",
-    "cobranca.CobrancaRecorrente", "relacionamento.Lead", "nps.RespostaDeNps",
-    "plataforma.Pacote", "plataforma.Assinatura", "api.RegistroAuditoria",
+    "core.Rede",
+    "core.Unidade",
+    "core.VinculoUsuario",
+    "core.RegistroAuditoria",
+    "usuarios.Usuario",
+    "usuarios.FichaSaude",
+    "professores.Professor",
+    "financeiro.Plano",
+    "financeiro.Pagamento",
+    "agendamento.Agendamento",
+    "painel.Painel",
+    "painel.PainelItem",
+    "aulas.Aulas",
+    "notificacoes.Notificacao",
+    "treinos.Treino",
+    "treinos.ExercicioDoTreino",
+    "treinos.AvaliacaoFisica",
+    "cobranca.CobrancaRecorrente",
+    "relacionamento.Lead",
+    "nps.RespostaDeNps",
+    "plataforma.Pacote",
+    "plataforma.Assinatura",
+    "api.RegistroAuditoria",
 ]:
     try:
         campos(rotulo)
-    except Exception as erro:  # noqa: BLE001 - diagnostico: so quero ver o que existe
+    except Exception as erro:
         print(f"{rotulo}: ERRO {type(erro).__name__}: {erro}")

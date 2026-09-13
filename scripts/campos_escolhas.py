@@ -25,7 +25,7 @@ for app, modelo, campo in ALVOS:
         campo_meta = classe._meta.get_field(campo)
         escolhas = [valor for valor, _ in (campo_meta.choices or [])]
         print(f"{app}.{modelo}.{campo}: {escolhas or 'sem choices'}")
-    except Exception as erro:  # noqa: BLE001 - diagnostico
+    except Exception as erro:
         print(f"{app}.{modelo}.{campo}: ERRO {type(erro).__name__}: {erro}")
 
 print("--- modelos do app nps ---")

@@ -19,8 +19,14 @@ print("  em atraso...:", Pagamento.objects.exclude(status="pago").count())
 print("AGENDAMENTOS..:", Agendamento.objects.count())
 print("COBRANCAS.....:", CobrancaRecorrente.objects.count())
 print("VINCULOS......:", VinculoUsuario.todos.count())
-print("TREINOS.......:", Treino.objects.count(), "| exercicios:", ExercicioDoTreino.objects.count(),
-      "| avaliacoes:", AvaliacaoFisica.objects.count())
+print(
+    "TREINOS.......:",
+    Treino.objects.count(),
+    "| exercicios:",
+    ExercicioDoTreino.objects.count(),
+    "| avaliacoes:",
+    AvaliacaoFisica.objects.count(),
+)
 
 for email in [
     "dono@safestack.com.br",
