@@ -59,18 +59,15 @@ def montar_rotas() -> None:
 
 
 def incluir_testes() -> None:
-    caminho = RAIZ / "pyproject.toml"
-    texto = caminho.read_text(encoding="utf-8")
-    for pasta in TESTPATHS:
-        if f'"{pasta}"' in texto:
-            print(f"pyproject: {pasta} ja na suite")
-            continue
-        ancora = ', "documentos"]'
-        if ancora not in texto:
-            raise SystemExit("ERRO: nao achei o testpaths")
-        texto = texto.replace(ancora, f', "documentos", "{pasta}"]', 1)
-        print(f"pyproject: {pasta} na suite padrao")
-    caminho.write_text(texto, encoding="utf-8")
+    """Delega para o patch de testpaths, que mexe na lista inteira sem depender de ancora."""
+    import subprocess
+    import sys
+
+    caminho = RAIZ / "scripts" / "patch_testpaths.py"
+    if caminho.exists():
+        subprocess.run([sys.executable, str(caminho)], check=True)
+    else:
+        print("pyproject: patch de testpaths nao encontrado (pulado)")
 
 
 def marcar_isolamento() -> None:
