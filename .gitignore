@@ -1,5 +1,3 @@
-
-
 # Documentacao de engenharia e versionada (mesmo com a pasta docs/ ignorada)
 docs/*
 !docs/*.md
@@ -21,3 +19,7 @@ htmlcov/
 __pycache__/
 *.py[cod]
 _*.tgz
+
+# Uploads e midia gerados em execucao ficam no servidor, nao no repositorio
+# (o acervo de exemplo ja rastreado continua versionado)
+media/*/
