@@ -1,0 +1,37 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h2 class="text-lg font-semibold text-slate-900">
+      {% if resultado.dry_run %}Simulação do recálculo{% else %}Recálculo concluído{% endif %}
+    </h2>
+    <p class="mt-1 text-xs text-slate-500">
+      {{ resultado.alunos }} aluno(s) ativo(s) · {{ resultado.criados }} perfil(is) novo(s) ·
+      {{ resultado.atualizados }} já existente(s)
+      {% if resultado.dry_run %}· <strong>nada foi gravado</strong>{% endif %}
+    </p>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 text-left text-xs text-slate-500">
+        <tr><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Antes</th><th class="px-4 py-3">Depois</th><th class="px-4 py-3">Faixa</th></tr>
+      </thead>
+      <tbody>
+        {% for mudanca in resultado.mudancas %}
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-3 text-slate-800">{{ mudanca.aluno }}</td>
+          <td class="px-4 py-3 text-slate-500">{{ mudanca.de|default_if_none:"—" }}</td>
+          <td class="px-4 py-3 font-medium text-slate-900">{{ mudanca.para }}</td>
+          <td class="px-4 py-3 text-slate-600">{{ mudanca.faixa }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma pontuação mudaria.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a class="text-sm text-sky-700 underline" href="{% url 'relacionamento:retencao' %}">Voltar para a fila</a>
+</div>
+{% endblock %}

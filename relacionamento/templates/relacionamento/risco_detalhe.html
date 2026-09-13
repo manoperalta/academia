@@ -1,0 +1,29 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900">{{ perfil.aluno.nome }}</h2>
+        <p class="text-xs text-slate-500">
+          {{ perfil.unidade.nome|default:"rede" }} · calculado em {{ perfil.calculado_em|date:"d/m/Y H:i" }}
+        </p>
+      </div>
+      <div class="text-right">
+        <p class="text-2xl font-semibold text-slate-900">{{ perfil.pontuacao }}</p>
+        <p class="text-xs text-slate-500">{{ perfil.get_faixa_display }}</p>
+      </div>
+    </div>
+    <h3 class="mt-4 text-sm font-semibold text-slate-900">A conta do risco</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for motivo in perfil.motivos %}<li class="rounded bg-slate-50 px-3 py-1.5">{{ motivo }}</li>{% endfor %}
+    </ul>
+    <p class="mt-3 text-xs text-slate-500">
+      Ação sugerida: <strong>{{ perfil.get_acao_display }}</strong> · desfecho atual: {{ perfil.get_desfecho_display }}
+      {% if perfil.responsavel %}· responsável {{ perfil.responsavel }}{% endif %}
+    </p>
+    {% if perfil.observacoes %}<p class="mt-2 text-sm text-slate-700">Observações: {{ perfil.observacoes }}</p>{% endif %}
+  </div>
+  <a class="text-sm text-sky-700 underline" href="{% url 'relacionamento:retencao' %}">Voltar para a fila</a>
+</div>
+{% endblock %}

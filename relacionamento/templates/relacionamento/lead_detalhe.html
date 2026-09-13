@@ -1,0 +1,75 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-4xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900">{{ lead.nome }}</h2>
+        <p class="text-xs text-slate-500">
+          {{ lead.get_origem_display }} · {{ lead.telefone|default:"sem telefone" }}
+          {% if lead.email %}· {{ lead.email }}{% endif %} · criado em {{ lead.criado_em|date:"d/m/Y" }}
+        </p>
+        <p class="mt-1 text-xs text-slate-500">Interesse: {{ lead.interesse|default:"não informado" }} · estimativa R$ {{ lead.valor_estimado }}</p>
+      </div>
+      <span class="rounded bg-slate-100 px-3 py-1 text-xs text-slate-700">{{ lead.get_situacao_display }}</span>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      {% if lead.esta_aberto %}
+      <form method="post" action="{% url 'relacionamento:converter' lead.pk %}">{% csrf_token %}
+        <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">Converter em matrícula</button>
+      </form>
+      {% endif %}
+      <a href="{% url 'relacionamento:leads' %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Voltar</a>
+    </div>
+  </div>
+
+  <form method="post" action="{% url 'relacionamento:interacao' lead.pk %}" class="rounded-xl bg-white p-5 shadow">
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold text-slate-900">Registrar contato</h3>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      {% for campo in form %}
+      <label class="text-xs text-slate-600">{{ campo.label }}{{ campo }}</label>
+      {% endfor %}
+    </div>
+    <button class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Salvar contato</button>
+    <p class="mt-2 text-xs text-slate-500">Visita registrada faz o lead avançar para “visitou” automaticamente.</p>
+  </form>
+
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Histórico</h3>
+    <ol class="mt-3 space-y-3">
+      {% for interacao in interacoes %}
+      <li class="border-l-2 border-slate-200 pl-3">
+        <p class="text-xs text-slate-500">{{ interacao.criado_em|date:"d/m/Y H:i" }} · {{ interacao.get_tipo_display }}
+          {% if interacao.feito_por %}· {{ interacao.feito_por }}{% endif %}</p>
+        <p class="text-sm text-slate-800">{{ interacao.resumo }}</p>
+        {% if interacao.resultado %}<p class="text-xs text-slate-600">Resultado: {{ interacao.resultado }}</p>{% endif %}
+        {% if interacao.proximo_contato_em %}<p class="text-xs text-sky-700">Próximo contato: {{ interacao.proximo_contato_em|date:"d/m/Y" }}</p>{% endif %}
+      </li>
+      {% empty %}
+      <li class="text-sm text-slate-500">Nenhum contato registrado ainda.</li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  {% if lead.esta_aberto %}
+  <form method="post" action="{% url 'relacionamento:perder' lead.pk %}" class="rounded-xl bg-white p-5 shadow">
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold text-slate-900">Marcar como perdido</h3>
+    <p class="text-xs text-slate-500">O motivo é obrigatório: é ele que mostra qual canal não vale o investimento.</p>
+    <label class="mt-3 block text-xs text-slate-600">{{ form_perda.motivo.label }}{{ form_perda.motivo }}</label>
+    <button class="mt-3 rounded-lg border border-rose-300 px-4 py-2 text-sm text-rose-700">Marcar perdido</button>
+  </form>
+  {% elif lead.situacao == "perdido" %}
+  <div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+    Perdido: {{ lead.motivo_da_perda }}
+  </div>
+  {% elif lead.situacao == "matriculado" %}
+  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+    Virou aluno{% if lead.aluno %} ({{ lead.aluno.nome }}){% endif %}
+    {% if lead.dias_ate_matricular %} em {{ lead.dias_ate_matricular }} dia(s) desde o primeiro contato{% endif %}.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -11,10 +11,13 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-APPS: list[str] = ["midia"]
-ROTAS: list[str] = ["midia.urls"]
+APPS: list[str] = ["midia", "relacionamento"]
+ROTAS: list[str] = ["midia.urls", "relacionamento.urls"]
 TESTPATHS: list[str] = ["midia"]
-ISOLAMENTO: list[str] = ["midia.arquivodemidia", "midia.partedemidia"]
+ISOLAMENTO: list[str] = [
+    "midia.arquivodemidia", "midia.partedemidia",
+    "relacionamento.lead", "relacionamento.interacaocomlead", "relacionamento.perfilderisco",
+]
 
 
 def registrar_apps() -> None:

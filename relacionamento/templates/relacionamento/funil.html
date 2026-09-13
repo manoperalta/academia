@@ -1,0 +1,71 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 flex flex-wrap items-center gap-3">
+  <div class="mr-auto">
+    <h2 class="text-lg font-semibold text-slate-900">Funil de captação</h2>
+    <p class="text-xs text-slate-500">
+      {{ funil.total }} lead(s) · {{ funil.convertidos }} virou aluno ·
+      conversão de {{ funil.taxa_de_conversao }}% ·
+      {% if funil.dias_ate_matricular %}média de {{ funil.dias_ate_matricular }} dias até matricular{% else %}sem conversão ainda{% endif %}
+    </p>
+  </div>
+  <a href="{% url 'relacionamento:leads' %}" class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Ver leads</a>
+  <a href="{% url 'relacionamento:retencao' %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Fila de retenção</a>
+</div>
+
+<div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+  {% for valor, rotulo in funil.por_situacao.items %}
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">{{ valor }}</p>
+    <p class="text-xl font-semibold text-slate-900">{{ rotulo }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-4 overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Origem</th><th class="px-4 py-3">Leads</th>
+          <th class="px-4 py-3">Matriculados</th><th class="px-4 py-3">Conversão</th></tr>
+    </thead>
+    <tbody>
+      {% for linha in funil.por_origem %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ linha.origem }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.leads }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.matriculados }}</td>
+        <td class="px-4 py-3 font-medium text-slate-900">{{ linha.taxa }}%</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum lead registrado ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-2">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Para contatar hoje</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for lead in para_contato %}
+      <li><a class="text-sky-700 underline" href="{% url 'relacionamento:lead' lead.pk %}">{{ lead.nome }}</a>
+        <span class="text-xs text-slate-500">{{ lead.get_origem_display }}{% if lead.proximo_contato_em %} · contato {{ lead.proximo_contato_em|date:"d/m" }}{% else %} · sem data marcada{% endif %}</span></li>
+      {% empty %}
+      <li class="text-slate-500">Nada na fila de contato.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Retenção</h3>
+    <p class="mt-1 text-xs text-slate-500">{{ retencao.total }} aluno(s) avaliado(s) · {{ retencao.pedem_acao }} pedem ação</p>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for faixa, quantidade in retencao.por_faixa.items %}
+      <li>{{ faixa }}: <strong>{{ quantidade }}</strong></li>
+      {% endfor %}
+    </ul>
+    {% if retencao.sem_perfil %}
+    <p class="mt-2 text-xs text-amber-700">{{ retencao.sem_perfil }} aluno(s) ainda sem risco calculado — <a class="underline" href="{% url 'relacionamento:retencao' %}">recalcular</a>.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Leads</h2>
+  <p class="text-xs text-slate-500">Cada contato fica registrado: é o que mostra qual canal traz aluno que fica.</p>
+</div>
+
+<form method="post" class="mb-4 rounded-xl bg-white p-5 shadow">
+  {% csrf_token %}
+  <h3 class="text-sm font-semibold text-slate-900">Registrar interessado</h3>
+  <div class="mt-3 grid gap-3 sm:grid-cols-3">
+    {% for campo in form %}
+    <label class="text-xs text-slate-600">{{ campo.label }}{{ campo }}
+      {% if campo.errors %}<span class="mt-1 block text-xs text-rose-600">{{ campo.errors|join:", " }}</span>{% endif %}
+    </label>
+    {% endfor %}
+  </div>
+  <button class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Salvar lead</button>
+</form>
+
+<form class="mb-3 flex flex-wrap items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Situação
+    <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in situacoes %}<option value="{{ valor }}" {% if filtro_situacao == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="text-xs text-slate-600">Origem
+    <select name="origem" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in origens %}<option value="{{ valor }}" {% if filtro_origem == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Nome</th><th class="px-4 py-3">Origem</th><th class="px-4 py-3">Contato</th>
+          <th class="px-4 py-3">Situação</th><th class="px-4 py-3">Próximo contato</th></tr>
+    </thead>
+    <tbody>
+      {% for lead in leads %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3"><a class="text-sky-700 underline" href="{% url 'relacionamento:lead' lead.pk %}">{{ lead.nome }}</a></td>
+        <td class="px-4 py-3 text-slate-600">{{ lead.get_origem_display }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ lead.telefone|default:"—" }}{% if lead.email %} · {{ lead.email }}{% endif %}</td>
+        <td class="px-4 py-3"><span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{{ lead.get_situacao_display }}</span></td>
+        <td class="px-4 py-3 text-slate-600">{{ lead.proximo_contato_em|date:"d/m/Y"|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum lead com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
