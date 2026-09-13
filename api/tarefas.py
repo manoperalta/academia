@@ -21,7 +21,12 @@ class TarefaDesconhecida(Exception):
 
 
 def _pasta() -> Path:
-    pasta = Path(getattr(settings, "TAREFAS_DIR", Path(settings.BASE_DIR) / "tarefas"))
+    """Pasta dos artefatos das tarefas (CSV do relatorio).
+
+    Fica dentro de ``MEDIA_ROOT`` de proposito: artefato gerado em execucao nao pode cair no
+    diretorio do codigo -- o caminho relativo sujava a arvore do repositorio a cada execucao.
+    """
+    pasta = Path(getattr(settings, "TAREFAS_DIR", Path(settings.MEDIA_ROOT) / "tarefas"))
     pasta.mkdir(parents=True, exist_ok=True)
     return pasta
 

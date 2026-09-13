@@ -247,4 +247,6 @@ BACKUP_DIR = BASE_DIR / "backups"
 # ------------------------------------------------ API v1 (fase 7)
 API_JWT_SECRET = os.environ.get("API_JWT_SECRET", "")
 API_JWT_VALIDADE = 3600
-TAREFAS_DIR = os.environ.get("TAREFAS_DIR", BASE_DIR / "tarefas")
+#: Onde as tarefas assincronas gravam o CSV do relatorio. Dentro de MEDIA_ROOT: artefato de
+#: execucao nao pode cair no diretorio do codigo (o caminho relativo sujava a arvore).
+TAREFAS_DIR = os.environ.get("TAREFAS_DIR", MEDIA_ROOT / "tarefas")
