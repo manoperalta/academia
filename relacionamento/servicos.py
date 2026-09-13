@@ -252,7 +252,8 @@ def calcular_risco(aluno) -> dict:
             f"Treinou nos ultimos {dias_sem_treinar} dia(s): -{REDUCAO_TREINOU_NA_SEMANA}"
         )
 
-    pagamentos = Pagamento.objects.filter(usuario=aluno.user)
+    # Escopo explicito pela rede: o risco nao pode depender do contexto da requisicao.
+    pagamentos = Pagamento.todos.filter(rede=aluno.rede, usuario=aluno.user)
     ultimo_pagamento = pagamentos.order_by("-data_fim", "-id").first()
     dias_em_atraso = None
     if ultimo_pagamento is None:

@@ -44,6 +44,7 @@ urlpatterns = [
     path("", include("midia.urls")),
     path("", include("relacionamento.urls")),
     path("", include("busca.urls")),
+    path("", include("acesso.urls")),
     path("", include("documentos.urls")),
     path("", include("governanca.urls")),
     path("academia/", academia_views.index, name="index"),

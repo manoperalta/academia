@@ -11,12 +11,14 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-APPS: list[str] = ["midia", "relacionamento", "busca"]
-ROTAS: list[str] = ["midia.urls", "relacionamento.urls", "busca.urls"]
+APPS: list[str] = ["midia", "relacionamento", "busca", "acesso"]
+ROTAS: list[str] = ["midia.urls", "relacionamento.urls", "busca.urls", "acesso.urls"]
 TESTPATHS: list[str] = ["midia", "busca"]
 ISOLAMENTO: list[str] = [
     "midia.arquivodemidia", "midia.partedemidia",
     "relacionamento.lead", "relacionamento.interacaocomlead", "relacionamento.perfilderisco",
+    "acesso.dispositivodeacesso", "acesso.credencialdeacesso", "acesso.registrodeacesso",
+    "acesso.planodeparceiro", "acesso.extratodeparceiro", "acesso.linhadeextrato",
 ]
 
 

@@ -70,6 +70,7 @@ LOCAIS = [
     "relatorios",
     "notificacoes",
     "documentos",
+    "acesso",
     "busca",
     "relacionamento",
     "midia",

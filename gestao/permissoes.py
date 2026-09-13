@@ -35,6 +35,8 @@ class Modulo(models.TextChoices):
     CATALOGO = "catalogo", "Catálogo da rede"
     CRM = "crm", "CRM e captacao"
     RETENCAO = "retencao", "Retencao de alunos"
+    ACESSO = "acesso", "Controle de acesso"
+    PARCEIROS = "parceiros", "Parceiros e conciliacao"
     COMISSOES = "comissoes", "Comissoes e remuneracao"
     GAMIFICACAO = "gamificacao", "Gamificacao"
     PESQUISAS = "pesquisas", "Pesquisas e NPS"
@@ -64,6 +66,8 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.AUDITORIA: "ver",
         Modulo.PRIVACIDADE: "ver",
         Modulo.CRM: "editar",
+        Modulo.ACESSO: "editar",
+        Modulo.PARCEIROS: "editar",
         Modulo.RETENCAO: "editar",
         Modulo.COMISSOES: "ver",
         Modulo.GAMIFICACAO: "ver",

@@ -95,7 +95,7 @@ def _unidades(rede, termo: str) -> list[Resultado]:
 def _pagamentos(rede, termo: str) -> list[Resultado]:
     from financeiro.models import Pagamento
 
-    consulta = Pagamento.objects.filter(rede=rede).select_related("usuario", "plano")
+    consulta = Pagamento.todos.filter(rede=rede).select_related("usuario", "plano")
     resultados = []
     for pagamento in consulta.filter(plano__nome__icontains=termo)[:20]:
         resultados.append(

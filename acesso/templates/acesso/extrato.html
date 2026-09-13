@@ -1,0 +1,63 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 flex flex-wrap items-center gap-3">
+  <div class="mr-auto">
+    <h2 class="text-lg font-semibold text-slate-900">{{ extrato.plano_de_parceiro }} — {{ extrato.competencia|date:"m/Y" }}</h2>
+    <p class="text-xs text-slate-500">
+      {{ resultado.linhas }} linha(s) · {{ resultado.conciliadas }} conciliada(s) ·
+      {{ resultado.sem_acesso|length }} cobrança(s) sem acesso ·
+      {{ resultado.nao_faturados|length }} acesso(s) não faturado(s) ·
+      valor no extrato R$ {{ resultado.valor_no_extrato }} · esperado pela rede R$ {{ resultado.valor_esperado }}
+    </p>
+  </div>
+  <form method="post" action="{% url 'acesso:conciliar' extrato.pk %}">{% csrf_token %}
+    <input type="hidden" name="dry_run" value="1">
+    <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Simular conciliação</button>
+  </form>
+  <form method="post" action="{% url 'acesso:conciliar' extrato.pk %}">{% csrf_token %}
+    <button class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Conciliar agora</button>
+  </form>
+</div>
+
+{% if resultado.sem_acesso %}
+<div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+  <h3 class="text-sm font-semibold text-amber-900">Cobranças sem acesso correspondente</h3>
+  <p class="text-xs text-amber-800">O parceiro cobrou por um dia em que não há registro de entrada desta credencial — confira antes de aceitar o repasse.</p>
+  <ul class="mt-2 text-xs text-amber-900">
+    {% for linha in resultado.sem_acesso %}<li>{{ linha.data|date:"d/m/Y" }} · {{ linha.codigo }} · R$ {{ linha.valor }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% if resultado.nao_faturados %}
+<div class="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-4">
+  <h3 class="text-sm font-semibold text-sky-900">Acessos não faturados no extrato</h3>
+  <p class="text-xs text-sky-800">Aluno treinou e o acesso não aparece no extrato: dinheiro deixado na mesa.</p>
+  <ul class="mt-2 text-xs text-sky-900">
+    {% for linha in resultado.nao_faturados %}<li>{{ linha.data|date:"d/m/Y" }} · {{ linha.codigo }} · {{ linha.aluno }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Data</th><th class="px-4 py-3">Código</th><th class="px-4 py-3">Nome informado</th>
+          <th class="px-4 py-3">Valor</th><th class="px-4 py-3">Conciliação</th></tr>
+    </thead>
+    <tbody>
+      {% for linha in linhas %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-600">{{ linha.data|date:"d/m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-800">{{ linha.codigo }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.nome_informado|default:"—" }}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ linha.valor }}</td>
+        <td class="px-4 py-3 {% if linha.conciliado %}text-emerald-700{% else %}text-rose-700{% endif %}">
+          {{ linha.divergencia|default:"conciliado" }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

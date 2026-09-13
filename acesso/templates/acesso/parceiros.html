@@ -1,0 +1,77 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Parceiros (Wellhub, TotalPass)</h2>
+  <p class="text-xs text-slate-500">O parceiro manda o extrato; a rede confere se cada cobrança tem acesso e se cada acesso foi cobrado.</p>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+  <form method="post" action="{% url 'acesso:criar_plano' %}" class="rounded-xl bg-white p-5 shadow">
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold text-slate-900">Plano de parceiro</h3>
+    <label class="mt-2 block text-xs text-slate-600">Parceiro
+      <select name="parceiro" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for valor, rotulo in parceiros %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Nome do plano no parceiro
+      <input name="nome_no_parceiro" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Valor por acesso (R$)
+      <input name="valor_por_acesso" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Percentual do parceiro (%)
+      <input name="percentual" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Limite de acessos por mês (0 = sem limite)
+      <input name="limite" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Salvar plano</button>
+  </form>
+
+  <form method="post" action="{% url 'acesso:importar_extrato' %}" enctype="multipart/form-data"
+        class="rounded-xl bg-white p-5 shadow">
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold text-slate-900">Importar extrato do mês</h3>
+    <label class="mt-2 block text-xs text-slate-600">Plano
+      <select name="plano" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for plano in planos %}<option value="{{ plano.pk }}">{{ plano }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Competência
+      <input name="competencia" placeholder="2026-09" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">Arquivo CSV (data, código, valor)
+      <input type="file" name="arquivo" accept=".csv,text/csv" class="mt-1 block w-full text-sm">
+    </label>
+    <label class="mt-2 block text-xs text-slate-600">ou cole o conteúdo
+      <textarea name="conteudo" rows="3" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+    </label>
+    <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Importar</button>
+  </form>
+</div>
+
+<div class="mt-4 overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Competência</th><th class="px-4 py-3">Plano</th>
+          <th class="px-4 py-3">Acessos</th><th class="px-4 py-3">Valor</th>
+          <th class="px-4 py-3">Situação</th><th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for extrato in extratos %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ extrato.competencia|date:"m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ extrato.plano_de_parceiro }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ extrato.total_de_acessos }}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ extrato.valor_total }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ extrato.get_situacao_display }}</td>
+        <td class="px-4 py-3 text-right"><a class="text-xs text-sky-700 underline" href="{% url 'acesso:extrato' extrato.pk %}">Conferir</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum extrato importado.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

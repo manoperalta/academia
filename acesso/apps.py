@@ -1,0 +1,9 @@
+"""App de controle de acesso: catraca, credencial e planos de parceiros."""
+
+from django.apps import AppConfig
+
+
+class AcessoConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "acesso"
+    verbose_name = "Controle de acesso"

@@ -1,0 +1,40 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Registros de acesso</h2>
+  <p class="text-xs text-slate-500">Cada tentativa, liberada ou negada, com o motivo.</p>
+</div>
+<form class="mb-3 flex items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Resultado
+    <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todos</option>
+      <option value="liberado" {% if filtro == "liberado" %}selected{% endif %}>liberados</option>
+      <option value="negado" {% if filtro == "negado" %}selected{% endif %}>negados</option>
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Quando</th><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Unidade</th>
+          <th class="px-4 py-3">Origem</th><th class="px-4 py-3">Motivo</th></tr>
+    </thead>
+    <tbody>
+      {% for registro in registros %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-600">{{ registro.criado_em|date:"d/m/Y H:i" }}</td>
+        <td class="px-4 py-3 text-slate-800">{{ registro.aluno.nome|default:"—" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ registro.unidade.nome }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ registro.get_origem_display }}</td>
+        <td class="px-4 py-3 {% if registro.liberado %}text-emerald-700{% else %}text-rose-700{% endif %}">
+          {{ registro.motivo|default:"liberado" }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="px-4 py-6 text-center text-sm text-slate-500">Nada com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
