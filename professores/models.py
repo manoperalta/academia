@@ -1,8 +1,9 @@
 from django.db import models
 
 from django.conf import settings
+from core.models import TenantModel
 
-class Professor(models.Model):
+class Professor(TenantModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='professor_profile', null=True, blank=True)
 
     STATUS_CHOICES = (

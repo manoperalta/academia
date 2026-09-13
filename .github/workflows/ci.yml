@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "feat/**"]
+  pull_request:
+
+jobs:
+  qualidade:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: academia_test
+          POSTGRES_USER: academia
+          POSTGRES_PASSWORD: academia
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_ENV: test
+      DATABASE_URL: postgres://academia:academia@localhost:5432/academia_test
+      DJANGO_SECRET_KEY: ci-nao-e-segredo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalar dependencias
+        run: pip install -r requirements-dev.txt
+      - name: Lint (PEP8/ruff)
+        run: ruff check . && ruff format --check .
+      - name: Migracoes pendentes
+        run: python manage.py makemigrations --check --dry-run
+      - name: Checagem do projeto
+        run: python manage.py check
+      - name: Testes com cobertura
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=60

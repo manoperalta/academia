@@ -2,8 +2,9 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import get_connection, EmailMultiAlternatives
+from core.models import TenantModel
 
-class ConfiguracaoEmail(models.Model):
+class ConfiguracaoEmail(TenantModel):
     host = models.CharField(max_length=255, verbose_name="Servidor SMTP (Host)")
     port = models.IntegerField(default=587, verbose_name="Porta")
     username = models.CharField(max_length=255, verbose_name="Usuário/Email")
@@ -27,7 +28,7 @@ class ConfiguracaoEmail(models.Model):
         verbose_name = "Configuração de E-mail"
         verbose_name_plural = "Configuração de E-mail"
 
-class ConfiguracaoWhatsapp(models.Model):
+class ConfiguracaoWhatsapp(TenantModel):
     access_token = models.CharField(max_length=500, verbose_name="Access Token")
     phone_number_id = models.CharField(max_length=100, verbose_name="Phone Number ID")
     business_account_id = models.CharField(max_length=100, verbose_name="WhatsApp Business Account ID", blank=True, null=True)
@@ -46,7 +47,7 @@ class ConfiguracaoWhatsapp(models.Model):
         verbose_name = "Configuração de WhatsApp"
         verbose_name_plural = "Configuração de WhatsApp"
 
-class Notificacao(models.Model):
+class Notificacao(TenantModel):
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
         ('enviado', 'Enviado'),

@@ -1,0 +1,46 @@
+# Ambiente de desenvolvimento do i3. Nao conflita com producao:
+# nomes de container proprios, nenhuma porta publicada para o app,
+# Postgres em volume separado.
+name: academia-saas-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: academia_dev_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: academia_dev
+      POSTGRES_USER: academia
+      POSTGRES_PASSWORD: academia
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academia -d academia_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: academia_dev_web
+    volumes:
+      - .:/app
+    environment:
+      DJANGO_ENV: dev
+      DJANGO_SECRET_KEY: dev-nao-e-segredo
+      DJANGO_DEBUG: "1"
+      DJANGO_DEBUG_TOKEN: dev
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DATABASE_URL: postgres://academia:academia@db:5432/academia_dev
+      PYTHONDONTWRITEBYTECODE: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["pytest"]
+
+volumes:
+  pgdata_dev:

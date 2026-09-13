@@ -3,8 +3,9 @@ from django.conf import settings
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
+from core.models import TenantModel
 
-class GatewayConfig(models.Model):
+class GatewayConfig(TenantModel):
     GATEWAY_CHOICES = [
         ('mercadopago', 'Mercado Pago'),
         ('pagbank', 'PagBank'),
@@ -37,7 +38,7 @@ class GatewayConfig(models.Model):
         verbose_name = "Configuração do Gateway de Pagamento"
         verbose_name_plural = "Configuração do Gateway de Pagamento"
 
-class Plano(models.Model):
+class Plano(TenantModel):
     TIPOS_PLANO = [
         ('semanal', 'Semanal'),
         ('mensal', 'Mensal'),
@@ -58,7 +59,7 @@ class Plano(models.Model):
         verbose_name = "Plano"
         verbose_name_plural = "Planos"
 
-class Pagamento(models.Model):
+class Pagamento(TenantModel):
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
         ('pago', 'Pago'),
@@ -103,7 +104,7 @@ class Pagamento(models.Model):
         verbose_name_plural = "Pagamentos"
         ordering = ['-data_pagamento']
 
-class Despesa(models.Model):
+class Despesa(TenantModel):
     descricao = models.CharField(max_length=255, verbose_name="Descrição")
     valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor")
     data = models.DateField(verbose_name="Data da Despesa")

@@ -1,0 +1,14 @@
+# Ambiente de desenvolvimento/teste: reaproveita a imagem de producao ja
+# construida (mesmo Django e mesmas libs) e acrescenta o que e so de dev.
+FROM academia-web:latest
+
+WORKDIR /app
+
+COPY requirements.txt requirements-dev.txt /app/
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_ENV=dev
+
+CMD ["pytest"]

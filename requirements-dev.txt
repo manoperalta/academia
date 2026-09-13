@@ -1,0 +1,19 @@
+# Dependencias de desenvolvimento e teste (nao vao para a imagem de producao).
+-r requirements.txt
+
+# API REST
+djangorestframework>=3.15,<4
+djangorestframework-simplejwt>=5.3,<6
+django-filter>=24.2
+drf-spectacular>=0.27,<1
+
+# Configuracao e banco
+django-environ>=0.11,<1
+psycopg[binary]>=3.2,<4
+
+# Qualidade e testes
+pytest>=8.3,<9
+pytest-django>=4.9,<5
+pytest-cov>=6.0,<7
+factory-boy>=3.3,<4
+ruff>=0.8,<1

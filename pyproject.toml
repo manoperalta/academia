@@ -1,0 +1,38 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["migrations", ".venv", "staticfiles", "media"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "DJ", "SIM", "RUF"]
+ignore = [
+    "E501",   # comprimento tratado pelo formatador
+    "RUF012", # ClassVar em models do Django e ruido
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "RUF001", "E741"]
+"conftest.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "app.settings_env.test"
+python_files = ["test_*.py", "*_test.py"]
+testpaths = ["tests", "core", "api"]
+addopts = "-q --strict-markers --disable-warnings"
+markers = [
+    "isolamento: garante que dados de uma rede/unidade nao vazam para outra",
+    "caracterizacao: congela o comportamento atual antes da refatoracao",
+]
+
+[tool.coverage.run]
+source = [".", "core", "api"]
+omit = ["*/migrations/*", "*/tests/*", "manage.py", "app/settings_env/*", "*/venv/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 0

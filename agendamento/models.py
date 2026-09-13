@@ -1,10 +1,11 @@
 from django.db import models
 from django.conf import settings
 from painel.models import Painel # Importando o modelo correto
+from core.models import TenantModel
 
 # Modelo Painel removido pois agora usamos o do app 'painel'
 
-class Agendamento(models.Model):
+class Agendamento(TenantModel):
     STATUS_CHOICES = (
         ('Agendado', 'Agendado'),
         ('Cancelado', 'Cancelado'),

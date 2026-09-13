@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
+from core.models import TenantModel
 
-class Aulas(models.Model):
+class Aulas(TenantModel):
     CATEGORIAS_EXERCICIOS = [
         ("aerobico", "Aeróbico/Cardiovascular"),
         ("forca", "Treinamento de Força"),
@@ -48,7 +49,7 @@ class Aulas(models.Model):
         verbose_name = "Aula"
         verbose_name_plural = "Aulas"
 
-class ImagemAula(models.Model):
+class ImagemAula(TenantModel):
     aula = models.ForeignKey(Aulas, related_name='imagens', on_delete=models.CASCADE)
     imagem = models.ImageField(upload_to='imagens_aulas/')
 

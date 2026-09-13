@@ -1,37 +1,19 @@
-# Python
-*.pyc
-*.pyo
-*.pyd
-__pycache__/
-*.so
 
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
-# Virtual Environment
-venv/
-env/
-.env
+# Documentacao de engenharia e versionada (mesmo com a pasta docs/ ignorada)
+docs/*
+!docs/*.md
+
+# Artefatos locais de transferencia entre maquinas
+_upload.tgz
+*.tgz
+
+# Ambiente virtual local
 .venv/
 
-# Media and Static
-media/
-static/
-!static/css/
-!static/js/
-!static/img/
-
-# IDEs
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Pastas
-docs/
-staticfiles/
+# Artefatos de ferramentas
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+*.orig

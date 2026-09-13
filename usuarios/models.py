@@ -1,8 +1,9 @@
 from django.db import models
 
 from django.conf import settings
+from core.models import TenantModel
 
-class Usuario(models.Model):
+class Usuario(TenantModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='usuario_profile', null=True, blank=True)
 
     STATUS_CHOICES = (
@@ -31,7 +32,7 @@ class Usuario(models.Model):
         verbose_name = "Usuário"
         verbose_name_plural = "Usuários"
 
-class FichaSaude(models.Model):
+class FichaSaude(TenantModel):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='ficha_saude')
     altura = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Altura (m)", null=True, blank=True)
     peso = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Peso (kg)", null=True, blank=True)

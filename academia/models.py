@@ -1,6 +1,7 @@
 from django.db import models
+from core.models import TenantModel
 
-class Configuracao(models.Model):
+class Configuracao(TenantModel):
     THEME_CHOICES = [
         ('dark', 'Tema Escuro'),
         ('light', 'Tema Claro'),
@@ -48,7 +49,7 @@ class Configuracao(models.Model):
         verbose_name = "Configuração"
         verbose_name_plural = "Configurações"
 
-class IdentidadeVisual(models.Model):
+class IdentidadeVisual(TenantModel):
     logotipo = models.ImageField(upload_to='logos/', verbose_name="Logotipo")
     favicon = models.ImageField(upload_to='favicons/', verbose_name="Favicon")
 

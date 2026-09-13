@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 from aulas.models import Aulas
+from core.models import TenantModel
 
-class Painel(models.Model):
+class Painel(TenantModel):
     nome = models.CharField(max_length=200, verbose_name="Nome do Painel", default="Painel de Aulas")
     data = models.DateField(verbose_name="Data")
     hora_inicio = models.TimeField(verbose_name="Hora de Início")
@@ -21,7 +22,7 @@ class Painel(models.Model):
         verbose_name_plural = "Painéis de Aulas"
         ordering = ['-data', '-hora_inicio']
 
-class PainelItem(models.Model):
+class PainelItem(TenantModel):
     painel = models.ForeignKey(Painel, on_delete=models.CASCADE, related_name='itens')
     aula = models.ForeignKey(Aulas, on_delete=models.CASCADE, verbose_name="Aula")
     ordem = models.PositiveIntegerField(default=0, verbose_name="Ordem")
