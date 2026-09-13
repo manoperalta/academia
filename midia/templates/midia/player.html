@@ -1,0 +1,38 @@
+{% extends "gestao/base.html" %}
+
+{% block conteudo %}
+<div class="mx-auto max-w-4xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="mb-3 flex items-start justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900">{{ arquivo.titulo }}</h2>
+        <p class="text-xs text-slate-500">
+          {{ arquivo.get_tipo_display }} · {{ arquivo.tamanho_legivel }}
+          {% if arquivo.largura %}· {{ arquivo.largura }}×{{ arquivo.altura }} px{% endif %}
+          {% if arquivo.aula %}· aula {{ arquivo.aula.nome }}{% endif %}
+        </p>
+      </div>
+      <div class="text-right text-xs text-slate-500">
+        <p>hash {{ arquivo.hash_final|slice:":12" }}…</p>
+        <p>link válido por {{ expira_em_minutos }} min</p>
+      </div>
+    </div>
+
+    {% if arquivo.tipo == "video" %}
+      <video class="w-full rounded-lg bg-black" controls preload="metadata" src="{{ url_do_arquivo }}"></video>
+    {% elif arquivo.tipo == "audio" %}
+      <audio class="w-full" controls src="{{ url_do_arquivo }}"></audio>
+    {% elif arquivo.tipo == "imagem" %}
+      <img class="mx-auto max-h-[70vh] rounded-lg" alt="{{ arquivo.titulo }}" src="{{ url_do_arquivo }}">
+    {% else %}
+      <a class="text-sm text-sky-700 underline" href="{{ url_do_arquivo }}">Abrir arquivo</a>
+    {% endif %}
+  </div>
+
+  <div class="rounded-xl bg-white p-5 text-sm text-slate-600 shadow">
+    <p>O arquivo é servido por link assinado e temporário: fora da janela de validade, o mesmo link
+       deixa de funcionar. O caminho no armazenamento nunca aparece na tela.</p>
+    <p class="mt-2"><a class="text-sky-700 underline" href="{% url 'midia:lista' %}">Voltar para a mídia da rede</a></p>
+  </div>
+</div>
+{% endblock %}

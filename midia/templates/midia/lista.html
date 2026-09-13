@@ -1,0 +1,98 @@
+{% extends "gestao/base.html" %}
+
+{% block conteudo %}
+<div class="mb-4 flex flex-wrap items-center gap-3">
+  <div class="mr-auto">
+    <h2 class="text-lg font-semibold text-slate-900">Mídia da rede</h2>
+    <p class="text-xs text-slate-500">
+      {{ resumo.total }} arquivo(s) · {{ resumo.prontos }} pronto(s) ·
+      {{ resumo.enviando }} em envio · {{ resumo.com_erro }} com erro · {{ resumo.espaco }} no total
+    </p>
+  </div>
+  <a href="{% url 'midia:enviar' %}" class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Enviar arquivo</a>
+</div>
+
+<form class="mb-4 flex flex-wrap items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Situação
+    <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in situacoes %}
+        <option value="{{ valor }}" {% if filtro_situacao == valor %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="text-xs text-slate-600">Tipo
+    <select name="tipo" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todos</option>
+      {% for valor, rotulo in tipos %}
+        <option value="{{ valor }}" {% if filtro_tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Título</th>
+        <th class="px-4 py-3">Tipo</th>
+        <th class="px-4 py-3">Tamanho</th>
+        <th class="px-4 py-3">Situação</th>
+        <th class="px-4 py-3">Unidade / aula</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for arquivo in arquivos %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3">
+          <span class="font-medium text-slate-900">{{ arquivo.titulo }}</span>
+          <span class="block text-xs text-slate-400">{{ arquivo.nome_original }}</span>
+        </td>
+        <td class="px-4 py-3 text-slate-600">{{ arquivo.get_tipo_display }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ arquivo.tamanho_legivel }}</td>
+        <td class="px-4 py-3">
+          {% if arquivo.situacao == "pronto" %}
+            <span class="rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">pronto</span>
+          {% elif arquivo.situacao == "enviando" %}
+            <span class="rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-700">enviando {{ arquivo.progresso }}%</span>
+          {% elif arquivo.situacao == "erro" %}
+            <span class="rounded bg-rose-50 px-2 py-0.5 text-xs text-rose-700" title="{{ arquivo.erro }}">erro</span>
+          {% else %}
+            <span class="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ arquivo.get_situacao_display }}</span>
+          {% endif %}
+          {% if arquivo.erro %}<span class="block text-xs text-rose-600">{{ arquivo.erro }}</span>{% endif %}
+        </td>
+        <td class="px-4 py-3 text-slate-600">
+          {{ arquivo.unidade.nome|default:"rede" }}
+          {% if arquivo.aula %}<span class="block text-xs text-slate-400">{{ arquivo.aula.nome }}</span>{% endif %}
+        </td>
+        <td class="px-4 py-3 text-right">
+          {% if arquivo.esta_pronto %}
+            <a class="text-xs text-sky-700 underline" href="{% url 'midia:player' arquivo.pk %}">Abrir</a>
+          {% else %}
+            <span class="text-xs text-slate-400">aguardando envio</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum arquivo ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+<div class="mt-4 flex items-center gap-2 text-sm">
+  {% if page_obj.has_previous %}
+    <a class="rounded-lg border border-slate-300 px-3 py-1.5" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+  {% endif %}
+  <span class="text-xs text-slate-500">página {{ page_obj.number }} de {{ paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a class="rounded-lg border border-slate-300 px-3 py-1.5" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

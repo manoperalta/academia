@@ -1,0 +1,114 @@
+{% extends "gestao/base.html" %}
+
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h2 class="text-lg font-semibold text-slate-900">Enviar arquivo em partes</h2>
+    <p class="mt-1 text-xs text-slate-500">
+      O arquivo sobe em pedaços de <span id="tamanho-parte"></span>. Se a conexão cair, você reenvia
+      <strong>só o pedaço que falhou</strong> — o envio continua de onde parou.
+    </p>
+
+    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+      <label class="text-xs text-slate-600">Título
+        <input id="titulo" required class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </label>
+      <label class="text-xs text-slate-600">Tipo
+        <select id="tipo" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          {% for valor, rotulo in tipos %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="text-xs text-slate-600">Vincular a uma aula (opcional)
+        <select id="aula" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="">não vincular agora</option>
+          {% for aula in aulas %}<option value="{{ aula.pk }}">{{ aula.nome }}</option>{% endfor %}
+        </select>
+      </label>
+      <label class="text-xs text-slate-600">Arquivo
+        <input id="arquivo" type="file" required class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      </label>
+    </div>
+
+    <button id="enviar" class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Enviar</button>
+
+    <div id="progresso-caixa" class="mt-4 hidden">
+      <div class="h-2 w-full overflow-hidden rounded bg-slate-100">
+        <div id="progresso" class="h-2 w-0 bg-emerald-500 transition-all" style="width:0%"></div>
+      </div>
+      <p id="progresso-texto" class="mt-2 text-xs text-slate-500"></p>
+    </div>
+    <p id="aviso" class="mt-3 text-sm" role="status" aria-live="polite"></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const parte = {{ tamanho_da_parte }};
+  document.getElementById("tamanho-parte").textContent = (parte / 1048576).toFixed(0) + " MB";
+  const csrf = document.cookie.split("; ").find(l => l.startsWith("csrftoken="))?.split("=")[1] || "";
+
+  async function resumo(bytes) {
+    const hash = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function aviso(texto, erro) {
+    const alvo = document.getElementById("aviso");
+    alvo.textContent = texto;
+    alvo.className = "mt-3 text-sm " + (erro ? "text-rose-600" : "text-emerald-700");
+  }
+
+  document.getElementById("enviar").addEventListener("click", async (evento) => {
+    evento.preventDefault();
+    const arquivo = document.getElementById("arquivo").files[0];
+    const titulo = document.getElementById("titulo").value.trim();
+    if (!arquivo || !titulo) { aviso("Informe o título e escolha o arquivo.", true); return; }
+
+    document.getElementById("progresso-caixa").classList.remove("hidden");
+    const inicio = await fetch("/midia/api/iniciar/", {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "X-CSRFToken": csrf},
+      body: JSON.stringify({
+        titulo: titulo, nome: arquivo.name, tamanho: arquivo.size,
+        tipo: document.getElementById("tipo").value, mime: arquivo.type,
+        aula: document.getElementById("aula").value
+      })
+    }).then(r => r.json());
+    if (inicio.erro) { aviso(inicio.erro, true); return; }
+
+    const total = inicio.total_de_partes;
+    for (let numero = 1; numero <= total; numero++) {
+      const pedaco = arquivo.slice((numero - 1) * inicio.tamanho_da_parte, Math.min(numero * inicio.tamanho_da_parte, arquivo.size));
+      const bytes = await pedaco.arrayBuffer();
+      const dados = new FormData();
+      dados.append("numero", numero);
+      dados.append("hash", await resumo(bytes));
+      dados.append("parte", new Blob([bytes]), arquivo.name + ".parte" + numero);
+
+      let resposta = null;
+      for (let tentativa = 1; tentativa <= 3; tentativa++) {
+        try {
+          const r = await fetch(inicio.url_parte, {method: "POST", headers: {"X-CSRFToken": csrf}, body: dados});
+          resposta = await r.json();
+          if (!resposta.erro) break;
+        } catch (erro) {
+          resposta = {erro: "Falha de rede na parte " + numero + "."};
+        }
+        aviso("Reenviando a parte " + numero + " (tentativa " + (tentativa + 1) + ")…");
+      }
+      if (!resposta || resposta.erro) { aviso(resposta?.erro || "Falha no envio.", true); return; }
+
+      const pct = Math.round((numero / total) * 100);
+      document.getElementById("progresso").style.width = pct + "%";
+      document.getElementById("progresso-texto").textContent = "parte " + numero + " de " + total + " · " + pct + "%";
+    }
+
+    const fim = await fetch(inicio.url_concluir, {method: "POST", headers: {"X-CSRFToken": csrf}}).then(r => r.json());
+    if (fim.erro) { aviso(fim.erro, true); return; }
+    document.getElementById("progresso").style.width = "100%";
+    aviso("Enviado e conferido (hash " + fim.hash.slice(0, 12) + "…).");
+    setTimeout(() => { window.location.href = fim.url_player; }, 900);
+  });
+})();
+</script>
+{% endblock %}

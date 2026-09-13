@@ -15,7 +15,16 @@
 </div>
 
 <div class="row">
-    {% for aula in aulas %}
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+  <div class="mr-auto">
+    <h2 class="text-sm font-semibold text-slate-900">Vídeos e materiais</h2>
+    <p class="text-xs text-slate-500">Envie o vídeo da aula em partes, com conferência de integridade.</p>
+  </div>
+  <a href="{% url 'midia:lista' %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Mídia da rede</a>
+  <a href="{% url 'midia:enviar' %}" class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Enviar arquivo</a>
+</div>
+
+{% for aula in aulas %}
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm">
             {% if aula.file_de_video %}

@@ -128,6 +128,8 @@ def modelos_sem_rede_em_modelos():
         "api.webhookdesaida",
         "api.entregadewebhook",
         "api.tarefaassincrona",
+        "midia.arquivodemidia",
+        "midia.partedemidia",
     }
     pendentes = []
     for modelo in apps.get_models():
