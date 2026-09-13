@@ -1,0 +1,23 @@
+{% extends "professor/base.html" %}
+{% block conteudo %}
+<h2 class="mb-3 text-lg font-semibold">Meus alunos</h2>
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Situação</th><th class="px-4 py-3">Unidade</th><th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for aluno in alunos %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ aluno.nome }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ aluno.status_user }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ aluno.unidade.nome|default:"rede" }}</td>
+        <td class="px-4 py-3 text-right"><a class="text-xs text-sky-700 underline" href="{% url 'professor:aluno' aluno.pk %}">Abrir ficha</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Você ainda não tem alunos nas suas turmas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

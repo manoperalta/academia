@@ -70,6 +70,8 @@ LOCAIS = [
     "relatorios",
     "notificacoes",
     "documentos",
+    "painel_do_professor",
+    "treinos",
     "design",
     "pdv",
     "fiscal",

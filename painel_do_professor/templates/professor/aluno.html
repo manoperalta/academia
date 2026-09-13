@@ -1,0 +1,64 @@
+{% extends "professor/base.html" %}
+{% block conteudo %}
+<div class="mb-4">
+  <h2 class="text-lg font-semibold">{{ aluno.nome }}</h2>
+  <p class="text-xs text-slate-500">{{ aluno.status_user }} · {{ aluno.unidade.nome|default:"rede" }}
+    · treinos ativos: {{ resumo.treinos_ativos }} · avaliações: {{ resumo.avaliacoes }}
+    · presença: {{ frequencia.taxa_de_presenca }}% ({{ frequencia.presencas }}/{{ frequencia.agendamentos }} em {{ frequencia.dias }} dias)</p>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-2">
+  <div class="rounded-xl bg-white p-4 shadow">
+    <h3 class="text-sm font-semibold">Ficha de saúde</h3>
+    {% if ficha %}
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      <li>Altura: {{ ficha.altura }} m · Peso: {{ ficha.peso }} kg</li>
+      <li>Restrições: {{ ficha.restricoes|default:"nenhuma registrada" }}</li>
+      <li>Prescrições: {{ ficha.prescricoes|default:"—" }}</li>
+      <li>Medicamento: {% if ficha.usa_medicamento %}{{ ficha.qual_medicamento|default:"sim" }}{% else %}não usa{% endif %}</li>
+    </ul>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-500">O aluno ainda não preencheu a ficha de saúde.</p>
+    {% endif %}
+    <p class="mt-2 text-xs text-slate-400">Dado sensível: o acesso é restrito e fica registrado.</p>
+  </div>
+
+  <div class="rounded-xl bg-white p-4 shadow">
+    <h3 class="text-sm font-semibold">Evolução</h3>
+    {% if evolucao.avaliacoes %}
+    <p class="text-xs text-slate-500">De {{ evolucao.primeira.data|date:"d/m/Y" }} a {{ evolucao.ultima.data|date:"d/m/Y" }}</p>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      <li>Peso: {{ evolucao.diferencas.peso }} kg</li>
+      <li>% de gordura: {{ evolucao.diferencas.percentual_de_gordura }}</li>
+      <li>Massa muscular: {{ evolucao.diferencas.massa_muscular }} kg</li>
+      <li>IMC: {{ evolucao.ultima.imc }} ({{ evolucao.ultima.faixa_de_imc }})</li>
+    </ul>
+    {% else %}
+    <p class="mt-2 text-sm text-slate-500">Sem avaliação física registrada.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="mt-4 overflow-hidden rounded-xl bg-white shadow">
+  <h3 class="border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-600">Treinos que eu prescrevi</h3>
+  <ul class="p-4 space-y-1 text-sm">
+    {% for treino in treinos %}
+    <li><a class="text-sky-700 underline" href="{% url 'professor:treino' treino.pk %}">{{ treino.nome }}</a>
+      <span class="text-xs text-slate-500">{{ treino.total_de_exercicios }} exercício(s) · {{ treino.get_situacao_display }}</span></li>
+    {% empty %}
+    <li class="text-slate-500">Nenhum treino meu para este aluno.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="mt-4 rounded-xl bg-white p-4 shadow">
+  <h3 class="text-sm font-semibold">Minhas ocorrências sobre este aluno</h3>
+  <ul class="mt-2 space-y-1 text-sm text-slate-700">
+    {% for ocorrencia in ocorrencias %}
+    <li><span class="text-xs text-slate-500">{{ ocorrencia.criado_em|date:"d/m/Y" }} · {{ ocorrencia.get_tipo_display }}</span> — {{ ocorrencia.descricao }}</li>
+    {% empty %}
+    <li class="text-slate-500">Nenhuma ocorrência registrada.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

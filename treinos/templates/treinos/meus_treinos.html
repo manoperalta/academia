@@ -1,0 +1,22 @@
+{% extends "treinos/base_aluno.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Meus treinos</h1>
+<div class="space-y-3">
+  {% for treino in treinos %}
+  <a class="block rounded-xl bg-white p-4 shadow" href="{% url 'treinos:meu_treino' treino.pk %}">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <p class="font-medium">{{ treino.nome }}</p>
+        <p class="text-xs text-slate-500">{{ treino.get_objetivo_display }} · {{ treino.total_de_exercicios }} exercício(s)
+          {% if treino.inicio %}· desde {{ treino.inicio|date:"d/m/Y" }}{% endif %}</p>
+      </div>
+      <span class="rounded px-2 py-0.5 text-xs {% if treino.situacao == 'ativo' %}bg-emerald-50 text-emerald-700{% else %}bg-slate-100 text-slate-600{% endif %}">{{ treino.get_situacao_display }}</span>
+    </div>
+  </a>
+  {% empty %}
+  <div class="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow">
+    Você ainda não tem treino prescrito. Fale com seu professor.
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

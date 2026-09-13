@@ -1,0 +1,52 @@
+{% extends "treinos/base_aluno.html" %}
+{% block conteudo %}
+<h1 class="mb-1 text-lg font-semibold">{{ treino.nome }}</h1>
+<p class="mb-4 text-xs text-slate-500">{{ treino.get_objetivo_display }}
+  {% if treino.observacoes %}· {{ treino.observacoes }}{% endif %}</p>
+
+<div class="space-y-3">
+  {% for exercicio in exercicios %}
+  <div class="rounded-xl bg-white p-4 shadow">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <p class="font-medium">{{ exercicio.ordem }}. {{ exercicio.nome }}</p>
+        <p class="text-xs text-slate-500">{{ exercicio.series }} séries × {{ exercicio.repeticoes }}
+          · carga sugerida {{ exercicio.carga_sugerida }} kg · descanso {{ exercicio.descanso_segundos }}s</p>
+        {% if exercicio.tem_restricao_conflitante %}
+        <p class="mt-1 rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-800">
+          Atenção: esta aula é marcada para {{ exercicio.aula.restricao }} e consta na sua ficha de saúde. Fale com o professor.
+        </p>
+        {% endif %}
+      </div>
+      {% if exercicio.aula and exercicio.aula.file_de_video %}
+      <a class="text-xs text-sky-700 underline" href="{% url 'midia:aluno_assistir' exercicio.aula.pk %}">ver execução</a>
+      {% endif %}
+    </div>
+
+    <form method="post" action="{% url 'treinos:registrar_execucao' exercicio.pk %}" class="mt-3 flex flex-wrap items-end gap-2">
+      {% csrf_token %}
+      <label class="text-xs text-slate-600">Carga (kg)
+        <input name="carga" class="mt-1 block w-24 rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+      </label>
+      <label class="text-xs text-slate-600">Repetições
+        <input name="repeticoes" class="mt-1 block w-24 rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+      </label>
+      <label class="text-xs text-slate-600">Esforço (1-10)
+        <input name="esforco_percebido" class="mt-1 block w-20 rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
+      </label>
+      <button class="rounded-lg bg-slate-900 px-3 py-2 text-sm text-white">Registrar</button>
+    </form>
+
+    {% for chave, progresso in progressos.items %}{% if chave == exercicio.pk %}
+    {% if progresso.execucoes %}
+    <p class="mt-2 text-xs text-slate-500">
+      {{ progresso.execucoes }} registro(s) · última carga {{ progresso.ultima.carga }} kg
+      · variação {{ progresso.variacao }} kg ({{ progresso.variacao_percentual }}%)
+    </p>
+    {% endif %}{% endif %}{% endfor %}
+  </div>
+  {% empty %}
+  <div class="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow">Este treino ainda não tem exercícios.</div>
+  {% endfor %}
+</div>
+{% endblock %}

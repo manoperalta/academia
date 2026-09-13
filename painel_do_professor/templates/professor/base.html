@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Área do professor{% endblock %} · {{ request.rede.nome|default:"Academia" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
+      <a href="{% url 'professor:agenda' %}" class="mr-auto text-sm font-semibold text-slate-900">
+        {{ request.rede.nome|default:"Academia" }} · área do professor
+      </a>
+      <nav class="flex flex-wrap gap-3 text-sm">
+        <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:agenda' %}">Agenda</a>
+        <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:treinos' %}">Treinos</a>
+        <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:alunos' %}">Alunos</a>
+        <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:avaliacoes' %}">Avaliações</a>
+        <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:comissoes' %}">Comissões</a>
+      </nav>
+      <span class="text-xs text-slate-500">{{ professor.nome|default:request.user }}</span>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-5xl px-4 py-6">
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+      {% for message in messages %}
+      <div class="rounded-lg px-4 py-2 text-sm {% if message.tags == 'error' %}bg-rose-50 text-rose-800{% else %}bg-emerald-50 text-emerald-800{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>

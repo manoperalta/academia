@@ -1,0 +1,71 @@
+{% extends "treinos/base_aluno.html" %}
+{% block conteudo %}
+<h1 class="mb-3 text-lg font-semibold">Minha evolução</h1>
+
+{% if evolucao.avaliacoes %}
+<div class="mb-4 grid gap-3 sm:grid-cols-2">
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Primeira avaliação</p>
+    <p class="text-sm">{{ evolucao.primeira.data|date:"d/m/Y" }} · {{ evolucao.primeira.peso }} kg</p>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Última avaliação</p>
+    <p class="text-sm">{{ evolucao.ultima.data|date:"d/m/Y" }} · {{ evolucao.ultima.peso }} kg
+      · IMC {{ evolucao.ultima.imc }} ({{ evolucao.ultima.faixa_de_imc }})</p>
+  </div>
+</div>
+
+<div class="mb-4 rounded-xl bg-white p-4 shadow">
+  <h2 class="text-sm font-semibold">Diferenças</h2>
+  <ul class="mt-2 space-y-1 text-sm text-slate-700">
+    <li>Peso: {{ evolucao.diferencas.peso }} kg</li>
+    <li>Percentual de gordura: {{ evolucao.diferencas.percentual_de_gordura }} pontos</li>
+    <li>Massa muscular: {{ evolucao.diferencas.massa_muscular }} kg</li>
+    <li>IMC: {{ evolucao.diferencas.imc }}</li>
+  </ul>
+</div>
+
+<div class="mb-4 rounded-xl bg-white p-4 shadow">
+  <h2 class="text-sm font-semibold">Peso por avaliação</h2>
+  <table class="mt-2 min-w-full text-sm">
+    <tbody>
+      {% for ponto in evolucao.series.peso %}
+      <tr class="border-t border-slate-100">
+        <td class="py-2 text-slate-600">{{ ponto.data|date:"d/m/Y" }}</td>
+        <td class="py-2 text-slate-800">{{ ponto.valor }} kg</td>
+        <td class="py-2">
+          <span class="inline-block h-2 rounded bg-emerald-500" style="width: {{ ponto.valor }}px"></span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="mt-2 text-xs text-slate-400">A barra é proporcional ao peso registrado, para comparação rápida entre avaliações.</p>
+</div>
+
+{% if evolucao.medidas %}
+<div class="rounded-xl bg-white p-4 shadow">
+  <h2 class="text-sm font-semibold">Medidas</h2>
+  <table class="mt-2 min-w-full text-sm">
+    <thead class="text-left text-xs text-slate-500">
+      <tr><th class="py-2">Medida</th><th class="py-2">Primeira</th><th class="py-2">Última</th><th class="py-2">Diferença</th></tr>
+    </thead>
+    <tbody>
+      {% for linha in evolucao.medidas %}
+      <tr class="border-t border-slate-100">
+        <td class="py-2 text-slate-600">{{ linha.rotulo }}</td>
+        <td class="py-2 text-slate-600">{{ linha.inicio|default:"—" }}</td>
+        <td class="py-2 text-slate-600">{{ linha.fim|default:"—" }}</td>
+        <td class="py-2 text-slate-800">{{ linha.diferenca }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% else %}
+<div class="rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow">
+  Ainda não há avaliação física registrada. Procure seu professor para a primeira medição.
+</div>
+{% endif %}
+{% endblock %}

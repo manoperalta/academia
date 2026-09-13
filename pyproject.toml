@@ -22,7 +22,7 @@ indent-style = "space"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "app.settings_env.test"
 python_files = ["test_*.py", "*_test.py"]
-testpaths = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede", "fase8_tests", "documentos", "midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal", "pdv", "e2e", "design"]
+testpaths = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede", "fase8_tests", "documentos", "midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal", "pdv", "e2e", "design", "treinos", "painel_do_professor"]
 addopts = "-q --strict-markers --disable-warnings"
 markers = [
     "isolamento: garante que dados de uma rede/unidade nao vazam para outra",

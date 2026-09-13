@@ -1,0 +1,47 @@
+{% extends "professor/base.html" %}
+{% block conteudo %}
+<h2 class="mb-3 text-lg font-semibold">Avaliações físicas</h2>
+
+<form method="post" action="{% url 'professor:registrar_avaliacao' %}" class="mb-4 rounded-xl bg-white p-4 shadow">
+  {% csrf_token %}
+  <div class="grid gap-3 sm:grid-cols-4">
+    <label class="text-xs text-slate-600">Aluno
+      <select name="aluno" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for aluno in alunos %}<option value="{{ aluno.pk }}">{{ aluno.nome }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-xs text-slate-600">Peso (kg)<input name="peso" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">Altura (m)<input name="altura" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">% de gordura<input name="percentual_de_gordura" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">Cintura (cm)<input name="cintura" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">Quadril (cm)<input name="quadril" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">Braço (cm)<input name="braco" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+    <label class="text-xs text-slate-600">Massa muscular (kg)<input name="massa_muscular" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></label>
+  </div>
+  <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Registrar avaliação</button>
+  <p class="mt-2 text-xs text-slate-500">Uma avaliação por aluno por dia; a tela de evolução compara a primeira com a última.</p>
+</form>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Data</th><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Peso</th>
+          <th class="px-4 py-3">IMC</th><th class="px-4 py-3">% gordura</th><th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for avaliacao in avaliacoes %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-600">{{ avaliacao.data|date:"d/m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-800">{{ avaliacao.aluno.nome }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ avaliacao.peso }} kg</td>
+        <td class="px-4 py-3 text-slate-600">{{ avaliacao.imc }} ({{ avaliacao.faixa_de_imc }})</td>
+        <td class="px-4 py-3 text-slate-600">{{ avaliacao.percentual_de_gordura }}%</td>
+        <td class="px-4 py-3 text-right"><a class="text-xs text-sky-700 underline" href="{% url 'professor:aluno' avaliacao.aluno.pk %}">Ver aluno</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma avaliação registrada por você ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

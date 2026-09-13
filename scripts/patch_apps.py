@@ -11,8 +11,8 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-APPS: list[str] = ["midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal", "pdv", "design"]
-ROTAS: list[str] = ["midia.urls", "relacionamento.urls", "busca.urls", "acesso.urls", "cobranca.urls", "fiscal.urls", "pdv.urls", "design.urls"]
+APPS: list[str] = ["midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal", "pdv", "design", "treinos", "painel_do_professor"]
+ROTAS: list[str] = ["midia.urls", "relacionamento.urls", "busca.urls", "acesso.urls", "cobranca.urls", "fiscal.urls", "pdv.urls", "design.urls", "treinos.urls", "painel_do_professor.urls"]
 TESTPATHS: list[str] = ["midia", "busca"]
 ISOLAMENTO: list[str] = [
     "midia.arquivodemidia", "midia.partedemidia",
@@ -23,6 +23,9 @@ ISOLAMENTO: list[str] = [
     "fiscal.configuracaofiscal", "fiscal.notafiscal", "fiscal.eventofiscal",
     "pdv.produto", "pdv.venda", "pdv.itemdavenda", "pdv.movimentodeestoque",
     "documentos.envelopedeassinatura", "documentos.signatario", "documentos.assinatura",
+    "treinos.treino", "treinos.exerciciodotreino", "treinos.execucaodoexercicio",
+    "treinos.avaliacaofisica",
+    "painel_do_professor.ocorrenciadaturma", "painel_do_professor.substituicaodeturna",
 ]
 
 

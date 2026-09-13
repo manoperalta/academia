@@ -1,0 +1,40 @@
+{% extends "professor/base.html" %}
+{% block conteudo %}
+<h2 class="mb-3 text-lg font-semibold">Minhas comissões</h2>
+<div class="mb-4 grid gap-3 sm:grid-cols-3">
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Total apurado</p>
+    <p class="text-xl font-semibold">R$ {{ comissoes.total_devido }}</p>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Já pago</p>
+    <p class="text-xl font-semibold">R$ {{ comissoes.total_pago }}</p>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">A receber</p>
+    <p class="text-xl font-semibold text-emerald-700">R$ {{ comissoes.a_receber }}</p>
+  </div>
+</div>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Período</th><th class="px-4 py-3">Unidade</th><th class="px-4 py-3">Valor devido</th>
+          <th class="px-4 py-3">Situação</th></tr>
+    </thead>
+    <tbody>
+      {% for apuracao in comissoes.apuracoes %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-600">{{ apuracao.inicio|date:"d/m/Y" }} a {{ apuracao.fim|date:"d/m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ apuracao.unidade.nome|default:"rede" }}</td>
+        <td class="px-4 py-3 text-slate-800">R$ {{ apuracao.valor_devido }}</td>
+        <td class="px-4 py-3 text-slate-600">{% if apuracao.pago_em %}pago em {{ apuracao.pago_em|date:"d/m/Y" }}{% else %}a receber{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma apuração de comissão para você ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="mt-3 text-xs text-slate-500">A memória de cálculo de cada apuração fica na tela de comissões da unidade, com hash e conferência por recálculo.</p>
+{% endblock %}
