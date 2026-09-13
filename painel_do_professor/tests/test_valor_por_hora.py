@@ -13,7 +13,12 @@ from agendamento.models import Agendamento
 from painel.models import Painel
 from painel_do_professor import servicos
 from remuneracao.models import RegraDeComissao, TipoDeComissao
-from remuneracao.servicos import ErroDeRemuneracao, aulas_dadas, calcular_apuracao, horas_trabalhadas
+from remuneracao.servicos import (
+    ErroDeRemuneracao,
+    aulas_dadas,
+    calcular_apuracao,
+    horas_trabalhadas,
+)
 
 pytestmark = pytest.mark.django_db
 

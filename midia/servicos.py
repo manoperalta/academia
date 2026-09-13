@@ -21,7 +21,6 @@ from django.utils import timezone
 from core.validadores import MIMES_DE_IMAGEM, MIMES_DE_VIDEO, tipo_real_do_arquivo
 from midia.models import (
     TAMANHO_DA_PARTE,
-    TAMANHO_MAXIMO,
     ArquivoDeMidia,
     ParteDeMidia,
     tamanho_legivel,

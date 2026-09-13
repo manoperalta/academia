@@ -193,8 +193,12 @@ def meu_financeiro(professor, referencia=None) -> dict:
     O valor da hora vem do painel do admin/gestor (regra ``por_hora`` vigente) -- o professor
     confere o numero, nao define.
     """
-    from remuneracao.servicos import ErroDeRemuneracao, calcular_apuracao, competencia
-    from remuneracao.servicos import horas_trabalhadas
+    from remuneracao.servicos import (
+        ErroDeRemuneracao,
+        calcular_apuracao,
+        competencia,
+        horas_trabalhadas,
+    )
 
     inicio, fim = competencia(referencia)
     horas, fonte = horas_trabalhadas(professor, professor.unidade, inicio, fim)
@@ -273,9 +277,11 @@ def compor_compromisso(disponibilidade, aulas) -> list[AulaDaDisponibilidade]:
     """Define (substituindo) as aulas que compoem o compromisso, na ordem informada."""
     if not aulas:
         raise ErroDoProfessor("Escolha pelo menos uma aula para compor o compromisso.")
-    disponibilidade.composicao.all().delete()
+    AulaDaDisponibilidade.todos.filter(disponibilidade=disponibilidade).delete()
     return [
-        AulaDaDisponibilidade.objects.create(
+        AulaDaDisponibilidade.todos.create(
+            rede=disponibilidade.rede,
+            unidade=disponibilidade.unidade,
             disponibilidade=disponibilidade, aula=aula, ordem=ordem
         )
         for ordem, aula in enumerate(aulas, start=1)
@@ -410,7 +416,7 @@ def materializar_disponibilidade(
 
     rastros = {
         (rastro.turma.data, rastro.turma.hora_inicio): rastro
-        for rastro in TurmaMaterializada.objects.filter(disponibilidade=disponibilidade).select_related(
+        for rastro in TurmaMaterializada.todos.filter(disponibilidade=disponibilidade).select_related(
             "turma"
         )
     }
@@ -441,10 +447,20 @@ def materializar_disponibilidade(
                     responsavel=disponibilidade.professor.user,
                     numero_de_user=disponibilidade.vagas_por_horario,
                 )
-                TurmaMaterializada.objects.create(disponibilidade=disponibilidade, turma=turma)
+                TurmaMaterializada.todos.create(
+                    rede=disponibilidade.rede,
+                    unidade=disponibilidade.unidade,
+                    disponibilidade=disponibilidade,
+                    turma=turma,
+                )
             else:
                 if rastro is None:
-                    TurmaMaterializada.objects.create(disponibilidade=disponibilidade, turma=turma)
+                    TurmaMaterializada.todos.create(
+                    rede=disponibilidade.rede,
+                    unidade=disponibilidade.unidade,
+                    disponibilidade=disponibilidade,
+                    turma=turma,
+                )
                 conflito = rastro and rastro.disponibilidade_id != disponibilidade.pk
                 if conflito:
                     resultado["preservadas"] += 1
@@ -518,7 +534,7 @@ def encerrar_disponibilidade(disponibilidade, *, arquivar_futuras: bool = True) 
     if not arquivar_futuras:
         return resultado
     hoje = timezone.localdate()
-    for rastro in TurmaMaterializada.objects.filter(
+    for rastro in TurmaMaterializada.todos.filter(
         disponibilidade=disponibilidade
     ).select_related("turma"):
         turma = rastro.turma

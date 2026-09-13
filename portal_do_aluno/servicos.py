@@ -15,7 +15,6 @@ from painel.models import Painel
 from portal_do_aluno.models import ListaDeEspera, PreferenciaDeNotificacao
 from usuarios.models import FichaSaude
 
-
 #: Antecedencia minima para reservar e para cancelar sem levar falta (decisao de produto).
 ANTECEDENCIA_PARA_AGENDAR = timedelta(hours=2)
 ANTECEDENCIA_PARA_CANCELAR = timedelta(hours=4)

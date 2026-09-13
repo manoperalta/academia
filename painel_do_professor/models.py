@@ -153,16 +153,20 @@ class DisponibilidadeDoProfessor(TenantModel):
             raise ValidationError({"hora_fim": "O horario de fechamento tem de ser depois da abertura."})
         if self.duracao_minutos is not None and self.duracao_minutos < 1:
             raise ValidationError({"duracao_minutos": "O tempo do compromisso tem de ser positivo."})
-        if self.hora_inicio and self.hora_fim and self.duracao_minutos:
-            if self.duracao_minutos > self.janela_minutos:
-                raise ValidationError(
-                    {
-                        "duracao_minutos": (
-                            f"O tempo do compromisso ({self.duracao_minutos} min) e maior que a "
-                            f"janela aberta ({self.janela_minutos} min)."
-                        )
-                    }
-                )
+        if (
+            self.hora_inicio
+            and self.hora_fim
+            and self.duracao_minutos
+            and self.duracao_minutos > self.janela_minutos
+        ):
+            raise ValidationError(
+                {
+                    "duracao_minutos": (
+                        f"O tempo do compromisso ({self.duracao_minutos} min) e maior que a "
+                        f"janela aberta ({self.janela_minutos} min)."
+                    )
+                }
+            )
         if self.inicio_vigencia and self.fim_vigencia and self.fim_vigencia < self.inicio_vigencia:
             raise ValidationError({"fim_vigencia": "A vigencia termina antes de comecar."})
 
@@ -200,11 +204,23 @@ class DisponibilidadeDoProfessor(TenantModel):
             return False
         return not (self.fim_vigencia and data > self.fim_vigencia)
 
+    @property
+    def total_de_aulas(self) -> int:
+        """Quantas aulas (videos) compoem o compromisso -- pelo manager global (nao escopado)."""
+        return AulaDaDisponibilidade.todos.filter(disponibilidade=self).count()
+
     def aulas_compostas(self):
-        """Aulas (videos) que compoem o compromisso, na ordem definida."""
+        """Aulas (videos) que compoem o compromisso, na ordem definida -- manager global.
+
+        O relacionamento reverso de um ``TenantModel`` (``self.composicao``) usa o manager com
+        escopo e esconderia as linhas fora do painel da rede; aqui a chave e a propria
+        disponibilidade.
+        """
         return [
             item.aula
-            for item in self.composicao.select_related("aula").order_by("ordem", "pk")
+            for item in AulaDaDisponibilidade.todos.filter(disponibilidade=self)
+            .select_related("aula")
+            .order_by("ordem", "pk")
         ]
 
     def minutos_de_video(self) -> int | None:
@@ -217,7 +233,7 @@ class DisponibilidadeDoProfessor(TenantModel):
         return sum(duracoes) if duracoes else None
 
 
-class AulaDaDisponibilidade(models.Model):
+class AulaDaDisponibilidade(TenantModel):
     """Uma aula (video) dentro do compromisso do professor, com a ordem de execucao."""
 
     disponibilidade = models.ForeignKey(
@@ -243,7 +259,7 @@ class AulaDaDisponibilidade(models.Model):
         return f"{self.ordem}. {self.aula}"
 
 
-class TurmaMaterializada(models.Model):
+class TurmaMaterializada(TenantModel):
     """Rastro do que a disponibilidade gerou: liga a recorrencia a turma concreta.
 
     Sem esse rastro, uma segunda materializacao nao saberia o que ela mesma criou -- e acabaria

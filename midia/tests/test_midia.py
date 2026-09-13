@@ -249,12 +249,15 @@ def test_estatisticas_da_rede(cliente_painel):
 
 
 def test_iniciar_envio_recusa_arquivo_grande_demais(cliente_painel):
+    """O limite passou a ser por tipo: video de aula ate 450 MB."""
+    from midia.models import ArquivoDeMidia
+
     resposta = cliente_painel.post(
         reverse("midia:api_iniciar"),
         data={
             "titulo": "Gigante",
             "nome": "g.mp4",
-            "tamanho": servicos.TAMANHO_MAXIMO + 1,
+            "tamanho": ArquivoDeMidia.limite_do_tipo("video") + 1,
             "tipo": "video",
         },
         content_type="application/json",

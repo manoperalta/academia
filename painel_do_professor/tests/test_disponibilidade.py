@@ -8,12 +8,12 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
+from agendamento.models import Agendamento
 from aulas.models import Aulas
 from midia.models import ArquivoDeMidia
 from painel.models import Painel
 from painel_do_professor import servicos
 from painel_do_professor.models import DisponibilidadeDoProfessor, TurmaMaterializada
-from agendamento.models import Agendamento
 
 pytestmark = pytest.mark.django_db
 

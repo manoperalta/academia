@@ -14,8 +14,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from cobranca.models import AutorizacaoDeDebito, CobrancaRecorrente
 from cobranca import servicos
+from cobranca.models import AutorizacaoDeDebito, CobrancaRecorrente
 from core.models import VinculoUsuario
 from core.papeis import Papel
 from usuarios.models import Usuario

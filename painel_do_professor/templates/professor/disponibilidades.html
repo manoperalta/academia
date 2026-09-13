@@ -19,7 +19,7 @@
               <td class="text-xs">{{ bloco.hora_inicio|time:"H:i" }}–{{ bloco.hora_fim|time:"H:i" }}</td>
               <td class="text-xs">{{ bloco.duracao_minutos }} min{% if bloco.sobra_minutos %} <span class="text-amber-600">(sobra {{ bloco.sobra_minutos }} min)</span>{% endif %}</td>
               <td class="text-xs">{{ bloco.vagas_por_horario }}</td>
-              <td class="text-xs">{{ bloco.composicao.count }} vídeo(s)</td>
+              <td class="text-xs">{{ bloco.total_de_aulas }} vídeo(s)</td>
               <td class="text-xs">{% if bloco.ativo %}<span class="text-emerald-700">aberta</span>{% else %}<span class="text-slate-400">encerrada</span>{% endif %}</td>
               <td class="text-right">
                 {% if bloco.ativo %}

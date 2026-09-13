@@ -12,6 +12,7 @@ o conteudo claramente nao e o que o nome diz** (por exemplo: um PDF ou um execut
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
@@ -73,20 +74,15 @@ def _cabecalho(origem, tamanho: int = 16) -> bytes:
     if origem is None:
         return b""
     if hasattr(origem, "read"):
-        try:
+        posicao = None
+        with contextlib.suppress(AttributeError, OSError, ValueError):
             posicao = origem.tell()
-        except (AttributeError, OSError):
-            posicao = None
-        try:
+        with contextlib.suppress(AttributeError, OSError, ValueError):
             dados = origem.read(tamanho) or b""
-        except (AttributeError, OSError, ValueError):
-            return b""
-        if posicao is not None:
-            try:
+            if posicao is not None:
                 origem.seek(posicao)
-            except (AttributeError, OSError, ValueError):
-                pass
-        return dados
+            return dados
+        return b""
     caminho = Path(str(origem))
     if not caminho.is_file():
         return b""

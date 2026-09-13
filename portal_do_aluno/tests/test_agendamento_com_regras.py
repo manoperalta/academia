@@ -10,7 +10,6 @@ Regras de produto cobertas:
 from __future__ import annotations
 
 from datetime import time, timedelta
-from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
