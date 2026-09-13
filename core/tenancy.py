@@ -108,6 +108,11 @@ def resolver_rede(request):
     if rede:
         return rede, unidade
 
+    # Suporte: sessao com impersonation ativa entra na visao do cliente.
+    impersonacao = _impersonacao_da_sessao(request)
+    if impersonacao is not None:
+        return impersonacao.rede, None
+
     usuario = getattr(request, "user", None)
     if usuario is not None and usuario.is_authenticated:
         rede = rede_do_usuario(usuario)
@@ -133,3 +138,15 @@ def definir_contexto_da_requisicao(request) -> None:
     definir_contexto(rede=rede, unidade=unidade, usuario=getattr(request, "user", None))
     request.rede = rede
     request.unidade = unidade
+
+
+def _impersonacao_da_sessao(request):
+    """Impersonation ativa na sessao (import tardio evita ciclo com a plataforma)."""
+    if not hasattr(request, "session"):
+        return None
+    identificador = request.session.get("impersonacao_id")
+    if not identificador:
+        return None
+    from plataforma.models import Impersonacao
+
+    return Impersonacao.objects.filter(pk=identificador, fim__isnull=True).first()

@@ -1,0 +1,104 @@
+{% extends "plataforma/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="space-y-4 lg:col-span-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-base font-semibold">{{ object.nome }}</h2>
+          <p class="text-xs text-slate-500">/{{ object.slug }} · {{ object.cnpj|default:"sem CNPJ" }} · {{ object.email_responsavel|default:"sem e-mail" }}</p>
+        </div>
+        <div class="flex gap-2 text-xs">
+          <a class="rounded border border-slate-300 px-3 py-1.5" href="{% url 'plataforma:tenant_editar' object.pk %}">Editar</a>
+          <form method="post" action="{% url 'plataforma:tenant_acao' object.pk 'reativar' %}">{% csrf_token %}<button class="rounded border border-emerald-300 px-3 py-1.5 text-emerald-700">Reativar</button></form>
+          <form method="post" action="{% url 'plataforma:tenant_acao' object.pk 'somente_leitura' %}">{% csrf_token %}<button class="rounded border border-amber-300 px-3 py-1.5 text-amber-700">Somente leitura</button></form>
+          <form method="post" action="{% url 'plataforma:tenant_acao' object.pk 'suspender' %}">{% csrf_token %}<button class="rounded border border-red-300 px-3 py-1.5 text-red-700">Suspender</button></form>
+        </div>
+      </div>
+      <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div><dt class="text-xs text-slate-500">Status</dt><dd>{{ object.get_status_display }}</dd></div>
+        <div><dt class="text-xs text-slate-500">Pacote</dt><dd>{{ assinatura.pacote.nome|default:"sem assinatura" }} {% if assinatura %}· {{ assinatura.get_ciclo_display }}{% endif %}</dd></div>
+        <div><dt class="text-xs text-slate-500">Renovação</dt><dd>{{ assinatura.renovacao_em|default:"—" }}{% if assinatura.em_trial %} (trial até {{ assinatura.trial_termina_em }}){% endif %}</dd></div>
+        <div><dt class="text-xs text-slate-500">Valor do ciclo</dt><dd>{{ assinatura.valor_do_ciclo|default:0|moeda }}</dd></div>
+      </dl>
+      <div class="mt-4 grid grid-cols-3 gap-3">
+        {% for recurso in situacao.recursos %}
+          <div class="rounded-lg border border-slate-100 p-3">
+            <p class="text-xs uppercase text-slate-500">{{ recurso.recurso }}</p>
+            <p class="text-lg font-semibold">{{ recurso.uso }}{% if not recurso.ilimitado %} / {{ recurso.limite }}{% else %} <span class="text-xs text-slate-500">ilimitado</span>{% endif %}</p>
+            {% if not recurso.ilimitado %}
+              <div class="mt-1 h-1.5 w-full rounded bg-slate-100"><div class="h-1.5 rounded bg-emerald-500" style="width: {{ recurso.percentual }}%"></div></div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-sm font-semibold">Faturas</h2>
+      <table class="min-w-full text-sm">
+        <thead class="text-left text-xs uppercase text-slate-500"><tr><th class="py-2">Número</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for fatura in faturas %}
+            <tr>
+              <td class="py-2 text-xs">{{ fatura.numero }}</td>
+              <td class="text-xs">{{ fatura.vencimento }}{% if fatura.dias_de_atraso %} <span class="text-red-600">({{ fatura.dias_de_atraso }}d)</span>{% endif %}</td>
+              <td>{{ fatura.valor_final|moeda }}</td>
+              <td class="text-xs">{{ fatura.get_status_display }}</td>
+              <td class="space-x-2 text-right text-xs">
+                {% if fatura.em_aberto %}
+                  <form method="post" action="{% url 'plataforma:fatura_cobrar' fatura.pk %}" class="inline">{% csrf_token %}<button class="text-slate-600 hover:underline">Cobrar</button></form>
+                  <form method="post" action="{% url 'plataforma:fatura_baixar' fatura.pk %}" class="inline">{% csrf_token %}<button class="text-emerald-700 hover:underline">Baixar</button></form>
+                  <form method="post" action="{% url 'plataforma:fatura_simular_pagamento' fatura.pk %}" class="inline">{% csrf_token %}<button class="text-indigo-600 hover:underline">Simular pagamento</button></form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="py-4 text-slate-500">Nenhuma fatura.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <form method="post" action="{% url 'plataforma:tenant_faturar' object.pk %}">{% csrf_token %}<button class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-white">Gerar fatura do ciclo</button></form>
+      </div>
+      <form method="post" action="{% url 'plataforma:tenant_faturar' object.pk %}" class="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+        {% csrf_token %}
+        {% for campo in form_fatura %}
+          <div><label class="text-xs text-slate-500">{{ campo.label }}</label>{{ campo }}</div>
+        {% endfor %}
+        <div class="col-span-2 md:col-span-4"><button class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs">Criar fatura avulsa</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-2 text-sm font-semibold">Suporte (impersonation)</h2>
+      <p class="mb-3 text-xs text-slate-500">Entrar na visão do cliente exige motivo e fica registrado. Sem acesso à ficha de saúde.</p>
+      <form method="post" action="{% url 'plataforma:impersonar' object.pk %}" class="space-y-2">
+        {% csrf_token %}
+        {% for campo in form_impersonar %}
+          <div><label class="text-xs text-slate-500">{{ campo.label }}</label>{{ campo }}</div>
+        {% endfor %}
+        <button class="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white">Entrar como suporte</button>
+      </form>
+      <ul class="mt-3 space-y-1 text-xs text-slate-500">
+        {% for registro in impersonacoes %}
+          <li>{{ registro.inicio|date:"d/m H:i" }} · {{ registro.usuario_plataforma }} · {{ registro.motivo|truncatechars:50 }} {% if registro.ativa %}<span class="text-amber-600">(em curso)</span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-2 text-sm font-semibold">Últimos disparos</h2>
+      <ul class="space-y-1 text-xs text-slate-500">
+        {% for evento in eventos %}
+          <li>{{ evento.criado_em|date:"d/m H:i" }} · {{ evento.get_marco_display }} · {{ evento.get_status_display }}{% if evento.erro %} · <span class="text-red-600">{{ evento.erro|truncatechars:40 }}</span>{% endif %}</li>
+        {% empty %}
+          <li>Nenhum disparo.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

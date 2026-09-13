@@ -1,0 +1,20 @@
+{% extends "plataforma/base.html" %}
+{% block conteudo %}
+<div class="max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+  <div class="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+    Gateway: <strong>{{ configuracao.asaas_ambiente }}</strong>
+    {% if configuracao.gateway_em_modo_simulado %}· sem chave configurada: <strong>modo simulado</strong> (nada é cobrado de verdade){% else %}· chave configurada{% endif %}
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {% for campo in form %}
+        <div><label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>{{ campo }}
+          {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
+          {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}</div>
+      {% endfor %}
+    </div>
+    <button class="mt-5 rounded-lg bg-emerald-600 px-5 py-2 text-sm text-white">Salvar configuração</button>
+  </form>
+</div>
+{% endblock %}

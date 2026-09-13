@@ -1,0 +1,31 @@
+{% extends "plataforma/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="mb-4 flex justify-end">
+  <a href="{% url 'plataforma:pacote_novo' %}" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">+ Novo pacote</a>
+</div>
+<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+  {% for pacote in object_list %}
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-base font-semibold">{{ pacote.nome }}</h2>
+          <p class="text-xs text-slate-500">{{ pacote.descricao }}</p>
+        </div>
+        <a class="text-xs text-emerald-700 hover:underline" href="{% url 'plataforma:pacote_editar' pacote.pk %}">Editar</a>
+      </div>
+      <p class="mt-3 text-2xl font-semibold">{{ pacote.preco_mensal|moeda }}<span class="text-xs font-normal text-slate-500">/mês</span></p>
+      <p class="text-xs text-slate-500">anual {{ pacote.preco_anual|moeda }}{% if not pacote.preco_mensal %} · preço a definir{% endif %}</p>
+      <ul class="mt-3 space-y-1 text-sm">
+        <li>👥 {{ pacote.limite_alunos|default:"ilimitado" }} alunos</li>
+        <li>🧑‍🏫 {{ pacote.limite_professores|default:"ilimitado" }} professores</li>
+        <li>🏢 {{ pacote.limite_unidades|default:"ilimitado" }} unidades</li>
+      </ul>
+      <p class="mt-3 text-xs text-slate-500">Módulos: {{ pacote.modulos|join:", "|default:"—" }}</p>
+      <p class="mt-2 text-xs text-slate-500">{{ assinaturas_por_pacote|default_if_none:"" }}{{ pacote.assinaturas.count }} cliente(s) neste pacote</p>
+    </div>
+  {% empty %}
+    <p class="text-slate-500">Nenhum pacote. Rode <code>manage.py seed_plataforma</code>.</p>
+  {% endfor %}
+</div>
+{% endblock %}

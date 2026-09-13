@@ -25,7 +25,11 @@
 
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <h3 class="mb-3 text-sm font-semibold text-slate-900">Ficha de saúde</h3>
-      {% if pode_editar %}
+      {% if not ficha_form %}
+        <p class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          A ficha de saúde não fica disponível durante o acesso de suporte.
+        </p>
+      {% elif pode_editar %}
         <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 gap-3 md:grid-cols-2">
           {% csrf_token %}
           {% for campo in ficha_form %}

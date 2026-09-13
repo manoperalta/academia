@@ -1,5 +1,4 @@
 """Mixins do painel: permissao por modulo, unidade atual e contexto comum."""
-
 from __future__ import annotations
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -37,7 +36,11 @@ class PainelMixin(RedeRequiredMixin, EscritaPermitidaMixin, LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
+        from plataforma.servicos import impersonacao_ativa, situacao_do_tenant
+
         contexto = super().get_context_data(**kwargs)
+        contexto["impersonacao"] = impersonacao_ativa(self.request)
+        contexto["situacao_plano"] = situacao_do_tenant(getattr(self.request, "rede", None))
         contexto.update(
             painel=True,
             modulo=self.modulo,

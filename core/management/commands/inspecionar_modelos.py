@@ -2,22 +2,13 @@
 
 Uso: python manage.py inspecionar_modelos [app ...]     (sem app = todos os apps com modelo)
 """
-
 from __future__ import annotations
 
 from django.apps import apps
 from django.core.management.base import BaseCommand
 
-PADRAO = [
-    "accounts",
-    "usuarios",
-    "professores",
-    "aulas",
-    "agendamento",
-    "financeiro",
-    "academia",
-    "notificacoes",
-]
+PADRAO = ["accounts", "usuarios", "professores", "aulas", "agendamento", "financeiro",
+          "academia", "notificacoes"]
 
 
 class Command(BaseCommand):

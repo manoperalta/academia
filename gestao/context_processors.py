@@ -1,9 +1,8 @@
 """Menu do painel disponivel em qualquer template."""
-
 from __future__ import annotations
 
 from gestao.menu import ROTAS
-from gestao.permissoes import Modulo, modulos_visiveis, nivel
+from gestao.permissoes import Modulo, nivel, modulos_visiveis
 
 
 def menu_do_painel(request):
@@ -39,5 +38,6 @@ ICONES = {
     Modulo.COMUNICACAO: "✉️",
     Modulo.IDENTIDADE: "🏷️",
     Modulo.EQUIPE: "👥",
+    Modulo.PLANO: "💳",
     Modulo.AUDITORIA: "🔒",
 }

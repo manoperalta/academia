@@ -1,7 +1,7 @@
 """Seletor de unidade e escopo por unidade."""
-
 from __future__ import annotations
 
+import pytest
 from django.urls import reverse
 
 from core.models import Unidade
@@ -10,12 +10,8 @@ from usuarios.models import Usuario
 
 def _aluno(rede, nome, unidade):
     return Usuario.todos.create(
-        rede=rede,
-        unidade=unidade,
-        nome=nome,
-        email_user=f"{nome.split()[0].lower()}@exemplo.com",
-        telefone_user="51000000000",
-        status_user="Ativo",
+        rede=rede, unidade=unidade, nome=nome, email_user=f"{nome.split()[0].lower()}@exemplo.com",
+        telefone_user="51000000000", status_user="Ativo",
     )
 
 

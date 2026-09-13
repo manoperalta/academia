@@ -12,6 +12,13 @@ from core.papeis import PAPEIS_DA_REDE, Papel
 from core.papeis import StatusRede as _StatusRede
 
 
+def impersonando_suporte(request) -> bool:
+    """True quando a requisicao esta dentro de um acesso de suporte auditado."""
+    if not hasattr(request, "session"):
+        return False
+    return bool(request.session.get("impersonacao_id"))
+
+
 def papeis_do_usuario(usuario, rede=None):
     """Papeis do usuario na rede informada (ou na rede do contexto)."""
     if not usuario or not usuario.is_authenticated:
@@ -38,7 +45,7 @@ class RedeRequiredMixin:
         if request.user.is_authenticated:
             papeis = papeis_do_usuario(request.user, rede)
             vinculo = bool(papeis)
-            if not papeis and not request.user.is_superuser:
+            if not papeis and not request.user.is_superuser and not impersonando_suporte(request):
                 raise PermissionDenied("Voce nao tem vinculo com esta academia.")
             if self.papeis_permitidos and not (
                 set(self.papeis_permitidos).intersection(papeis) or request.user.is_superuser

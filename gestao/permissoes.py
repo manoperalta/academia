@@ -1,5 +1,4 @@
 """RBAC do painel: papel x modulo x nivel de acesso (PRD secao 7.1)."""
-
 from __future__ import annotations
 
 from django.db import models
@@ -22,13 +21,14 @@ class Modulo(models.TextChoices):
     COMUNICACAO = "comunicacao", "Comunicacao"
     IDENTIDADE = "identidade", "Identidade e dados fiscais"
     EQUIPE = "equipe", "Equipe e acessos"
+    PLANO = "plano", "Meu plano"
     AUDITORIA = "auditoria", "Auditoria"
 
 
 NIVEIS: dict[str | None, int] = {None: 0, "ver": 1, "editar": 2, "admin": 3}
 
-TUDO = dict.fromkeys(Modulo, "admin")
-SO_LEITURA = dict.fromkeys(Modulo, "ver")
+TUDO = {modulo: "admin" for modulo in Modulo}
+SO_LEITURA = {modulo: "ver" for modulo in Modulo}
 
 #: Matriz papel x modulo. Nivel: ver < editar < admin.
 MATRIZ: dict[str, dict[str, str]] = {
@@ -45,6 +45,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.COMUNICACAO: "ver",
         Modulo.IDENTIDADE: "ver",
         Modulo.EQUIPE: "editar",
+        Modulo.PLANO: "admin",
         Modulo.AUDITORIA: "ver",
     },
     Papel.RECEPCAO: {
@@ -66,6 +67,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.ALUNOS: "ver",
         Modulo.PROFESSORES: "ver",
         Modulo.FINANCEIRO: "editar",
+        Modulo.PLANO: "ver",
         Modulo.RELATORIOS: "ver",
         Modulo.AUDITORIA: "ver",
     },
@@ -84,6 +86,9 @@ def papeis_do_usuario(usuario, rede=None, unidade=None) -> set[str]:
     if not getattr(usuario, "is_authenticated", False):
         return set()
     if getattr(usuario, "is_superuser", False):
+        return {Papel.SUPERADMIN_PLATAFORMA}
+    if getattr(usuario, "is_staff", False):
+        # Equipe da SafeStack: inclui o acesso de suporte (impersonation) auditado.
         return {Papel.SUPERADMIN_PLATAFORMA}
     consulta = VinculoUsuario.todos.filter(usuario=usuario, ativo=True)
     if rede is not None:

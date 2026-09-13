@@ -118,7 +118,14 @@ def modelos_sem_rede_em_modelos():
             continue
         if issubclass(modelo, TenantModel):
             continue
-        if modelo._meta.app_label in {"auth", "admin", "sessions", "contenttypes", "core"}:
+        if modelo._meta.app_label in {
+            "auth",
+            "admin",
+            "sessions",
+            "contenttypes",
+            "core",
+            "plataforma",
+        }:
             continue
         pendentes.append(rotulo)
     return pendentes

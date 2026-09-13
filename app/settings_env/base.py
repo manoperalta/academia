@@ -48,6 +48,7 @@ TERCEIROS = [
 
 LOCAIS = [
     "core",
+    "plataforma",
     "gestao",
     "api",
     "usuarios",

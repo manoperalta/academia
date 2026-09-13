@@ -1,0 +1,56 @@
+{% load gestao_extras %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titulo|default:"Plataforma" }} · SafeStack</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800" x-data="{ menu: true }">
+{% if impersonacao %}
+  <div class="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-amber-950">
+    🔐 Você está na visão de <strong>{{ impersonacao.rede.nome }}</strong> como suporte
+    (motivo: {{ impersonacao.motivo|truncatechars:80 }}) desde {{ impersonacao.inicio|date:"d/m H:i" }}.
+    <form method="post" action="{% url 'plataforma:sair_impersonacao' %}" class="inline">
+      {% csrf_token %}<button class="ml-2 rounded bg-amber-950 px-2 py-1 text-xs text-amber-50">Sair da impersonação</button>
+    </form>
+  </div>
+{% endif %}
+<div class="flex min-h-screen">
+  <aside class="w-60 shrink-0 bg-slate-900 text-slate-100">
+    <div class="px-5 py-5">
+      <p class="text-sm font-semibold">SafeStack · Plataforma</p>
+      <p class="text-xs text-slate-400">Academia SaaS</p>
+    </div>
+    <nav class="space-y-1 px-3 pb-6 text-sm">
+      <a href="{% url 'plataforma:metricas' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">📊 Métricas</a>
+      <a href="{% url 'plataforma:tenants' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">🏢 Clientes</a>
+      <a href="{% url 'plataforma:pacotes' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">📦 Pacotes</a>
+      <a href="{% url 'plataforma:faturas' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">🧾 Faturas</a>
+      <a href="{% url 'plataforma:regua' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">⏰ Régua de cobrança</a>
+      <a href="{% url 'plataforma:webhooks' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">🔔 Eventos do gateway</a>
+      <a href="{% url 'plataforma:relatorio' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">📈 Relatório financeiro</a>
+      <a href="{% url 'plataforma:config' %}" class="block rounded-lg px-3 py-2 text-slate-300 hover:bg-slate-800">⚙️ Configuração</a>
+      <a href="/gestao/" class="block rounded-lg px-3 py-2 text-emerald-400 hover:bg-slate-800">↩︎ Painel do cliente</a>
+    </nav>
+  </aside>
+  <div class="flex-1">
+    <header class="border-b border-slate-200 bg-white px-6 py-4">
+      <h1 class="text-lg font-semibold text-slate-900">{{ titulo|default:"Plataforma" }}</h1>
+      {% if subtitulo %}<p class="text-xs text-slate-500">{{ subtitulo }}</p>{% endif %}
+    </header>
+    <main class="p-6">
+      {% if messages %}
+        {% for mensagem in messages %}
+          <div class="mb-3 rounded-lg border px-4 py-3 text-sm
+            {% if mensagem.tags == 'error' %}border-red-200 bg-red-50 text-red-800
+            {% elif mensagem.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-900
+            {% else %}border-emerald-200 bg-emerald-50 text-emerald-900{% endif %}">{{ mensagem }}</div>
+        {% endfor %}
+      {% endif %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+</div>
+</body>
+</html>
