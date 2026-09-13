@@ -869,3 +869,6 @@ class ImportarDaRedeView(PainelMixin, View):
                 "arquivo_em_memoria": request.POST.get("arquivo_em_memoria", ""),
             },
         )
+
+
+from rede.views_comparativo import ComparativoDeUnidadesView  # noqa: E402, F401

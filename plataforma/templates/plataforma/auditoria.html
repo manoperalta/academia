@@ -1,0 +1,47 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Auditoria da plataforma</h2>
+  <p class="text-xs text-slate-500">
+    {{ total }} registro(s), do mais recente para o mais antigo. Trilha somente de inclusão: nada aqui é editado ou apagado.
+  </p>
+</div>
+<form class="mb-3 flex flex-wrap items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Ação
+    <select name="acao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in acoes %}<option value="{{ valor }}" {% if filtro_acao == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <label class="text-xs text-slate-600">Rede
+    <input name="rede" value="{{ filtro_rede }}" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+  <a class="rounded-lg border border-slate-300 px-4 py-2 text-sm" href="?formato=csv{% if filtro_acao %}&acao={{ filtro_acao }}{% endif %}{% if filtro_rede %}&rede={{ filtro_rede }}{% endif %}">Baixar CSV</a>
+</form>
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Quando</th><th class="px-4 py-3">Operador</th><th class="px-4 py-3">Ação</th>
+          <th class="px-4 py-3">Rede</th><th class="px-4 py-3">Entidade</th><th class="px-4 py-3">IP</th></tr>
+    </thead>
+    <tbody>
+      {% for registro in registros %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-600">{{ registro.criado_em|date:"d/m/Y H:i" }}</td>
+        <td class="px-4 py-3 text-slate-800">{{ registro.usuario|default:"sistema" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ registro.get_acao_display }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ registro.rede.nome|default:"—" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ registro.entidade|default:"—" }} {{ registro.entidade_id|default:"" }}</td>
+        <td class="px-4 py-3 text-slate-500">{{ registro.endereco_ip|default:"—" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum registro com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if is_paginated %}
+{% include "design/components/paginacao.html" %}
+{% endif %}
+{% endblock %}

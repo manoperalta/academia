@@ -1,0 +1,59 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Inadimplência</h2>
+  <p class="text-xs text-slate-500">
+    {{ resumo.quantidade_vencidas }} cobrança(s) vencida(s) · R$ {{ resumo.valor_vencido }} em aberto
+    {% if resumo.mais_antiga %}· mais antiga: {{ resumo.mais_antiga.aluno.nome }} desde {{ resumo.mais_antiga.vencimento|date:"d/m/Y" }}{% endif %}
+  </p>
+</div>
+
+<div class="mb-4 grid gap-3 sm:grid-cols-4">
+  {% for chave, faixa in faixas %}{% for nome, dados in resumo.por_faixa.items %}{% if nome == chave %}
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">{{ faixa }}</p>
+    <p class="text-lg font-semibold text-slate-900">{{ dados.quantidade }}</p>
+    <p class="text-xs text-slate-500">R$ {{ dados.valor }}</p>
+  </div>
+  {% endif %}{% endfor %}{% endfor %}
+</div>
+
+<form class="mb-3 flex items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Faixa de atraso
+    <select name="faixa" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in faixas %}<option value="{{ valor }}" {% if filtro == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Vencimento</th><th class="px-4 py-3">Atraso</th>
+          <th class="px-4 py-3">Valor</th><th class="px-4 py-3">Último lembrete</th><th class="px-4 py-3">Ação sugerida</th>
+          <th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for linha in lista %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ linha.cobranca.aluno.nome }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.cobranca.vencimento|date:"d/m/Y" }}</td>
+        <td class="px-4 py-3 text-rose-700">{{ linha.dias }} dia(s)</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ linha.cobranca.valor }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.ultimo_lembrete_em|date:"d/m/Y"|default:"nenhum" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.mensagem }}</td>
+        <td class="px-4 py-3 text-right">
+          <form method="post" action="{% url 'cobranca:lembrete' linha.cobranca.pk %}">{% csrf_token %}
+            <button class="text-xs text-sky-700 underline">Registrar cobrança</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Ninguém em atraso com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

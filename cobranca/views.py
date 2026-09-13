@@ -39,6 +39,22 @@ class PainelDeCobrancaView(PainelMixin, TemplateView):
         return contexto
 
 
+class InadimplenciaView(PainelMixin, TemplateView):
+    """Quem esta devendo, ha quantos dias, quanto e o que a regua ja fez."""
+
+    modulo = Modulo.COBRANCA
+    template_name = "cobranca/inadimplencia.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto.update(servicos.resumo_da_inadimplencia(self.request.rede))
+        faixa = self.request.GET.get("faixa", "").strip()
+        contexto["lista"] = servicos.lista_de_inadimplentes(self.request.rede, faixa=faixa)
+        contexto["faixas"] = servicos.FAIXAS_DE_ATRASO
+        contexto["filtro"] = faixa
+        return contexto
+
+
 class CobrancasView(PainelMixin, ListView):
     modulo = Modulo.COBRANCA
     template_name = "cobranca/lista.html"

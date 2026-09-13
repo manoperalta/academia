@@ -37,4 +37,5 @@ urlpatterns = [
     path("transferencias/", views.TransferenciasView.as_view(), name="transferencias"),
     path("importar/", views.ImportarDaRedeView.as_view(), name="importar"),
     path("demonstrativo/<int:pk>.csv", views.RepasseCsvView.as_view(), name="repasse_csv"),
+    path("comparativo/", views.ComparativoDeUnidadesView.as_view(), name="comparativo"),
 ]

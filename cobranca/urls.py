@@ -9,6 +9,7 @@ app_name = "cobranca"
 urlpatterns = [
     path("gestao/cobranca/", views.PainelDeCobrancaView.as_view(), name="painel"),
     path("gestao/cobranca/cobrancas/", views.CobrancasView.as_view(), name="lista"),
+    path("gestao/cobranca/inadimplencia/", views.InadimplenciaView.as_view(), name="inadimplencia"),
     path("gestao/cobranca/gerar/", views.GerarCobrancasView.as_view(), name="gerar"),
     path("gestao/cobranca/autorizacoes/", views.AutorizacoesView.as_view(), name="autorizacoes"),
     path("gestao/cobranca/autorizar/", views.AutorizarDebitoView.as_view(), name="autorizar"),

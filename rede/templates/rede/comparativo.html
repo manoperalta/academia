@@ -1,0 +1,52 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Comparativo de unidades</h2>
+  <p class="text-xs text-slate-500">
+    Mês de referência {{ referencia|date:"m/Y" }} · ranking por receita, com retenção, ocupação, ticket médio e inadimplência.
+  </p>
+</div>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">#</th><th class="px-4 py-3">Unidade</th><th class="px-4 py-3">Receita do mês</th>
+          <th class="px-4 py-3">Alunos ativos</th><th class="px-4 py-3">Ticket médio</th>
+          <th class="px-4 py-3">Inadimplência</th><th class="px-4 py-3">Variação</th></tr>
+    </thead>
+    <tbody>
+      {% for linha in ranking %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-500">{{ forloop.counter }}</td>
+        <td class="px-4 py-3 text-slate-800">{{ linha.unidade.nome }}
+          <span class="block text-xs text-slate-400">{{ linha.unidade.get_tipo_display }}</span></td>
+        <td class="px-4 py-3 text-slate-800">R$ {{ linha.receita }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ linha.alunos }}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ linha.ticket_medio }}</td>
+        <td class="px-4 py-3 {% if linha.inadimplencia_percentual >= 10 %}text-rose-700{% else %}text-slate-600{% endif %}">
+          {{ linha.inadimplencia_percentual }}% (R$ {{ linha.inadimplencia_valor }})</td>
+        <td class="px-4 py-3 {% if linha.variacao >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">
+          {{ linha.variacao }}%</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma unidade com movimento no mês.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 grid gap-4 sm:grid-cols-3">
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Receita da rede no mês</p>
+    <p class="text-lg font-semibold">R$ {{ total_receita }}</p>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Alunos ativos</p>
+    <p class="text-lg font-semibold">{{ total_alunos }}</p>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="text-xs text-slate-500">Ticket médio da rede</p>
+    <p class="text-lg font-semibold">R$ {{ ticket_medio_da_rede }}</p>
+  </div>
+</div>
+{% endblock %}

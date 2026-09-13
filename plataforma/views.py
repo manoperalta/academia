@@ -922,3 +922,6 @@ class LgpdView(PlataformaMixin, TemplateView):
             regras=RegraRetencao.objects.all(),
         )
         return contexto
+
+
+from plataforma.views_auditoria import AuditoriaDaPlataformaView  # noqa: E402, F401

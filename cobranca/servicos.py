@@ -350,3 +350,91 @@ def resumo_da_cobranca(rede, competencia: date | None = None) -> dict:
             rede=rede, situacao=AutorizacaoDeDebito.Situacao.ATIVA
         ).count(),
     }
+
+
+# ------------------------------------------------------------------ inadimplencia
+#: Faixas de atraso usadas na tela e na regua (mesmos cortes das etapas).
+FAIXAS_DE_ATRASO = [
+    ("1_a_5", "Ate 5 dias"),
+    ("6_a_15", "6 a 15 dias"),
+    ("16_a_30", "16 a 30 dias"),
+    ("mais_de_30", "Mais de 30 dias"),
+]
+
+
+def faixa_do_atraso(dias: int) -> str:
+    if dias <= 5:
+        return "1_a_5"
+    if dias <= 15:
+        return "6_a_15"
+    if dias <= 30:
+        return "16_a_30"
+    return "mais_de_30"
+
+
+def lista_de_inadimplentes(rede, faixa: str = "", limite: int = 200) -> list[dict]:
+    """Cobrancas vencidas com o que ja foi tentado, da mais antiga para a mais nova."""
+    hoje = timezone.localdate()
+    cobrancas = (
+        CobrancaRecorrente.objects.filter(
+            rede=rede,
+            situacao__in=[
+                CobrancaRecorrente.Situacao.PREVISTA,
+                CobrancaRecorrente.Situacao.ENVIADA,
+                CobrancaRecorrente.Situacao.RECUSADA,
+            ],
+            vencimento__lt=hoje,
+        )
+        .select_related("aluno", "unidade")
+        .order_by("vencimento")[:limite]
+    )
+    linhas = []
+    for cobranca in cobrancas:
+        dias = cobranca.dias_de_atraso
+        if faixa and faixa_do_atraso(dias) != faixa:
+            continue
+        ultimo_lembrete = (
+            cobranca.eventos.filter(tipo=EventoDaCobranca.Tipo.LEMBRETE)
+            .order_by("-criado_em")
+            .first()
+        )
+        linhas.append(
+            {
+                "cobranca": cobranca,
+                "dias": dias,
+                "faixa": faixa_do_atraso(dias),
+                "mensagem": ETAPAS_DA_REGUA.get(dias, "Cobranca em aberto."),
+                "ultimo_lembrete_em": ultimo_lembrete.criado_em if ultimo_lembrete else None,
+                "tentativas": cobranca.tentativas,
+            }
+        )
+    return linhas
+
+
+def resumo_da_inadimplencia(rede) -> dict:
+    """Quanto esta vencido, por faixa — o numero que o dono da academia olha primeiro."""
+    hoje = timezone.localdate()
+    vencidas = CobrancaRecorrente.objects.filter(
+        rede=rede,
+        situacao__in=[
+            CobrancaRecorrente.Situacao.PREVISTA,
+            CobrancaRecorrente.Situacao.ENVIADA,
+            CobrancaRecorrente.Situacao.RECUSADA,
+        ],
+        vencimento__lt=hoje,
+    )
+    por_faixa = {
+        chave: {"quantidade": 0, "valor": Decimal("0")} for chave, _rotulo in FAIXAS_DE_ATRASO
+    }
+    total = Decimal("0")
+    for cobranca in vencidas:
+        chave = faixa_do_atraso(cobranca.dias_de_atraso)
+        por_faixa[chave]["quantidade"] += 1
+        por_faixa[chave]["valor"] += cobranca.valor or Decimal("0")
+        total += cobranca.valor or Decimal("0")
+    return {
+        "quantidade_vencidas": vencidas.count(),
+        "valor_vencido": total,
+        "por_faixa": por_faixa,
+        "mais_antiga": vencidas.order_by("vencimento").first(),
+    }

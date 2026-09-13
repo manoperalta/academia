@@ -45,4 +45,5 @@ urlpatterns = [
     path("relatorio/", views.RelatorioFinanceiroView.as_view(), name="relatorio"),
     path("relatorio.csv", views.RelatorioFinanceiroCsvView.as_view(), name="relatorio_csv"),
     path("sair-impersonacao/", views.SairImpersonacaoView.as_view(), name="sair_impersonacao"),
+    path("auditoria/", views.AuditoriaDaPlataformaView.as_view(), name="auditoria"),
 ]
