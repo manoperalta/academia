@@ -1,0 +1,10 @@
+{
+ "todos": true,
+ "ajustes": [
+  [
+   "scripts/demo_publica.py",
+   "    dono = criar_login(\"Dono SafeStack\", \"dono@safestack.com.br\", is_staff=True, is_superuser=True)",
+   "    criar_login(\"Dono SafeStack\", \"dono@safestack.com.br\", is_staff=True, is_superuser=True)"
+  ]
+ ]
+}

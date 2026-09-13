@@ -110,7 +110,7 @@ def povoar() -> None:
     )
     print(f"[plataforma] assinatura no pacote {pacote.nome if pacote else 'padrao'}")
 
-    dono = criar_login("Dono SafeStack", "dono@safestack.com.br", is_staff=True, is_superuser=True)
+    criar_login("Dono SafeStack", "dono@safestack.com.br", is_staff=True, is_superuser=True)
     login_rede = criar_login("Administrador da Rede", f"rede@{DOMINIO}")
     login_unidade = criar_login("Administrador da Unidade", f"unidade@{DOMINIO}")
     login_professor = criar_login("Professor Demonstracao", f"professor@{DOMINIO}")
