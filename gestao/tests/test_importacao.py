@@ -1,6 +1,7 @@
 """Importacao CSV de alunos e professores (RF-PLT-034)."""
-
 from __future__ import annotations
+
+from decimal import Decimal
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -31,22 +32,17 @@ ALUNOS_COM_PROBLEMAS = (
 
 @pytest.fixture
 def pacote(db):
-    return Pacote.objects.create(
-        nome="Prata", codigo="prata", limite_alunos=3, limite_professores=1, preco_mensal="125.00"
-    )
+    return Pacote.objects.create(nome="Prata", codigo="prata", limite_alunos=3,
+                                 limite_professores=1, preco_mensal="125.00")
 
 
 @pytest.fixture
 def assinatura_do_tenant(db, rede, pacote):
     from django.utils import timezone
 
-    return Assinatura.objects.create(
-        rede=rede,
-        pacote=pacote,
-        ciclo="mensal",
-        inicio=timezone.localdate(),
-        renovacao_em=timezone.localdate(),
-    )
+    return Assinatura.objects.create(rede=rede, pacote=pacote, ciclo="mensal",
+                                     inicio=timezone.localdate(),
+                                     renovacao_em=timezone.localdate())
 
 
 def _upload(conteudo: str):
@@ -61,10 +57,9 @@ def test_modelo_de_planilha_disponivel(cliente_logado):
 
 
 def test_previa_conta_linhas_e_aponta_erros(cliente_logado, rede):
-    resposta = cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_COM_PROBLEMAS)},
-    )
+    resposta = cliente_logado.post(reverse("gestao:importar"),
+                                  {"acao": "analisar", "tipo": "alunos",
+                                   "arquivo": _upload(ALUNOS_COM_PROBLEMAS)})
     assert resposta.status_code == 200
     resultado = resposta.context["resultado"]
     assert resultado.total == 4
@@ -78,13 +73,9 @@ def test_previa_conta_linhas_e_aponta_erros(cliente_logado, rede):
 
 
 def test_confirmacao_grava_os_alunos(cliente_logado, rede):
-    cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)},
-    )
-    resposta = cliente_logado.post(
-        reverse("gestao:importar"), {"acao": "confirmar", "tipo": "alunos"}
-    )
+    cliente_logado.post(reverse("gestao:importar"),
+                        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)})
+    resposta = cliente_logado.post(reverse("gestao:importar"), {"acao": "confirmar", "tipo": "alunos"})
     assert resposta.status_code == 302
     alunos = Usuario.todos.filter(rede=rede)
     assert alunos.count() == 3
@@ -96,10 +87,8 @@ def test_confirmacao_grava_os_alunos(cliente_logado, rede):
 
 def test_importacao_respeita_o_teto_do_pacote(cliente_logado, rede, assinatura_do_tenant):
     criar_alunos(rede, 2)  # limite do pacote de teste = 3
-    resposta = cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)},
-    )
+    resposta = cliente_logado.post(reverse("gestao:importar"),
+                                  {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)})
     resultado = resposta.context["resultado"]
     assert len(resultado.a_criar) == 1
     assert len(resultado.com_erro) == 2
@@ -109,35 +98,23 @@ def test_importacao_respeita_o_teto_do_pacote(cliente_logado, rede, assinatura_d
 
 
 def test_duplicado_da_base_e_ignorado(cliente_logado, rede):
-    Usuario.todos.create(
-        rede=rede, nome="Ana Antiga", email_user="ana@exemplo.com", status_user="Ativo"
-    )
-    resposta = cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)},
-    )
+    Usuario.todos.create(rede=rede, nome="Ana Antiga", email_user="ana@exemplo.com",
+                         status_user="Ativo")
+    resposta = cliente_logado.post(reverse("gestao:importar"),
+                                  {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(ALUNOS_OK)})
     resultado = resposta.context["resultado"]
     assert len(resultado.ignoradas) == 1
     assert len(resultado.a_criar) == 2
 
 
 def test_atualizar_quando_pedido(cliente_logado, rede):
-    Usuario.todos.create(
-        rede=rede, nome="Ana Antiga", email_user="ana@exemplo.com", status_user="Inativo"
-    )
-    cliente_logado.post(
-        reverse("gestao:importar"),
-        {
-            "acao": "analisar",
-            "tipo": "alunos",
-            "atualizar_existentes": "on",
-            "arquivo": _upload(ALUNOS_OK),
-        },
-    )
-    cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "confirmar", "tipo": "alunos", "atualizar_existentes": "on"},
-    )
+    Usuario.todos.create(rede=rede, nome="Ana Antiga", email_user="ana@exemplo.com",
+                         status_user="Inativo")
+    cliente_logado.post(reverse("gestao:importar"),
+                        {"acao": "analisar", "tipo": "alunos", "atualizar_existentes": "on",
+                         "arquivo": _upload(ALUNOS_OK)})
+    cliente_logado.post(reverse("gestao:importar"),
+                        {"acao": "confirmar", "tipo": "alunos", "atualizar_existentes": "on"})
     ana = Usuario.todos.get(email_user="ana@exemplo.com")
     assert ana.nome == "Ana Lima"
     assert Usuario.todos.filter(rede=rede).count() == 3
@@ -145,19 +122,15 @@ def test_atualizar_quando_pedido(cliente_logado, rede):
 
 def test_planilha_sem_coluna_nome_e_recusada(cliente_logado, rede):
     conteudo = "email;telefone\nx@y.com;51\n"
-    resposta = cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(conteudo)},
-    )
+    resposta = cliente_logado.post(reverse("gestao:importar"),
+                                  {"acao": "analisar", "tipo": "alunos", "arquivo": _upload(conteudo)})
     assert "coluna de nome" in resposta.context["resultado"].erro_geral
 
 
 def test_importacao_de_professores(cliente_logado, rede):
     conteudo = CABECALHO + "Professor Um;prof1@exemplo.com;51;;;Ativo\n"
-    cliente_logado.post(
-        reverse("gestao:importar"),
-        {"acao": "analisar", "tipo": "professores", "arquivo": _upload(conteudo)},
-    )
+    cliente_logado.post(reverse("gestao:importar"),
+                        {"acao": "analisar", "tipo": "professores", "arquivo": _upload(conteudo)})
     cliente_logado.post(reverse("gestao:importar"), {"acao": "confirmar", "tipo": "professores"})
     assert Professor.todos.filter(rede=rede, nome="Professor Um").exists()
 

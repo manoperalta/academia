@@ -5,7 +5,6 @@ calculo, metas, comunicados, alcadas de aprovacao, onboarding e transferencias.
 Tudo referenciando ``Rede``/``Unidade`` explicitamente: sao decisoes de rede, nao de
 uma unidade isolada.
 """
-
 from __future__ import annotations
 
 import hashlib
@@ -24,21 +23,17 @@ ZERO = Decimal("0.00")
 class PoliticaDaRede(models.Model):
     """O que a unidade NAO pode mudar (RF-RED-014) e como a marca e herdada (RF-RED-013)."""
 
-    rede = models.OneToOneField(
-        Rede, on_delete=models.CASCADE, related_name="politica", verbose_name="rede"
-    )
+    rede = models.OneToOneField(Rede, on_delete=models.CASCADE, related_name="politica",
+                                verbose_name="rede")
     trava_planos_e_precos = models.BooleanField("travam planos e precos", default=True)
     trava_politica_de_desconto = models.BooleanField("trava a politica de desconto", default=True)
-    teto_de_desconto = models.DecimalField(
-        "teto de desconto (%)", max_digits=5, decimal_places=2, default=Decimal("10.00")
-    )
+    teto_de_desconto = models.DecimalField("teto de desconto (%)", max_digits=5, decimal_places=2,
+                                           default=Decimal("10.00"))
     trava_regua_de_cobranca = models.BooleanField("trava a regua de cobranca", default=True)
     trava_contratos = models.BooleanField("trava modelos de contrato", default=True)
     trava_cancelamento = models.BooleanField("trava politica de cancelamento", default=True)
     trava_templates_de_mensagem = models.BooleanField("trava templates de mensagem", default=True)
-    permitir_sobrescrita_branding = models.BooleanField(
-        "permite sobrescrever a marca", default=False
-    )
+    permitir_sobrescrita_branding = models.BooleanField("permite sobrescrever a marca", default=False)
     dia_de_fechamento = models.PositiveSmallIntegerField("dia de fechamento do repasse", default=1)
     atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -70,49 +65,31 @@ class RegraDeRepasse(models.Model):
         BRUTO = "bruto", "Faturamento bruto"
         LIQUIDO = "liquido", "Faturamento liquido (com exclusoes)"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="regras_de_repasse", verbose_name="rede"
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="regras_de_repasse",
-        verbose_name="unidade",
-        help_text="Em branco = regra padrao da rede.",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="regras_de_repasse",
+                             verbose_name="rede")
+    unidade = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.CASCADE,
+                                related_name="regras_de_repasse", verbose_name="unidade",
+                                help_text="Em branco = regra padrao da rede.")
     tipo = models.CharField("tipo", max_length=25, choices=Tipo.choices, default=Tipo.PERCENTUAL)
-    percentual = models.DecimalField(
-        "percentual (%)", max_digits=6, decimal_places=3, default=Decimal("0.000")
-    )
-    valor_fixo = models.DecimalField(
-        "valor fixo (R$)", max_digits=12, decimal_places=2, default=ZERO
-    )
-    base = models.CharField(
-        "base de calculo", max_length=10, choices=Base.choices, default=Base.BRUTO
-    )
+    percentual = models.DecimalField("percentual (%)", max_digits=6, decimal_places=3,
+                                     default=Decimal("0.000"))
+    valor_fixo = models.DecimalField("valor fixo (R$)", max_digits=12, decimal_places=2, default=ZERO)
+    base = models.CharField("base de calculo", max_length=10, choices=Base.choices,
+                            default=Base.BRUTO)
     excluir_taxas_de_gateway = models.BooleanField("excluir taxas de gateway", default=True)
     excluir_estornos = models.BooleanField("excluir estornos e devolucoes", default=True)
     excluir_impostos = models.BooleanField("excluir impostos sobre a receita", default=False)
-    excluir_planos_de_parceiros = models.BooleanField(
-        "excluir planos de parceiros (Wellhub etc.)", default=False
-    )
-    percentual_de_impostos = models.DecimalField(
-        "impostos (% sobre a receita)", max_digits=5, decimal_places=2, default=ZERO
-    )
+    excluir_planos_de_parceiros = models.BooleanField("excluir planos de parceiros (Wellhub etc.)",
+                                                      default=False)
+    percentual_de_impostos = models.DecimalField("impostos (% sobre a receita)", max_digits=5,
+                                                 decimal_places=2, default=ZERO)
     percentual_de_taxas_de_gateway = models.DecimalField(
-        "taxas de gateway (% sobre a receita)",
-        max_digits=5,
-        decimal_places=2,
-        default=ZERO,
+        "taxas de gateway (% sobre a receita)", max_digits=5, decimal_places=2, default=ZERO,
     )
-    fundo_de_marketing = models.DecimalField(
-        "fundo de marketing (%)", max_digits=5, decimal_places=2, default=ZERO
-    )
-    piso_minimo = models.DecimalField(
-        "piso minimo (R$)", max_digits=12, decimal_places=2, default=ZERO
-    )
+    fundo_de_marketing = models.DecimalField("fundo de marketing (%)", max_digits=5, decimal_places=2,
+                                             default=ZERO)
+    piso_minimo = models.DecimalField("piso minimo (R$)", max_digits=12, decimal_places=2,
+                                      default=ZERO)
     dia_de_vencimento = models.PositiveSmallIntegerField("dia de vencimento", default=10)
     inicio_da_vigencia = models.DateField("inicio da vigencia", null=True, blank=True)
     fim_da_vigencia = models.DateField("fim da vigencia", null=True, blank=True)
@@ -156,42 +133,30 @@ class Repasse(models.Model):
         ATRASADO = "atrasado", "Atrasado"
         CANCELADO = "cancelado", "Cancelado"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="repasses", verbose_name="rede"
-    )
-    unidade = models.ForeignKey(
-        Unidade, on_delete=models.PROTECT, related_name="repasses", verbose_name="unidade"
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="repasses",
+                             verbose_name="rede")
+    unidade = models.ForeignKey(Unidade, on_delete=models.PROTECT, related_name="repasses",
+                               verbose_name="unidade")
     inicio = models.DateField("inicio do periodo")
     fim = models.DateField("fim do periodo")
-    situacao = models.CharField(
-        "situacao", max_length=15, choices=Situacao.choices, default=Situacao.PREVISTO
-    )
+    situacao = models.CharField("situacao", max_length=15, choices=Situacao.choices,
+                               default=Situacao.PREVISTO)
     base = models.CharField("base", max_length=10, choices=RegraDeRepasse.Base.choices)
-    receita_bruta = models.DecimalField(
-        "receita bruta", max_digits=14, decimal_places=2, default=ZERO
-    )
+    receita_bruta = models.DecimalField("receita bruta", max_digits=14, decimal_places=2, default=ZERO)
     exclusoes = models.DecimalField("exclusoes", max_digits=14, decimal_places=2, default=ZERO)
-    receita_liquida = models.DecimalField(
-        "receita liquida", max_digits=14, decimal_places=2, default=ZERO
-    )
-    base_de_calculo = models.DecimalField(
-        "base de calculo", max_digits=14, decimal_places=2, default=ZERO
-    )
-    percentual = models.DecimalField(
-        "percentual aplicado (%)", max_digits=6, decimal_places=3, default=ZERO
-    )
-    fundo_de_marketing = models.DecimalField(
-        "fundo de marketing (%)", max_digits=5, decimal_places=2, default=ZERO
-    )
+    receita_liquida = models.DecimalField("receita liquida", max_digits=14, decimal_places=2,
+                                          default=ZERO)
+    base_de_calculo = models.DecimalField("base de calculo", max_digits=14, decimal_places=2,
+                                         default=ZERO)
+    percentual = models.DecimalField("percentual aplicado (%)", max_digits=6, decimal_places=3,
+                                     default=ZERO)
+    fundo_de_marketing = models.DecimalField("fundo de marketing (%)", max_digits=5, decimal_places=2,
+                                             default=ZERO)
     valor_do_royalty = models.DecimalField("royalty", max_digits=14, decimal_places=2, default=ZERO)
-    valor_do_fundo = models.DecimalField(
-        "fundo de marketing", max_digits=14, decimal_places=2, default=ZERO
-    )
+    valor_do_fundo = models.DecimalField("fundo de marketing", max_digits=14, decimal_places=2,
+                                         default=ZERO)
     valor_fixo = models.DecimalField("valor fixo", max_digits=14, decimal_places=2, default=ZERO)
-    valor_devido = models.DecimalField(
-        "valor devido", max_digits=14, decimal_places=2, default=ZERO
-    )
+    valor_devido = models.DecimalField("valor devido", max_digits=14, decimal_places=2, default=ZERO)
     piso_aplicado = models.BooleanField("piso minimo aplicado", default=False)
     valor_pago = models.DecimalField("valor pago", max_digits=14, decimal_places=2, default=ZERO)
     vencimento = models.DateField("vencimento")
@@ -208,9 +173,7 @@ class Repasse(models.Model):
         verbose_name_plural = "repasses"
         ordering = ["-inicio", "unidade__nome"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["unidade", "inicio", "fim"], name="um_repasse_por_periodo"
-            ),
+            models.UniqueConstraint(fields=["unidade", "inicio", "fim"], name="um_repasse_por_periodo"),
         ]
 
     def __str__(self) -> str:
@@ -259,9 +222,8 @@ class ItemDeRepasse(models.Model):
         FIXO = "fixo", "Valor fixo"
         PISO = "piso", "Ajuste de piso minimo"
 
-    repasse = models.ForeignKey(
-        Repasse, on_delete=models.CASCADE, related_name="itens", verbose_name="repasse"
-    )
+    repasse = models.ForeignKey(Repasse, on_delete=models.CASCADE, related_name="itens",
+                               verbose_name="repasse")
     ordem = models.PositiveSmallIntegerField("ordem", default=1)
     tipo = models.CharField("tipo", max_length=12, choices=Tipo.choices)
     descricao = models.CharField("descricao", max_length=200)
@@ -289,18 +251,10 @@ class Meta(models.Model):
         OCUPACAO = "ocupacao", "Ocupacao das turmas (%)"
         TICKET_MEDIO = "ticket_medio", "Ticket medio (R$)"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="metas", verbose_name="rede"
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="metas",
-        verbose_name="unidade",
-        help_text="Em branco = meta da rede inteira.",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="metas", verbose_name="rede")
+    unidade = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.CASCADE,
+                                related_name="metas", verbose_name="unidade",
+                                help_text="Em branco = meta da rede inteira.")
     inicio = models.DateField("inicio do periodo")
     fim = models.DateField("fim do periodo")
     indicador = models.CharField("indicador", max_length=20, choices=Indicador.choices)
@@ -314,10 +268,8 @@ class Meta(models.Model):
         verbose_name_plural = "metas"
         ordering = ["-inicio", "indicador"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["rede", "unidade", "inicio", "fim", "indicador"],
-                name="uma_meta_por_indicador_e_periodo",
-            ),
+            models.UniqueConstraint(fields=["rede", "unidade", "inicio", "fim", "indicador"],
+                                    name="uma_meta_por_indicador_e_periodo"),
         ]
 
     def __str__(self) -> str:
@@ -341,33 +293,20 @@ class Comunicado(models.Model):
         UNIDADES = "unidades", "Equipe das unidades"
         ALUNOS = "alunos", "Alunos da rede"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="comunicados", verbose_name="rede"
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="comunicados",
-        verbose_name="unidade",
-        help_text="Em branco = todas as unidades.",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="comunicados",
+                             verbose_name="rede")
+    unidade = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.CASCADE,
+                                related_name="comunicados", verbose_name="unidade",
+                                help_text="Em branco = todas as unidades.")
     titulo = models.CharField("titulo", max_length=160)
     mensagem = models.TextField("mensagem")
-    publico = models.CharField(
-        "publico", max_length=10, choices=Publico.choices, default=Publico.UNIDADES
-    )
+    publico = models.CharField("publico", max_length=10, choices=Publico.choices,
+                               default=Publico.UNIDADES)
     exige_confirmacao = models.BooleanField("exige confirmacao de leitura", default=True)
     ativo = models.BooleanField("ativo", default=True)
-    criado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="comunicados_criados",
-        verbose_name="criado por",
-    )
+    criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="comunicados_criados",
+                                   verbose_name="criado por")
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -386,23 +325,12 @@ class Comunicado(models.Model):
 class LeituraDeComunicado(models.Model):
     """Confirmacao de leitura do comunicado (RF-RED-015)."""
 
-    comunicado = models.ForeignKey(
-        Comunicado, on_delete=models.CASCADE, related_name="confirmacoes", verbose_name="comunicado"
-    )
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="comunicados_lidos",
-        verbose_name="usuario",
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="leituras",
-        verbose_name="unidade",
-    )
+    comunicado = models.ForeignKey(Comunicado, on_delete=models.CASCADE, related_name="confirmacoes",
+                                  verbose_name="comunicado")
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                related_name="comunicados_lidos", verbose_name="usuario")
+    unidade = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name="leituras", verbose_name="unidade")
     lida_em = models.DateTimeField("lida em", auto_now_add=True)
 
     class Meta:
@@ -410,9 +338,7 @@ class LeituraDeComunicado(models.Model):
         verbose_name_plural = "leituras de comunicado"
         ordering = ["-lida_em"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["comunicado", "usuario"], name="uma_leitura_por_usuario"
-            ),
+            models.UniqueConstraint(fields=["comunicado", "usuario"], name="uma_leitura_por_usuario"),
         ]
 
     def __str__(self) -> str:
@@ -436,43 +362,23 @@ class SolicitacaoDeAprovacao(models.Model):
         RECUSADA = "recusada", "Recusada"
         CANCELADA = "cancelada", "Cancelada"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="aprovacoes", verbose_name="rede"
-    )
-    unidade = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="aprovacoes",
-        verbose_name="unidade",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="aprovacoes",
+                             verbose_name="rede")
+    unidade = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.CASCADE,
+                                related_name="aprovacoes", verbose_name="unidade")
     tipo = models.CharField("tipo", max_length=15, choices=Tipo.choices)
     titulo = models.CharField("titulo", max_length=160)
     descricao = models.TextField("descricao", blank=True)
-    valor = models.DecimalField(
-        "valor envolvido (R$)", max_digits=14, decimal_places=2, default=ZERO
-    )
+    valor = models.DecimalField("valor envolvido (R$)", max_digits=14, decimal_places=2, default=ZERO)
     contexto = models.JSONField("contexto", default=dict, blank=True)
-    situacao = models.CharField(
-        "situacao", max_length=12, choices=Situacao.choices, default=Situacao.PENDENTE
-    )
-    solicitante = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="aprovacoes_pedidas",
-        verbose_name="solicitante",
-    )
-    decidido_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="aprovacoes_decididas",
-        verbose_name="decidido por",
-    )
+    situacao = models.CharField("situacao", max_length=12, choices=Situacao.choices,
+                               default=Situacao.PENDENTE)
+    solicitante = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name="aprovacoes_pedidas",
+                                    verbose_name="solicitante")
+    decidido_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name="aprovacoes_decididas",
+                                     verbose_name="decidido por")
     decidido_em = models.DateTimeField("decidido em", null=True, blank=True)
     justificativa = models.TextField("justificativa", blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -496,17 +402,12 @@ class SolicitacaoDeAprovacao(models.Model):
 class TemplateDeUnidade(models.Model):
     """Modelo de configuracao aplicado numa unidade nova (RF-RED-016)."""
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="templates_de_unidade", verbose_name="rede"
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="templates_de_unidade",
+                             verbose_name="rede")
     nome = models.CharField("nome", max_length=120)
     descricao = models.CharField("descricao", max_length=200, blank=True)
-    configuracoes = models.JSONField(
-        "configuracoes",
-        default=dict,
-        blank=True,
-        help_text="Planos, grades, mensagens, marca e usuarios padrao.",
-    )
+    configuracoes = models.JSONField("configuracoes", default=dict, blank=True,
+                                     help_text="Planos, grades, mensagens, marca e usuarios padrao.")
     ativo = models.BooleanField("ativo", default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -522,9 +423,8 @@ class TemplateDeUnidade(models.Model):
 class ItemDeChecklist(models.Model):
     """Passo do checklist de implantacao (RF-RED-016)."""
 
-    template = models.ForeignKey(
-        TemplateDeUnidade, on_delete=models.CASCADE, related_name="itens", verbose_name="template"
-    )
+    template = models.ForeignKey(TemplateDeUnidade, on_delete=models.CASCADE, related_name="itens",
+                                verbose_name="template")
     titulo = models.CharField("titulo", max_length=160)
     ordem = models.PositiveSmallIntegerField("ordem", default=1)
     obrigatorio = models.BooleanField("obrigatorio", default=True)
@@ -541,17 +441,10 @@ class ItemDeChecklist(models.Model):
 class ImplantacaoDeUnidade(models.Model):
     """Execucao do template numa unidade, com o checklist (RF-RED-016)."""
 
-    unidade = models.OneToOneField(
-        Unidade, on_delete=models.CASCADE, related_name="implantacao", verbose_name="unidade"
-    )
-    template = models.ForeignKey(
-        TemplateDeUnidade,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="implantacoes",
-        verbose_name="template",
-    )
+    unidade = models.OneToOneField(Unidade, on_delete=models.CASCADE, related_name="implantacao",
+                                   verbose_name="unidade")
+    template = models.ForeignKey(TemplateDeUnidade, null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name="implantacoes", verbose_name="template")
     aplicado_em = models.DateTimeField("aplicado em", auto_now_add=True)
     concluida_em = models.DateTimeField("concluida em", null=True, blank=True)
     itens_concluidos = models.JSONField("itens concluidos", default=list, blank=True)
@@ -575,41 +468,19 @@ class ImplantacaoDeUnidade(models.Model):
 class TransferenciaDeAluno(models.Model):
     """Historico de transferencia de aluno entre unidades (RF-RED-004/024)."""
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="transferencias", verbose_name="rede"
-    )
-    aluno = models.ForeignKey(
-        "usuarios.Usuario",
-        on_delete=models.CASCADE,
-        related_name="transferencias",
-        verbose_name="aluno",
-    )
-    origem = models.ForeignKey(
-        Unidade,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="transferencias_de_saida",
-        verbose_name="unidade de origem",
-    )
-    destino = models.ForeignKey(
-        Unidade,
-        on_delete=models.PROTECT,
-        related_name="transferencias_de_entrada",
-        verbose_name="unidade de destino",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="transferencias",
+                             verbose_name="rede")
+    aluno = models.ForeignKey("usuarios.Usuario", on_delete=models.CASCADE,
+                              related_name="transferencias", verbose_name="aluno")
+    origem = models.ForeignKey(Unidade, null=True, blank=True, on_delete=models.SET_NULL,
+                               related_name="transferencias_de_saida", verbose_name="unidade de origem")
+    destino = models.ForeignKey(Unidade, on_delete=models.PROTECT,
+                                related_name="transferencias_de_entrada", verbose_name="unidade de destino")
     motivo = models.CharField("motivo", max_length=200, blank=True)
-    autorizado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="transferencias_autorizadas",
-        verbose_name="autorizado por",
-    )
-    lote = models.CharField(
-        "lote", max_length=40, blank=True, help_text="Agrupa transferencias em lote."
-    )
+    autorizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                       on_delete=models.SET_NULL, related_name="transferencias_autorizadas",
+                                       verbose_name="autorizado por")
+    lote = models.CharField("lote", max_length=40, blank=True, help_text="Agrupa transferencias em lote.")
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -624,20 +495,14 @@ class TransferenciaDeAluno(models.Model):
 class DistribuicaoDeCatalogo(models.Model):
     """Distribuicao em lote de aulas/treinos da rede para unidades (RF-RED-006)."""
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="distribuicoes", verbose_name="rede"
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="distribuicoes",
+                             verbose_name="rede")
     referencia = models.CharField("aula/treino de origem", max_length=120)
     unidades = models.JSONField("unidades", default=list, blank=True)
     resultado = models.JSONField("resultado", default=dict, blank=True)
-    criado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="distribuicoes_criadas",
-        verbose_name="criado por",
-    )
+    criado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="distribuicoes_criadas",
+                                   verbose_name="criado por")
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:

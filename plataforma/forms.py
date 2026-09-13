@@ -1,14 +1,10 @@
 """Formularios do painel da plataforma."""
-
 from __future__ import annotations
 
 from django import forms
 
 from plataforma.models import (
-    Ciclo,
-    ConfiguracaoPlataforma,
-    ModuloPacote,
-    Pacote,
+    Assinatura, Ciclo, ConfiguracaoPlataforma, ModuloPacote, Pacote,
 )
 
 
@@ -41,20 +37,9 @@ class PacoteForm(EstiloMixin, forms.ModelForm):
 
     class Meta:
         model = Pacote
-        fields = [
-            "nome",
-            "codigo",
-            "descricao",
-            "limite_alunos",
-            "limite_professores",
-            "limite_unidades",
-            "preco_mensal",
-            "preco_anual",
-            "modulos",
-            "ordem_exibicao",
-            "visivel_no_site",
-            "ativo",
-        ]
+        fields = ["nome", "codigo", "descricao", "limite_alunos", "limite_professores",
+                  "limite_unidades", "preco_mensal", "preco_anual", "modulos",
+                  "ordem_exibicao", "visivel_no_site", "ativo"]
 
     def clean_modulos(self):
         return list(self.cleaned_data.get("modulos") or [])
@@ -73,8 +58,7 @@ class TenantForm(EstiloMixin, forms.Form):
     dominio = forms.CharField(max_length=253, required=False, label="Dominio proprio")
     trial = forms.BooleanField(required=False, initial=True, label="Iniciar em periodo de teste")
     dono_email = forms.EmailField(
-        required=False,
-        label="E-mail do dono inicial",
+        required=False, label="E-mail do dono inicial",
         help_text="Cria o vinculo de administrador da rede para este e-mail (se a conta existir).",
     )
 
@@ -87,23 +71,23 @@ class TenantEdicaoForm(EstiloMixin, forms.Form):
     email_responsavel = forms.EmailField(required=False)
     telefone = forms.CharField(max_length=20, required=False)
     dominio = forms.CharField(max_length=253, required=False)
-    observacoes_internas = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
+    observacoes_internas = forms.CharField(
+        required=False, widget=forms.Textarea(attrs={"rows": 3})
+    )
     pacote = forms.ModelChoiceField(queryset=Pacote.objects.filter(ativo=True))
     ciclo = forms.ChoiceField(choices=Ciclo.choices)
     limite_alunos_custom = forms.IntegerField(required=False, min_value=1)
     limite_professores_custom = forms.IntegerField(required=False, min_value=1)
     limite_unidades_custom = forms.IntegerField(required=False, min_value=1)
     motivo_excecao = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 2}),
+        required=False, widget=forms.Textarea(attrs={"rows": 2}),
         help_text="Obrigatorio quando houver limite customizado (fica registrado quem autorizou).",
     )
 
     def clean(self):
         dados = super().clean()
         customizados = [
-            dados.get("limite_alunos_custom"),
-            dados.get("limite_professores_custom"),
+            dados.get("limite_alunos_custom"), dados.get("limite_professores_custom"),
             dados.get("limite_unidades_custom"),
         ]
         if any(customizados) and not (dados.get("motivo_excecao") or "").strip():
@@ -121,31 +105,18 @@ class FaturaManualForm(EstiloMixin, forms.Form):
 class ConfiguracaoPlataformaForm(EstiloMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoPlataforma
-        fields = [
-            "nome_emitente",
-            "cnpj_emitente",
-            "email_financeiro",
-            "asaas_api_key",
-            "asaas_ambiente",
-            "asaas_base_url",
-            "token_webhook",
-            "trial_dias",
-            "dias_bloqueio",
-            "dias_suspensao",
-            "multa_percentual",
-            "juros_dia_percentual",
-            "regua_ativa",
-        ]
-        widgets = {
-            "asaas_api_key": forms.PasswordInput(render_value=True),
-            "token_webhook": forms.PasswordInput(render_value=True),
-        }
+        fields = ["nome_emitente", "cnpj_emitente", "email_financeiro", "asaas_api_key",
+                  "asaas_ambiente", "asaas_base_url", "token_webhook", "trial_dias",
+                  "dias_bloqueio", "dias_suspensao", "multa_percentual", "juros_dia_percentual",
+                  "regua_ativa"]
+        widgets = {"asaas_api_key": forms.PasswordInput(render_value=True),
+                   "token_webhook": forms.PasswordInput(render_value=True)}
 
 
 class ImpersonarForm(EstiloMixin, forms.Form):
     motivo = forms.CharField(
-        label="Motivo do acesso (obrigatorio)",
-        widget=forms.Textarea(attrs={"rows": 2}),
+        label="Motivo do acesso (obrigatorio)", widget=forms.Textarea(attrs={"rows": 2}),
         max_length=500,
     )
-    usuario_alvo = forms.CharField(required=False, label="Usuario alvo (opcional)", max_length=150)
+    usuario_alvo = forms.CharField(required=False, label="Usuario alvo (opcional)",
+                                   max_length=150)

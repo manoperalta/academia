@@ -1,5 +1,4 @@
 """Entidades da plataforma: pacotes, assinaturas, faturas e cobranca (PRD secao 10.1)."""
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -82,12 +81,8 @@ class Pacote(models.Model):
     limite_alunos = models.PositiveIntegerField("limite de alunos", null=True, blank=True)
     limite_professores = models.PositiveIntegerField("limite de professores", null=True, blank=True)
     limite_unidades = models.PositiveIntegerField("limite de unidades", null=True, blank=True)
-    preco_mensal = models.DecimalField(
-        "preco mensal", max_digits=10, decimal_places=2, default=Decimal("0")
-    )
-    preco_anual = models.DecimalField(
-        "preco anual", max_digits=10, decimal_places=2, default=Decimal("0")
-    )
+    preco_mensal = models.DecimalField("preco mensal", max_digits=10, decimal_places=2, default=Decimal("0"))
+    preco_anual = models.DecimalField("preco anual", max_digits=10, decimal_places=2, default=Decimal("0"))
     modulos = models.JSONField("modulos habilitados", default=list, blank=True)
     ordem_exibicao = models.PositiveSmallIntegerField("ordem de exibicao", default=0)
     visivel_no_site = models.BooleanField("visivel no site", default=True)
@@ -123,46 +118,26 @@ class Pacote(models.Model):
 class Assinatura(models.Model):
     """Contrato do tenant (rede) com um pacote."""
 
-    rede = models.OneToOneField(
-        Rede, on_delete=models.CASCADE, related_name="assinatura", verbose_name="rede"
-    )
-    pacote = models.ForeignKey(
-        Pacote, on_delete=models.PROTECT, related_name="assinaturas", verbose_name="pacote"
-    )
+    rede = models.OneToOneField(Rede, on_delete=models.CASCADE, related_name="assinatura",
+                                verbose_name="rede")
+    pacote = models.ForeignKey(Pacote, on_delete=models.PROTECT, related_name="assinaturas",
+                               verbose_name="pacote")
     ciclo = models.CharField("ciclo", max_length=10, choices=Ciclo.choices, default=Ciclo.MENSAL)
     inicio = models.DateField("inicio", default=timezone.localdate)
     renovacao_em = models.DateField("proxima renovacao")
     trial_termina_em = models.DateField("teste termina em", null=True, blank=True)
     cancelada_em = models.DateField("cancelada em", null=True, blank=True)
-    limite_alunos_custom = models.PositiveIntegerField(
-        "limite de alunos (excecao)", null=True, blank=True
-    )
-    limite_professores_custom = models.PositiveIntegerField(
-        "limite de professores (excecao)", null=True, blank=True
-    )
-    limite_unidades_custom = models.PositiveIntegerField(
-        "limite de unidades (excecao)", null=True, blank=True
-    )
+    limite_alunos_custom = models.PositiveIntegerField("limite de alunos (excecao)", null=True, blank=True)
+    limite_professores_custom = models.PositiveIntegerField("limite de professores (excecao)", null=True, blank=True)
+    limite_unidades_custom = models.PositiveIntegerField("limite de unidades (excecao)", null=True, blank=True)
     motivo_excecao = models.TextField("motivo da excecao", blank=True)
-    autorizado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="excecoes_autorizadas",
-        verbose_name="autorizado por",
-    )
-    pacote_agendado = models.ForeignKey(
-        Pacote,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="agendadas",
-        verbose_name="pacote agendado",
-    )
-    desconto_percentual = models.DecimalField(
-        "desconto (%)", max_digits=5, decimal_places=2, default=Decimal("0")
-    )
+    autorizado_por = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                       on_delete=models.SET_NULL, related_name="excecoes_autorizadas",
+                                       verbose_name="autorizado por")
+    pacote_agendado = models.ForeignKey(Pacote, null=True, blank=True, on_delete=models.SET_NULL,
+                                        related_name="agendadas", verbose_name="pacote agendado")
+    desconto_percentual = models.DecimalField("desconto (%)", max_digits=5, decimal_places=2,
+                                              default=Decimal("0"))
     criado_em = models.DateTimeField("criado em", auto_now_add=True)
     atualizado_em = models.DateTimeField("atualizado em", auto_now=True)
 
@@ -266,12 +241,8 @@ class Assinatura(models.Model):
         self.pacote = self.pacote_agendado
         self.pacote_agendado = None
         self.save(update_fields=["pacote", "pacote_agendado", "atualizado_em"])
-        registrar(
-            "alterar",
-            "assinatura",
-            entidade_id=self.pk,
-            descricao=f"Pacote {self.pacote.nome} aplicado na renovacao",
-        )
+        registrar("alterar", "assinatura", entidade_id=self.pk,
+                  descricao=f"Pacote {self.pacote.nome} aplicado na renovacao")
         return True
 
 
@@ -280,33 +251,22 @@ class Fatura(models.Model):
 
     DIAS_POR_CICLO = {Ciclo.MENSAL: 30, Ciclo.ANUAL: 365}
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="faturas", verbose_name="rede"
-    )
-    assinatura = models.ForeignKey(
-        Assinatura,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="faturas",
-        verbose_name="assinatura",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="faturas",
+                             verbose_name="rede")
+    assinatura = models.ForeignKey(Assinatura, null=True, blank=True, on_delete=models.SET_NULL,
+                                   related_name="faturas", verbose_name="assinatura")
     numero = models.CharField("numero", max_length=24, unique=True, blank=True)
     periodo_inicio = models.DateField("periodo de")
     periodo_fim = models.DateField("periodo ate")
     vencimento = models.DateField("vencimento")
     valor = models.DecimalField("valor", max_digits=10, decimal_places=2)
-    desconto = models.DecimalField(
-        "desconto", max_digits=10, decimal_places=2, default=Decimal("0")
-    )
+    desconto = models.DecimalField("desconto", max_digits=10, decimal_places=2, default=Decimal("0"))
     valor_final = models.DecimalField("valor final", max_digits=10, decimal_places=2)
-    status = models.CharField(
-        "status", max_length=12, choices=StatusFatura.choices, default=StatusFatura.ABERTA
-    )
+    status = models.CharField("status", max_length=12, choices=StatusFatura.choices,
+                              default=StatusFatura.ABERTA)
     pago_em = models.DateField("pago em", null=True, blank=True)
-    forma_pagamento = models.CharField(
-        "forma", max_length=10, choices=FormaPagamento.choices, blank=True
-    )
+    forma_pagamento = models.CharField("forma", max_length=10, choices=FormaPagamento.choices,
+                                       blank=True)
     gateway = models.CharField("gateway", max_length=20, blank=True)
     gateway_id = models.CharField("id no gateway", max_length=80, blank=True)
     pix_qr_code = models.TextField("QR code (Pix)", blank=True)
@@ -370,24 +330,15 @@ class Fatura(models.Model):
 class EventoCobranca(models.Model):
     """Registro de cada disparo da regua (RF-PLT-023): nao repete nem perde."""
 
-    fatura = models.ForeignKey(
-        Fatura,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="eventos",
-        verbose_name="fatura",
-    )
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="eventos_cobranca", verbose_name="rede"
-    )
+    fatura = models.ForeignKey(Fatura, null=True, blank=True, on_delete=models.CASCADE,
+                               related_name="eventos", verbose_name="fatura")
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="eventos_cobranca",
+                             verbose_name="rede")
     marco = models.CharField("marco", max_length=6, choices=MarcoRegua.choices)
-    canal = models.CharField(
-        "canal", max_length=10, choices=CanalCobranca.choices, default=CanalCobranca.EMAIL
-    )
-    status = models.CharField(
-        "status", max_length=10, choices=ResultadoDisparo.choices, default=ResultadoDisparo.ENVIADO
-    )
+    canal = models.CharField("canal", max_length=10, choices=CanalCobranca.choices,
+                             default=CanalCobranca.EMAIL)
+    status = models.CharField("status", max_length=10, choices=ResultadoDisparo.choices,
+                              default=ResultadoDisparo.ENVIADO)
     mensagem = models.TextField("mensagem", blank=True)
     erro = models.TextField("erro", blank=True)
     criado_em = models.DateTimeField("criado em", auto_now_add=True)
@@ -397,9 +348,7 @@ class EventoCobranca(models.Model):
         verbose_name_plural = "eventos de cobranca"
         ordering = ["-criado_em"]
         constraints = [
-            models.UniqueConstraint(
-                fields=["fatura", "marco", "canal"], name="unico_evento_por_marco"
-            ),
+            models.UniqueConstraint(fields=["fatura", "marco", "canal"], name="unico_evento_por_marco"),
         ]
 
     def __str__(self) -> str:
@@ -434,23 +383,18 @@ class ConfiguracaoPlataforma(models.Model):
     cnpj_emitente = models.CharField("CNPJ do emitente", max_length=20, blank=True)
     email_financeiro = models.EmailField("e-mail financeiro", blank=True)
     asaas_api_key = models.CharField("chave da API Asaas", max_length=255, blank=True)
-    asaas_ambiente = models.CharField(
-        "ambiente Asaas",
-        max_length=10,
-        choices=[("sandbox", "Sandbox"), ("producao", "Producao")],
-        default="sandbox",
-    )
+    asaas_ambiente = models.CharField("ambiente Asaas", max_length=10,
+                                      choices=[("sandbox", "Sandbox"), ("producao", "Producao")],
+                                      default="sandbox")
     asaas_base_url = models.CharField("URL base da API", max_length=120, blank=True)
     token_webhook = models.CharField("token do webhook", max_length=120, blank=True)
     trial_dias = models.PositiveSmallIntegerField("dias de teste", default=14)
     dias_bloqueio = models.PositiveSmallIntegerField("dias para bloqueio de escrita", default=10)
     dias_suspensao = models.PositiveSmallIntegerField("dias para suspensao", default=30)
-    multa_percentual = models.DecimalField(
-        "multa (%)", max_digits=5, decimal_places=2, default=Decimal("2")
-    )
-    juros_dia_percentual = models.DecimalField(
-        "juros ao dia (%)", max_digits=6, decimal_places=3, default=Decimal("0.033")
-    )
+    multa_percentual = models.DecimalField("multa (%)", max_digits=5, decimal_places=2,
+                                           default=Decimal("2"))
+    juros_dia_percentual = models.DecimalField("juros ao dia (%)", max_digits=6,
+                                               decimal_places=3, default=Decimal("0.033"))
     regua_ativa = models.BooleanField("regua de cobranca ativa", default=True)
     atualizado_em = models.DateTimeField("atualizado em", auto_now=True)
 
@@ -480,15 +424,11 @@ class ConfiguracaoPlataforma(models.Model):
 class Impersonacao(models.Model):
     """Acesso de suporte auditado ao tenant (RF-PLT-007)."""
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="impersonacoes", verbose_name="rede"
-    )
-    usuario_plataforma = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="impersonacoes_feitas",
-        verbose_name="usuario da plataforma",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="impersonacoes",
+                             verbose_name="rede")
+    usuario_plataforma = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+                                           related_name="impersonacoes_feitas",
+                                           verbose_name="usuario da plataforma")
     usuario_alvo = models.CharField("usuario alvo", max_length=150, blank=True)
     motivo = models.TextField("motivo")
     inicio = models.DateTimeField("inicio", default=timezone.now)

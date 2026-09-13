@@ -1,17 +1,12 @@
 """Dominio proprio, verificacao, certificado e diagnostico (RF-PLT-050..052)."""
-
 from __future__ import annotations
+
+import pytest
 
 from core.models import StatusCertificado, StatusDominio
 from governanca.servicos import (
-    config_do_router,
-    estado_do_provisionamento,
-    hosts_da_rede,
-    instrucoes_de_dns,
-    rede_por_host,
-    reemitir_certificado,
-    subdominio_da,
-    verificar_dominio,
+    config_do_router, estado_do_provisionamento, hosts_da_rede, instrucoes_de_dns, rede_por_host,
+    reemitir_certificado, subdominio_da, verificar_dominio,
 )
 
 
@@ -36,8 +31,7 @@ def test_verificacao_por_arquivo_no_dominio(db, rede, monkeypatch):
     token = instrucoes_de_dns(rede)["registros"][1]["valor"]
     monkeypatch.setattr(servicos, "_checar_txt", lambda dominio, valor: (False, "sem dnspython"))
     monkeypatch.setattr(
-        servicos,
-        "_checar_arquivo_no_dominio",
+        servicos, "_checar_arquivo_no_dominio",
         lambda dominio, valor: (True, "token encontrado") if valor in token else (False, "nada"),
     )
     resultado = verificar_dominio(rede, forcar=True)
@@ -54,11 +48,8 @@ def test_verificacao_sem_arquivo_fica_pendente(db, rede, monkeypatch):
     rede.dominio = "academia.exemplo.com.br"
     rede.save()
     monkeypatch.setattr(servicos, "_checar_txt", lambda dominio, valor: (False, "sem TXT"))
-    monkeypatch.setattr(
-        servicos,
-        "_checar_arquivo_no_dominio",
-        lambda dominio, valor: (False, "nao encontrei o arquivo de verificacao"),
-    )
+    monkeypatch.setattr(servicos, "_checar_arquivo_no_dominio",
+                        lambda dominio, valor: (False, "nao encontrei o arquivo de verificacao"))
     resultado = verificar_dominio(rede, forcar=True)
     rede.refresh_from_db()
     assert resultado["ok"] is False

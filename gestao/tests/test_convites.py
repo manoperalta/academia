@@ -1,7 +1,8 @@
 """Convites de equipe: criacao, envio, aceite e ciclo de vida."""
-
 from __future__ import annotations
 
+import pytest
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone

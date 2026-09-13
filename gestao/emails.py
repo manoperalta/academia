@@ -1,5 +1,4 @@
 """Envio de e-mail usando o SMTP que a propria academia configurou."""
-
 from __future__ import annotations
 
 from django.conf import settings
@@ -29,9 +28,7 @@ def conexao_e_remetente(rede):
         use_ssl=config.use_ssl,
         fail_silently=False,
     )
-    remetente = config.remetente_email or getattr(
-        settings, "DEFAULT_FROM_EMAIL", "no-reply@localhost"
-    )
+    remetente = config.remetente_email or getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@localhost")
     return conexao, remetente
 
 

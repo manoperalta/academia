@@ -1,5 +1,4 @@
 """Executa a regua de cobranca (avisos, bloqueio D+10, suspensao D+30)."""
-
 from __future__ import annotations
 
 from datetime import datetime

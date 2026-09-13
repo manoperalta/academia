@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Playground da API</title>
+<script src="https://cdn.tailwindcss.com"></script></head>
+<body class="bg-slate-100 p-6 text-slate-800">
+<div class="mx-auto max-w-4xl space-y-4">
+  <h1 class="text-xl font-semibold">Playground da API v1</h1>
+  <p class="text-sm text-slate-600">Envie uma chamada de teste com o token escolhido e veja a resposta.
+     Nada aqui grava dado sem você pedir.</p>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <label class="block text-xs text-slate-500">Token (ApiToken)</label>
+    <input id="token" class="mb-3 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+           placeholder="cole o token de servico ou o JWT">
+    <div class="flex gap-2">
+      <select id="metodo" class="rounded border border-slate-300 px-3 py-2 text-sm">
+        <option>GET</option><option>POST</option><option>PATCH</option><option>DELETE</option>
+      </select>
+      <select id="caminho" class="rounded border border-slate-300 px-3 py-2 text-sm">
+        {% for recurso in recursos %}<option>{{ recurso }}</option>{% endfor %}
+      </select>
+      <input id="query" class="flex-1 rounded border border-slate-300 px-3 py-2 text-sm"
+             placeholder="?page=1&ordering=-id&dry_run=1">
+      <button onclick="enviar()" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">Enviar</button>
+    </div>
+    <textarea id="corpo" rows="3" class="mt-3 w-full rounded border border-slate-300 px-3 py-2 font-mono text-xs"
+              placeholder='{"nome": "..."} (para POST/PATCH)'></textarea>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="mb-2 text-xs text-slate-500">Resposta</p>
+    <pre id="saida" class="overflow-x-auto rounded bg-slate-900 p-3 text-xs text-emerald-200">—</pre>
+  </div>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="mb-2 text-xs text-slate-500">Escopos disponíveis</p>
+    <ul class="grid grid-cols-2 gap-1 text-xs text-slate-600">
+      {% for escopo, descricao in escopos %}<li><code>{{ escopo }}</code> — {{ descricao }}</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+<script>
+async function enviar() {
+  const token = document.getElementById('token').value.trim();
+  const metodo = document.getElementById('metodo').value;
+  const url = document.getElementById('caminho').value + document.getElementById('query').value;
+  const corpo = document.getElementById('corpo').value.trim();
+  const opcoes = {method: metodo, headers: {}};
+  if (token) opcoes.headers['Authorization'] = token.startsWith('ey') ? 'Bearer ' + token : 'Token ' + token;
+  if (corpo) { opcoes.headers['Content-Type'] = 'application/json'; opcoes.body = corpo; }
+  const saida = document.getElementById('saida');
+  saida.textContent = 'enviando...';
+  try {
+    const resposta = await fetch(url, opcoes);
+    const texto = await resposta.text();
+    let formatado = texto;
+    try { formatado = JSON.stringify(JSON.parse(texto), null, 2); } catch (e) {}
+    saida.textContent = 'HTTP ' + resposta.status + '\n' + formatado;
+  } catch (erro) { saida.textContent = 'Erro: ' + erro; }
+}
+</script></body></html>

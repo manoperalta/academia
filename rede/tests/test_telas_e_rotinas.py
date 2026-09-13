@@ -1,24 +1,24 @@
 """Telas do painel da rede e as rotinas periodicas (jobs com dry-run)."""
-
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.core.management import call_command
 from django.urls import reverse
+from django.utils import timezone
 
 from governanca.models import RotinaAgendada
-from governanca.rotinas import executar_rotinas, sincronizar_rotinas
+from governanca.rotinas import executar_rotinas, rotinas_devidas, sincronizar_rotinas
 from rede.models import RegraDeRepasse, Repasse
 from rede.servicos import emitir_repasse, periodo_do_mes
 
 
 @pytest.fixture
 def regra(db, rede):
-    return RegraDeRepasse.objects.create(
-        rede=rede, unidade=None, tipo=RegraDeRepasse.Tipo.PERCENTUAL, percentual=Decimal("8.000")
-    )
+    return RegraDeRepasse.objects.create(rede=rede, unidade=None, tipo=RegraDeRepasse.Tipo.PERCENTUAL,
+                                         percentual=Decimal("8.000"))
 
 
 def test_painel_da_rede_abre_com_comparativo(cliente_rede, unidades, receita):
@@ -29,24 +29,10 @@ def test_painel_da_rede_abre_com_comparativo(cliente_rede, unidades, receita):
 
 
 def test_telas_da_rede_abrem(cliente_rede, unidades, receita, regra):
-    rotas = [
-        "rede:painel",
-        "rede:unidades",
-        "rede:metas",
-        "rede:repasses",
-        "rede:regras",
-        "rede:governanca",
-        "rede:comunicados",
-        "rede:aprovacoes",
-        "rede:catalogo",
-        "rede:transferencias",
-        "rede:importar",
-        "rede:unidade_template",
-        "rede:unidade_criar",
-        "rede:meta_criar",
-        "rede:regra_criar",
-        "rede:comunicado_criar",
-    ]
+    rotas = ["rede:painel", "rede:unidades", "rede:metas", "rede:repasses", "rede:regras",
+             "rede:governanca", "rede:comunicados", "rede:aprovacoes", "rede:catalogo",
+             "rede:transferencias", "rede:importar", "rede:unidade_template", "rede:unidade_criar",
+             "rede:meta_criar", "rede:regra_criar", "rede:comunicado_criar"]
     for rota in rotas:
         assert cliente_rede.get(reverse(rota)).status_code == 200, rota
 
@@ -80,44 +66,30 @@ def test_emissao_pela_tela(cliente_rede, unidades, receita, regra):
 
 
 def test_transferencia_pela_tela_exige_confirmacao(cliente_rede, unidades, receita):
-    resposta = cliente_rede.post(
-        reverse("rede:transferencias"),
-        {
-            "origem": unidades[0].pk,
-            "destino": unidades[1].pk,
-            "confirmacao": "nao",
-        },
-    )
+    resposta = cliente_rede.post(reverse("rede:transferencias"), {
+        "origem": unidades[0].pk, "destino": unidades[1].pk, "confirmacao": "nao",
+    })
     assert resposta.status_code == 302
     from usuarios.models import Usuario
 
     assert Usuario.todos.filter(unidade=unidades[0]).count() > 0  # nada mudou
-    certo = cliente_rede.post(
-        reverse("rede:transferencias"),
-        {
-            "origem": unidades[0].pk,
-            "destino": unidades[1].pk,
-            "motivo": "teste",
-            "confirmacao": "TRANSFERIR",
-        },
-    )
+    certo = cliente_rede.post(reverse("rede:transferencias"), {
+        "origem": unidades[0].pk, "destino": unidades[1].pk, "motivo": "teste",
+        "confirmacao": "TRANSFERIR",
+    })
     assert certo.status_code == 302
     assert Usuario.todos.filter(unidade=unidades[0]).count() == 0
 
 
 def test_rotinas_sincronizam_e_rodam_em_dry_run(db):
     criadas = sincronizar_rotinas()
-    assert criadas == 9
+    assert criadas == 11
     resultado = executar_rotinas(dry_run=True)
     assert resultado["dry_run"] is True
-    assert {item["rotina"] for item in resultado["executadas"]} >= {
-        "metricas",
-        "backup",
-        "repasses",
-    }
+    assert {item["rotina"] for item in resultado["executadas"]} >= {"metricas", "backup", "repasses"}
     assert all(item["simulado"] for item in resultado["executadas"])
     # dry-run nao marca a rotina como executada
-    assert RotinaAgendada.objects.filter(ultima_execucao__isnull=True).count() == 9
+    assert RotinaAgendada.objects.filter(ultima_execucao__isnull=True).count() == 11
 
 
 def test_rotina_de_metas_e_atrasos_rodam_de_verdade(db, rede, unidades, receita, regra):

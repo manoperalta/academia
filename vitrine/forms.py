@@ -1,5 +1,4 @@
 """Formularios do site publico."""
-
 from __future__ import annotations
 
 from django import forms
@@ -14,9 +13,7 @@ class EstiloPublicoMixin:
         super().__init__(*args, **kwargs)
         for campo in self.fields.values():
             if isinstance(campo.widget, forms.CheckboxInput):
-                campo.widget.attrs["class"] = (
-                    "mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600"
-                )
+                campo.widget.attrs["class"] = "mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600"
             elif isinstance(campo.widget, forms.Textarea):
                 campo.widget.attrs["class"] = (
                     "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm "
@@ -33,25 +30,16 @@ class CadastroPublicoForm(EstiloPublicoMixin, forms.Form):
     """Dados da academia + modalidade escolhida (RF-PLT-030)."""
 
     nome = forms.CharField(max_length=150, label="Nome da academia")
-    cnpj = forms.CharField(
-        max_length=20,
-        required=False,
-        label="CNPJ",
-        help_text="Opcional, mas ajuda na emissao fiscal.",
-    )
+    cnpj = forms.CharField(max_length=20, required=False, label="CNPJ",
+                           help_text="Opcional, mas ajuda na emissao fiscal.")
     responsavel = forms.CharField(max_length=150, label="Seu nome")
     email = forms.EmailField(label="E-mail do responsavel")
     telefone = forms.CharField(max_length=20, required=False, label="Telefone/WhatsApp")
-    slug = forms.CharField(
-        max_length=60,
-        label="Endereco da sua academia",
-        help_text="Letras, numeros e hifen. Ex.: academia-forca",
-    )
+    slug = forms.CharField(max_length=60, label="Endereco da sua academia",
+                           help_text="Letras, numeros e hifen. Ex.: academia-forca")
     modalidade = forms.ChoiceField(
         choices=[("trial", "Testar 14 dias gratis"), ("pagamento", "Assinar agora com Pix")],
-        initial="trial",
-        label="Como quer comecar",
-        widget=forms.RadioSelect,
+        initial="trial", label="Como quer comecar", widget=forms.RadioSelect,
     )
     aceite = forms.BooleanField(
         label="Concordo com o uso dos dados para a prestacao do servico.",
@@ -99,6 +87,4 @@ class ContatoForm(EstiloPublicoMixin, forms.Form):
     email = forms.EmailField(label="E-mail")
     telefone = forms.CharField(max_length=20, required=False, label="Telefone")
     academia = forms.CharField(max_length=150, required=False, label="Academia")
-    mensagem = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 4}), label="Como podemos ajudar?"
-    )
+    mensagem = forms.CharField(widget=forms.Textarea(attrs={"rows": 4}), label="Como podemos ajudar?")

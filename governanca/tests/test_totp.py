@@ -1,5 +1,4 @@
 """TOTP (RFC 6238) -- vetores oficiais da RFC."""
-
 from __future__ import annotations
 
 import base64
@@ -25,7 +24,7 @@ def test_codigo_de_seis_digitos():
 def test_validar_aceita_janela_e_recusa_codigo_errado():
     codigo = totp.codigo_atual(SEGREDO_RFC, instante=1000)
     assert totp.validar(SEGREDO_RFC, codigo, instante=1000) is True
-    assert totp.validar(SEGREDO_RFC, codigo, instante=1030) is True  # uma janela adiante
+    assert totp.validar(SEGREDO_RFC, codigo, instante=1030) is True   # uma janela adiante
     assert totp.validar(SEGREDO_RFC, codigo, instante=1200) is False  # longe demais
     assert totp.validar(SEGREDO_RFC, "000000", instante=1000) is False
     assert totp.validar(SEGREDO_RFC, "abc", instante=1000) is False

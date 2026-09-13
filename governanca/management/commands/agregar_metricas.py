@@ -1,5 +1,4 @@
 """Persiste as metricas do cache e mostra os alertas (RNF-008)."""
-
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand

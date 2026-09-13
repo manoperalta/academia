@@ -1,5 +1,4 @@
 """Exportacao logica de um cliente (restauracao pontual, RNF-005)."""
-
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand
@@ -24,9 +23,8 @@ class Command(BaseCommand):
         if registro.situacao != "ok":
             self.stderr.write(self.style.ERROR(f"Exportacao FALHOU: {registro.erro[:300]}"))
             return
-        self.stdout.write(
-            self.style.SUCCESS(f"{rede.nome}: {registro.arquivo} ({registro.tamanho_mb} MB)")
-        )
+        self.stdout.write(self.style.SUCCESS(
+            f"{rede.nome}: {registro.arquivo} ({registro.tamanho_mb} MB)"))
         if not options["sem_verificar"]:
             verificacao = verificar_backup(registro)
             self.stdout.write(f"Verificacao: {verificacao['detalhe']}")

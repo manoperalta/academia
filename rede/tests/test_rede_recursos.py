@@ -1,33 +1,21 @@
 """Recursos da rede: comparativo, metas, governanca, alcadas, onboarding e transferencias."""
-
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from django.utils import timezone
 
+from core.models import Unidade
 from rede.models import (
-    Comunicado,
-    ItemDeChecklist,
-    LeituraDeComunicado,
-    Meta,
-    PoliticaDaRede,
-    SolicitacaoDeAprovacao,
-    TemplateDeUnidade,
-    TransferenciaDeAluno,
+    Comunicado, ItemDeChecklist, LeituraDeComunicado, Meta, PoliticaDaRede, RegraDeRepasse,
+    SolicitacaoDeAprovacao, TemplateDeUnidade, TransferenciaDeAluno,
 )
 from rede.servicos import (
-    ErroDeRede,
-    aplicar_template,
-    comparativo_entre_unidades,
-    consolidado_da_rede,
-    distribuir_catalogo,
-    encerrar_unidade,
-    marcar_item_do_checklist,
-    periodo_do_mes,
-    transferir_alunos,
-    travas_vigentes,
-    validar_desconto,
+    ErroDeRede, aplicar_template, comparativo_entre_unidades, consolidado_da_rede,
+    distribuir_catalogo, emitir_repasse, encerrar_unidade, marcar_item_do_checklist, periodo_do_mes,
+    politica, travas_vigentes, transferir_alunos, validar_desconto,
 )
 from rede.views import pode_criar_unidade
 
@@ -38,7 +26,7 @@ def test_comparativo_ranqueia_por_receita(db, rede, unidades, receita):
     assert [linha["posicao"] for linha in comparativo] == [1, 2, 3]
     assert comparativo[0]["recebido"] >= comparativo[-1]["recebido"]
     assert comparativo[0]["alunos_ativos"] >= 3
-    assert comparativo[0]["inadimplencia"] > 0  # há pagamento em aberto
+    assert comparativo[0]["inadimplencia"] > 0          # há pagamento em aberto
     assert comparativo[0]["ticket_medio"] > 0
 
 
@@ -53,14 +41,8 @@ def test_consolidado_soma_as_unidades(db, rede, unidades, receita):
 
 def test_metas_calculam_realizado_e_atingimento(db, rede, unidades, receita):
     inicio, fim = periodo_do_mes()
-    meta = Meta.objects.create(
-        rede=rede,
-        unidade=unidades[0],
-        inicio=inicio,
-        fim=fim,
-        indicador=Meta.Indicador.FATURAMENTO,
-        alvo=Decimal("300.00"),
-    )
+    meta = Meta.objects.create(rede=rede, unidade=unidades[0], inicio=inicio, fim=fim,
+                               indicador=Meta.Indicador.FATURAMENTO, alvo=Decimal("300.00"))
     from rede.servicos import atualizar_metas
 
     atualizar_metas(rede)
@@ -71,9 +53,8 @@ def test_metas_calculam_realizado_e_atingimento(db, rede, unidades, receita):
 
 
 def test_politica_trava_desconto_acima_do_teto(db, rede, unidades):
-    PoliticaDaRede.objects.create(
-        rede=rede, trava_politica_de_desconto=True, teto_de_desconto=Decimal("10.00")
-    )
+    PoliticaDaRede.objects.create(rede=rede, trava_politica_de_desconto=True,
+                                  teto_de_desconto=Decimal("10.00"))
     dentro = validar_desconto(unidades[0], Decimal("8.00"))
     assert dentro["permitido"] is True and dentro["exige_aprovacao"] is False
     fora = validar_desconto(unidades[0], Decimal("25.00"))
@@ -88,21 +69,16 @@ def test_travas_vigentes_refletem_a_politica(db, rede):
 
 
 def test_comunicado_com_leitura_confirmada(db, rede, admin_da_rede):
-    comunicado = Comunicado.objects.create(
-        rede=rede, titulo="Novo padrão de grade", mensagem="A partir de segunda vale a grade nova."
-    )
+    comunicado = Comunicado.objects.create(rede=rede, titulo="Novo padrão de grade",
+                                          mensagem="A partir de segunda vale a grade nova.")
     LeituraDeComunicado.objects.create(comunicado=comunicado, usuario=admin_da_rede)
     assert comunicado.leituras == 1
 
 
 def test_alcada_de_aprovacao_registra_decisao(db, rede, unidades, admin_da_rede):
     pedido = SolicitacaoDeAprovacao.objects.create(
-        rede=rede,
-        unidade=unidades[0],
-        tipo=SolicitacaoDeAprovacao.Tipo.DESCONTO_ACIMA_DO_TETO,
-        titulo="20% para plano anual",
-        valor=Decimal("300.00"),
-        solicitante=admin_da_rede,
+        rede=rede, unidade=unidades[0], tipo=SolicitacaoDeAprovacao.Tipo.DESCONTO_ACIMA_DO_TETO,
+        titulo="20% para plano anual", valor=Decimal("300.00"), solicitante=admin_da_rede,
     )
     pedido.decidir(admin_da_rede, aprovar=False, justificativa="Acima da política")
     pedido.refresh_from_db()
@@ -112,35 +88,23 @@ def test_alcada_de_aprovacao_registra_decisao(db, rede, unidades, admin_da_rede)
 
 def test_limite_de_unidades_do_pacote(db, rede, unidades):
     from datetime import date
-
     from plataforma.models import Assinatura, Pacote
 
-    pacote = Pacote.objects.create(
-        nome="Bronze",
-        codigo="bronze",
-        preco_mensal=Decimal("99.00"),
-        limite_alunos=150,
-        limite_professores=10,
-        limite_unidades=2,
-        visivel_no_site=True,
-    )
-    Assinatura.objects.create(
-        rede=rede, pacote=pacote, inicio=date(2026, 1, 1), renovacao_em=date(2026, 12, 1)
-    )
+    pacote = Pacote.objects.create(nome="Bronze", codigo="bronze", preco_mensal=Decimal("99.00"),
+                                   limite_alunos=150, limite_professores=10, limite_unidades=2,
+                                   visivel_no_site=True)
+    Assinatura.objects.create(rede=rede, pacote=pacote, inicio=date(2026, 1, 1),
+                              renovacao_em=date(2026, 12, 1))
     permitido, aviso = pode_criar_unidade(rede)
     assert permitido is False
     assert "2 unidade" in aviso and "pacote" in aviso.lower()
 
 
 def test_transferencia_em_lote_mantem_historico(db, rede, unidades, receita, admin_da_rede):
-    alunos = list(
-        __import__("usuarios.models", fromlist=["Usuario"]).Usuario.todos.filter(
-            rede=rede, unidade=unidades[0]
-        )
-    )
-    resultado = transferir_alunos(
-        alunos, unidades[1], motivo="fechamento temporario", usuario=admin_da_rede
-    )
+    alunos = list(__import__("usuarios.models", fromlist=["Usuario"]).Usuario.todos.filter(
+        rede=rede, unidade=unidades[0]))
+    resultado = transferir_alunos(alunos, unidades[1], motivo="fechamento temporario",
+                                  usuario=admin_da_rede)
     assert resultado["transferidos"] == len(alunos)
     assert resultado["lote"]
     assert TransferenciaDeAluno.objects.filter(lote=resultado["lote"]).count() == len(alunos)
@@ -155,11 +119,8 @@ def test_encerramento_move_alunos_e_inativa(db, rede, unidades, receita, admin_d
     assert unidades[0].status == "inativa"
     assert resultado["transferidos"] == resultado["alunos"] > 0
     assert Comunicado.objects.filter(titulo__icontains="encerrada").exists()
-    assert (
-        not __import__("usuarios.models", fromlist=["Usuario"])
-        .Usuario.todos.filter(rede=rede, unidade=unidades[0])
-        .exists()
-    )
+    assert not __import__("usuarios.models", fromlist=["Usuario"]).Usuario.todos.filter(
+        rede=rede, unidade=unidades[0]).exists()
 
 
 def test_encerramento_recusa_destino_igual(db, rede, unidades):
@@ -169,14 +130,9 @@ def test_encerramento_recusa_destino_igual(db, rede, unidades):
 
 def test_onboarding_aplica_template_e_checklist(db, rede, unidades):
     template = TemplateDeUnidade.objects.create(
-        rede=rede,
-        nome="Padrao franquia",
-        configuracoes={
-            "branding": {"sobrescrever": True},
-            "planos": ["Mensal"],
-            "grades": ["manha"],
-            "mensagens": ["boas-vindas"],
-        },
+        rede=rede, nome="Padrao franquia",
+        configuracoes={"branding": {"sobrescrever": True}, "planos": ["Mensal"],
+                       "grades": ["manha"], "mensagens": ["boas-vindas"]},
     )
     ItemDeChecklist.objects.create(template=template, titulo="Cadastrar CNPJ", ordem=1)
     ItemDeChecklist.objects.create(template=template, titulo="Treinar equipe", ordem=2)
@@ -208,21 +164,18 @@ def test_importacao_multi_unidade_confere_e_importa(db, rede, unidades):
     from gestao.importacao import analisar_aplicar_multiunidade
 
     conteudo = (
-        b"nome,email,unidade\n"
-        b"Ana Aluna,ana@x.com,Centro\n"
-        b"Bruno Aluno,bruno@x.com,Zona Sul\n"
-        b"Carla Sem Unidade,carla@x.com,Inexistente\n"
-    )
+        "nome,email,unidade\n"
+        "Ana Aluna,ana@x.com,Centro\n"
+        "Bruno Aluno,bruno@x.com,Zona Sul\n"
+        "Carla Sem Unidade,carla@x.com,Inexistente\n"
+    ).encode()
     conferencia = analisar_aplicar_multiunidade(conteudo, rede, dry_run=True)
     assert conferencia["criados"] == 2
-    assert any(
-        "nao encontrada" in erro
-        for dados in conferencia["por_unidade"].values()
-        for erro in dados["erros"]
-    )
+    assert any("nao encontrada" in erro for dados in conferencia["por_unidade"].values()
+               for erro in dados["erros"])
     from usuarios.models import Usuario
 
-    assert Usuario.todos.filter(rede=rede).count() == 0  # dry-run nao grava
+    assert Usuario.todos.filter(rede=rede).count() == 0   # dry-run nao grava
 
     importacao = analisar_aplicar_multiunidade(conteudo, rede)
     assert importacao["ok"] is True and importacao["criados"] == 2
@@ -232,7 +185,7 @@ def test_importacao_multi_unidade_confere_e_importa(db, rede, unidades):
 def test_importacao_sem_coluna_unidade_recusa(db, rede):
     from gestao.importacao import analisar_aplicar_multiunidade
 
-    conteudo = b"nome,email\nAna,ana@x.com\n"
+    conteudo = "nome,email\nAna,ana@x.com\n".encode()
     resultado = analisar_aplicar_multiunidade(conteudo, rede)
     assert resultado["ok"] is False
     assert "unidade" in resultado["mensagem"]

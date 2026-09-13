@@ -1,5 +1,4 @@
 """RBAC do painel: papel x modulo x nivel de acesso (PRD secao 7.1)."""
-
 from __future__ import annotations
 
 from django.db import models
@@ -37,8 +36,8 @@ class Modulo(models.TextChoices):
 
 NIVEIS: dict[str | None, int] = {None: 0, "ver": 1, "editar": 2, "admin": 3}
 
-TUDO = dict.fromkeys(Modulo, "admin")
-SO_LEITURA = dict.fromkeys(Modulo, "ver")
+TUDO = {modulo: "admin" for modulo in Modulo}
+SO_LEITURA = {modulo: "ver" for modulo in Modulo}
 
 #: Matriz papel x modulo. Nivel: ver < editar < admin.
 MATRIZ: dict[str, dict[str, str]] = {

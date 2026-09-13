@@ -5,14 +5,14 @@ As entidades de plataforma/tenant que endurecem a operacao. Todas referenciam a
 maioria delas e consultada de fora do contexto de um cliente (suporte, metricas,
 alertas de backup).
 """
-
 from __future__ import annotations
 
 import hashlib
-from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
+from datetime import timedelta
+
 from django.utils import timezone
 
 from core.models import Rede
@@ -51,14 +51,8 @@ class RegraRetencao(models.Model):
 class MetricaTenant(models.Model):
     """Uso e erros por cliente, por hora (RNF-008)."""
 
-    rede = models.ForeignKey(
-        Rede,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="metricas",
-        verbose_name="rede",
-    )
+    rede = models.ForeignKey(Rede, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="metricas", verbose_name="rede")
     inicio = models.DateTimeField("hora")
     requisicoes = models.PositiveIntegerField("requisicoes", default=0)
     erros_5xx = models.PositiveIntegerField("erros 5xx", default=0)
@@ -85,28 +79,16 @@ class MetricaTenant(models.Model):
 class ErroTenant(models.Model):
     """Erro 5xx observado num cliente, para suporte e alerta (RNF-008)."""
 
-    rede = models.ForeignKey(
-        Rede,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="erros",
-        verbose_name="rede",
-    )
+    rede = models.ForeignKey(Rede, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="erros", verbose_name="rede")
     rota = models.CharField("rota", max_length=200)
     metodo = models.CharField("metodo", max_length=10, blank=True)
     status = models.PositiveSmallIntegerField("status HTTP", default=500)
     tipo = models.CharField("tipo", max_length=120, blank=True)
     mensagem = models.TextField("mensagem", blank=True)
     traceback_curto = models.TextField("trecho do traceback", blank=True)
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="erros_tenant",
-        verbose_name="usuario",
-    )
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name="erros_tenant", verbose_name="usuario")
     resolvido = models.BooleanField("resolvido", default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -136,17 +118,10 @@ class RegistroBackup(models.Model):
     tipo = models.CharField("tipo", max_length=20, choices=Tipo.choices, default=Tipo.BANCO)
     tamanho_bytes = models.BigIntegerField("tamanho (bytes)", default=0)
     sha256 = models.CharField("sha256", max_length=64, blank=True)
-    rede = models.ForeignKey(
-        Rede,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="backups",
-        verbose_name="rede",
-    )
-    situacao = models.CharField(
-        "situacao", max_length=20, choices=Situacao.choices, default=Situacao.EM_ANDAMENTO
-    )
+    rede = models.ForeignKey(Rede, null=True, blank=True, on_delete=models.SET_NULL,
+                             related_name="backups", verbose_name="rede")
+    situacao = models.CharField("situacao", max_length=20, choices=Situacao.choices,
+                                default=Situacao.EM_ANDAMENTO)
     verificado_em = models.DateTimeField("verificado em", null=True, blank=True)
     verificacao = models.TextField("resultado da verificacao", blank=True)
     retencao_ate = models.DateField("reter ate", null=True, blank=True)
@@ -186,15 +161,13 @@ class SolicitacaoTitular(models.Model):
 
     PRAZO_LEGAL_DIAS = 15
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="solicitacoes_titular", verbose_name="rede"
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="solicitacoes_titular",
+                             verbose_name="rede")
     titular_nome = models.CharField("titular", max_length=150)
     titular_email = models.CharField("e-mail do titular", max_length=200, blank=True)
     tipo = models.CharField("tipo", max_length=20, choices=Tipo.choices)
-    situacao = models.CharField(
-        "situacao", max_length=20, choices=Situacao.choices, default=Situacao.ABERTA
-    )
+    situacao = models.CharField("situacao", max_length=20, choices=Situacao.choices,
+                                default=Situacao.ABERTA)
     prazo_em = models.DateField("prazo legal")
     descricao = models.TextField("descricao", blank=True)
     resposta = models.TextField("resposta ao titular", blank=True)
@@ -228,24 +201,16 @@ class AcessoDadoSensivel(models.Model):
         SUPORTE = "suporte", "Suporte"
         IMPRESSAO = "impressao", "Impressao/PDF"
 
-    rede = models.ForeignKey(
-        Rede, on_delete=models.CASCADE, related_name="acessos_sensiveis", verbose_name="rede"
-    )
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="acessos_sensiveis",
-        verbose_name="usuario",
-    )
+    rede = models.ForeignKey(Rede, on_delete=models.CASCADE, related_name="acessos_sensiveis",
+                             verbose_name="rede")
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+                                related_name="acessos_sensiveis", verbose_name="usuario")
     titular_nome = models.CharField("titular", max_length=150)
     usuario_id_titular = models.PositiveIntegerField("id do cadastro", null=True, blank=True)
     recurso = models.CharField("recurso", max_length=60, default="ficha_saude")
     acao = models.CharField("acao", max_length=30, default="leitura")
-    origem = models.CharField(
-        "origem", max_length=20, choices=Origem.choices, default=Origem.PAINEL
-    )
+    origem = models.CharField("origem", max_length=20, choices=Origem.choices,
+                              default=Origem.PAINEL)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -282,12 +247,8 @@ class TentativaDeLogin(models.Model):
 class Dispositivo2FA(models.Model):
     """Segundo fator (TOTP) do usuario (RNF-009)."""
 
-    usuario = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="dois_fatores",
-        verbose_name="usuario",
-    )
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                   related_name="dois_fatores", verbose_name="usuario")
     segredo = models.CharField("segredo", max_length=64)
     confirmado_em = models.DateTimeField("confirmado em", null=True, blank=True)
     ultimo_uso_em = models.DateTimeField("ultimo uso em", null=True, blank=True)
@@ -308,12 +269,8 @@ class Dispositivo2FA(models.Model):
 class CodigoRecuperacao(models.Model):
     """Codigo de recuperacao do 2FA: hash, uso unico."""
 
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="codigos_recuperacao",
-        verbose_name="usuario",
-    )
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                related_name="codigos_recuperacao", verbose_name="usuario")
     hash_codigo = models.CharField("hash", max_length=128)
     usado_em = models.DateTimeField("usado em", null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -348,17 +305,14 @@ class RotinaAgendada(models.Model):
 
     nome = models.CharField("nome", max_length=60, unique=True)
     descricao = models.CharField("descricao", max_length=200, blank=True)
-    periodicidade = models.CharField(
-        "periodicidade", max_length=10, choices=Periodicidade.choices, default=Periodicidade.DIA
-    )
+    periodicidade = models.CharField("periodicidade", max_length=10, choices=Periodicidade.choices,
+                                     default=Periodicidade.DIA)
     ativa = models.BooleanField("ativa", default=True)
-    executa_dry_run = models.BooleanField(
-        "executa em modo simulacao", default=False, help_text="Roda a rotina sem gravar nada."
-    )
+    executa_dry_run = models.BooleanField("executa em modo simulacao", default=False,
+                                          help_text="Roda a rotina sem gravar nada.")
     ultima_execucao = models.DateTimeField("ultima execucao", null=True, blank=True)
-    ultima_situacao = models.CharField(
-        "situacao da ultima execucao", max_length=10, choices=Situacao.choices, blank=True
-    )
+    ultima_situacao = models.CharField("situacao da ultima execucao", max_length=10,
+                                       choices=Situacao.choices, blank=True)
     ultimo_resultado = models.TextField("resultado da ultima execucao", blank=True)
     duracao_ms = models.PositiveIntegerField("duracao (ms)", default=0)
     criado_em = models.DateTimeField(auto_now_add=True)
@@ -375,12 +329,6 @@ class RotinaAgendada(models.Model):
     def atrasada(self) -> bool:
         if self.ultima_execucao is None:
             return True
-        limites = {
-            "hora": timedelta(hours=2),
-            "dia": timedelta(days=1, hours=2),
-            "semana": timedelta(days=8),
-            "mes": timedelta(days=32),
-        }
-        return timezone.now() - self.ultima_execucao > limites.get(
-            self.periodicidade, timedelta(days=2)
-        )
+        limites = {"hora": timedelta(hours=2), "dia": timedelta(days=1, hours=2),
+                   "semana": timedelta(days=8), "mes": timedelta(days=32)}
+        return timezone.now() - self.ultima_execucao > limites.get(self.periodicidade, timedelta(days=2))

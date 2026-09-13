@@ -1,5 +1,4 @@
 """Formularios de autenticacao e 2FA."""
-
 from __future__ import annotations
 
 from django import forms
@@ -22,8 +21,7 @@ class LoginSeguroForm(EstiloSeguroMixin, forms.Form):
 
 class Codigo2FAForm(EstiloSeguroMixin, forms.Form):
     codigo = forms.CharField(
-        label="Codigo do app (ou um codigo de recuperacao)",
-        max_length=20,
+        label="Codigo do app (ou um codigo de recuperacao)", max_length=20,
         widget=forms.TextInput(attrs={"autocomplete": "one-time-code", "autofocus": "autofocus"}),
     )
 

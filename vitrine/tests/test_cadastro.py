@@ -1,5 +1,4 @@
 """Cadastro self-service: provisionamento, trial, pagamento e recusas."""
-
 from __future__ import annotations
 
 from decimal import Decimal
@@ -11,9 +10,10 @@ from django.urls import reverse
 from django.utils import timezone
 
 from academia.models import Configuracao, IdentidadeVisual
-from core.models import ConviteEquipe, Rede, VinculoUsuario
+from core.models import Rede, VinculoUsuario
+from core.models import ConviteEquipe
 from plataforma.models import Assinatura, Fatura, StatusFatura
-from plataforma.servicos import slug_disponivel
+from plataforma.servicos import CadastroError, cadastrar_tenant_publico, slug_disponivel
 from plataforma.validadores import normalizar_cnpj, sugerir_slug, validar_cnpj
 from vitrine.tests.conftest import cnpj_valido
 
@@ -81,9 +81,7 @@ def test_slug_reservado_e_recusado(client, pacotes_publicos, dados_cadastro):
 
 
 def test_cnpj_invalido_e_recusado(client, pacotes_publicos, dados_cadastro):
-    resposta = _post(
-        client, pacotes_publicos["prata"], {**dados_cadastro, "cnpj": "11.111.111/1111-11"}
-    )
+    resposta = _post(client, pacotes_publicos["prata"], {**dados_cadastro, "cnpj": "11.111.111/1111-11"})
     assert resposta.status_code == 200
     assert not Rede.todos.filter(slug="academia-forca").exists()
 
@@ -91,11 +89,8 @@ def test_cnpj_invalido_e_recusado(client, pacotes_publicos, dados_cadastro):
 def test_cnpj_repetido_e_recusado(client, pacotes_publicos, dados_cadastro):
     primeiro = _post(client, pacotes_publicos["prata"], dados_cadastro)
     assert primeiro.status_code == 302
-    segundo = _post(
-        client,
-        pacotes_publicos["bronze"],
-        {**dados_cadastro, "slug": "outra-academia", "email": "outro@exemplo.com"},
-    )
+    segundo = _post(client, pacotes_publicos["bronze"],
+                    {**dados_cadastro, "slug": "outra-academia", "email": "outro@exemplo.com"})
     assert segundo.status_code == 200
     assert not Rede.todos.filter(slug="outra-academia").exists()
 
@@ -116,14 +111,10 @@ def test_provisionamento_e_transacional(client, pacotes_publicos, dados_cadastro
     monkeypatch.setattr(servicos, "_criar_configuracoes_padrao", explode)
     with pytest.raises(RuntimeError):
         servicos.cadastrar_tenant_publico(
-            nome=dados_cadastro["nome"],
-            slug=dados_cadastro["slug"],
-            cnpj=dados_cadastro["cnpj"],
-            responsavel=dados_cadastro["responsavel"],
-            email=dados_cadastro["email"],
-            telefone=dados_cadastro["telefone"],
-            pacote=pacotes_publicos["prata"],
-            modalidade="trial",
+            nome=dados_cadastro["nome"], slug=dados_cadastro["slug"],
+            cnpj=dados_cadastro["cnpj"], responsavel=dados_cadastro["responsavel"],
+            email=dados_cadastro["email"], telefone=dados_cadastro["telefone"],
+            pacote=pacotes_publicos["prata"], modalidade="trial",
         )
     assert not Rede.todos.filter(slug=dados_cadastro["slug"]).exists()
     assert not Assinatura.objects.exists()
@@ -142,12 +133,8 @@ def test_conclusao_mostra_link_de_primeiro_acesso(client, pacotes_publicos, dado
 
 def test_cnpj_alfanumerico_valido(db):
     """CNPJ alfanumerico (2026): mesma regra, com letras valendo ASCII-48."""
-
     def dv(parcial, pesos):
-        soma = sum(
-            (int(c) if c.isdigit() else ord(c) - 48) * w
-            for c, w in zip(parcial, pesos, strict=True)
-        )
+        soma = sum((int(c) if c.isdigit() else ord(c) - 48) * w for c, w in zip(parcial, pesos, strict=True))
         resto = soma % 11
         return "0" if resto < 2 else str(11 - resto)
 

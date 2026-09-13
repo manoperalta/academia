@@ -1,5 +1,4 @@
 """Meu plano: pacote, limites, avisos e faturas do tenant."""
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -16,10 +15,7 @@ from usuarios.models import Usuario
 @pytest.fixture
 def pacote(db):
     return Pacote.objects.create(
-        nome="Prata",
-        codigo="prata",
-        limite_alunos=100,
-        limite_professores=5,
+        nome="Prata", codigo="prata", limite_alunos=100, limite_professores=5,
         preco_mensal="150.00",
     )
 
@@ -28,10 +24,7 @@ def pacote(db):
 def assinatura_do_tenant(db, rede, pacote):
     hoje = timezone.localdate()
     return Assinatura.objects.create(
-        rede=rede,
-        pacote=pacote,
-        ciclo="mensal",
-        inicio=hoje,
+        rede=rede, pacote=pacote, ciclo="mensal", inicio=hoje,
         renovacao_em=hoje + timedelta(days=30),
     )
 
@@ -59,11 +52,8 @@ def test_recepcao_nao_acessa_meu_plano(cliente_recepcao):
 def test_aviso_de_limite_aparece_no_painel(cliente_logado, rede, assinatura_do_tenant):
     for indice in range(85):
         Usuario.todos.create(
-            rede=rede,
-            nome=f"Aluno {indice}",
-            email_user=f"aluno{indice}@exemplo.com",
-            telefone_user="51999999999",
-            status_user="Ativo",
+            rede=rede, nome=f"Aluno {indice}", email_user=f"aluno{indice}@exemplo.com",
+            telefone_user="51999999999", status_user="Ativo",
         )
     resposta = cliente_logado.get(reverse("gestao:visao_geral"))
     assert "85%" in resposta.content.decode()

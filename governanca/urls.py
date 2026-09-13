@@ -1,5 +1,4 @@
 """Rotas de governanca: entrar, 2FA, midia protegida, status e privacidade."""
-
 from django.urls import path
 
 from governanca import views

@@ -226,3 +226,8 @@ LOGGING = {
 
 # Pasta dos backups do banco e das exportacoes por cliente (RNF-005)
 BACKUP_DIR = BASE_DIR / "backups"
+
+# ------------------------------------------------ API v1 (fase 7)
+API_JWT_SECRET = os.environ.get("API_JWT_SECRET", "")
+API_JWT_VALIDADE = 3600
+TAREFAS_DIR = os.environ.get("TAREFAS_DIR", BASE_DIR / "tarefas")

@@ -1,12 +1,10 @@
 """Media isolada por cliente com sessao obrigatoria (RNF-010)."""
-
 from __future__ import annotations
 
+from governanca.tests.conftest import SENHA
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
-
-from governanca.tests.conftest import SENHA
 
 
 def test_anonimo_e_enviado_para_o_login(client, rede, arquivo_de_midia):
@@ -16,9 +14,7 @@ def test_anonimo_e_enviado_para_o_login(client, rede, arquivo_de_midia):
 
 
 def test_dono_recebe_o_arquivo(cliente_governanca, rede, arquivo_de_midia):
-    resposta = cliente_governanca.get(
-        reverse("governanca:midia", args=[f"redes/{rede.slug}/logo.png"])
-    )
+    resposta = cliente_governanca.get(reverse("governanca:midia", args=[f"redes/{rede.slug}/logo.png"]))
     assert resposta.status_code == 200
     assert b"PNG" in b"".join(resposta.streaming_content)
 

@@ -4,7 +4,6 @@ Fluxo em dois tempos: ``analisar`` (dry-run, nao escreve nada) e ``aplicar`` (co
 pelo usuario). O relatorio e por linha, com o motivo do erro, para o operador conferir a
 planilha dele sem adivinhacao.
 """
-
 from __future__ import annotations
 
 import csv
@@ -22,13 +21,8 @@ CABECALHOS = {
         "telefone": {"telefone", "celular", "whatsapp", "fone", "telefone user"},
         "status": {"status", "situacao", "status user"},
         "cpf": {"cpf", "cpf cnpj", "documento", "cpf cnpj user"},
-        "nascimento": {
-            "nascimento",
-            "data de nascimento",
-            "data nasc",
-            "aniversario",
-            "data nascimento",
-        },
+        "nascimento": {"nascimento", "data de nascimento", "data nasc", "aniversario",
+                       "data nascimento"},
     },
     "professores": {
         "nome": {"nome", "professor", "nome do professor"},
@@ -150,9 +144,7 @@ def analisar(conteudo: bytes, tipo: str, rede, atualizar_existentes: bool = Fals
 
     leitor = list(csv.DictReader(io.StringIO(texto), delimiter=detectar_delimitador(texto)))
     if not leitor:
-        resultado.erro_geral = (
-            "Nao encontrei linhas de dados (a primeira linha deve ter os titulos)."
-        )
+        resultado.erro_geral = "Nao encontrei linhas de dados (a primeira linha deve ter os titulos)."
         return resultado
     if len(leitor) > LIMITE_LINHAS:
         resultado.erro_geral = f"Planilha muito grande ({len(leitor)} linhas). Divida em partes."
@@ -170,7 +162,7 @@ def analisar(conteudo: bytes, tipo: str, rede, atualizar_existentes: bool = Fals
     resultado.colunas = mapa
     if "nome" not in mapa:
         resultado.erro_geral = (
-            'Nao encontrei a coluna de nome. A primeira linha precisa ter, no minimo, "nome".'
+            "Nao encontrei a coluna de nome. A primeira linha precisa ter, no minimo, \"nome\"."
         )
         return resultado
 
@@ -241,15 +233,15 @@ def analisar(conteudo: bytes, tipo: str, rede, atualizar_existentes: bool = Fals
             if linha.acao in {"criar", "atualizar"}:
                 if restantes <= 0:
                     linha.acao = "erro"
-                    linha.motivos = [f"limite do pacote atingido ({resultado.limite} {tipo})"]
+                    linha.motivos = [
+                        f"limite do pacote atingido ({resultado.limite} {tipo})"
+                    ]
                 else:
                     restantes -= 1
 
     # campos auxiliares usados ao gravar
     resultado.campos = {
-        "email": campo_email,
-        "telefone": campo_telefone,
-        "cpf": campo_cpf,
+        "email": campo_email, "telefone": campo_telefone, "cpf": campo_cpf,
         "status": campo_status,
     }
     return resultado
@@ -268,12 +260,8 @@ def aplicar(resultado: Resultado, rede) -> dict:
         "cpf": "cpf_cnpj_user" if resultado.tipo == "alunos" else "cpf_cnpj_prof",
         "status": "status_user" if resultado.tipo == "alunos" else "status_prof",
     }
-    resumo = {
-        "criados": 0,
-        "atualizados": 0,
-        "ignorados": len(resultado.ignoradas),
-        "erros": len(resultado.com_erro),
-    }
+    resumo = {"criados": 0, "atualizados": 0, "ignorados": len(resultado.ignoradas),
+              "erros": len(resultado.com_erro)}
     for linha in resultado.linhas:
         dados = linha.dados
         valores = {campos["status"]: dados.get("status", "Ativo")}
@@ -284,28 +272,18 @@ def aplicar(resultado: Resultado, rede) -> dict:
         if dados.get("cpf"):
             valores[campos["cpf"]] = dados["cpf"]
         if linha.acao == "criar":
-            nascimento = {
-                "data_nasc" if resultado.tipo == "alunos" else "data_nasc_prof": dados.get(
-                    "nascimento"
-                )
-            }
-            modelo.todos.create(
-                rede=rede,
-                nome=dados["nome"],
-                **{k: v for k, v in nascimento.items() if v},
-                **valores,
-            )
+            nascimento = {"data_nasc" if resultado.tipo == "alunos" else "data_nasc_prof":
+                          dados.get("nascimento")}
+            modelo.todos.create(rede=rede, nome=dados["nome"],
+                                **{k: v for k, v in nascimento.items() if v}, **valores)
             resumo["criados"] += 1
         elif linha.acao == "atualizar" and dados.get("pk"):
             modelo.todos.filter(pk=dados["pk"]).update(nome=dados["nome"], **valores)
             resumo["atualizados"] += 1
     registrar(
-        "importar",
-        resultado.tipo,
-        descricao=(
-            f"Importacao CSV: {resumo['criados']} criados, {resumo['atualizados']} "
-            f"atualizados, {resumo['ignorados']} ignorados, {resumo['erros']} com erro"
-        ),
+        "importar", resultado.tipo,
+        descricao=(f"Importacao CSV: {resumo['criados']} criados, {resumo['atualizados']} "
+                   f"atualizados, {resumo['ignorados']} ignorados, {resumo['erros']} com erro"),
     )
     return resumo
 
@@ -318,24 +296,14 @@ def _campos_do_modelo(modelo, desejados):
 #: cabecalho aceito -> campo do modelo (por tipo de cadastro)
 MAPA_MULTIUNIDADE = {
     "alunos": {
-        "nome": "nome",
-        "email": "email_user",
-        "telefone": "telefone_user",
-        "cpf": "cpf_cnpj_user",
-        "nascimento": "data_nasc",
-        "status": "status_user",
-        "endereco": "endereco_user",
-        "numero": "numero_end_user",
-        "bairro": "bairro_user",
+        "nome": "nome", "email": "email_user", "telefone": "telefone_user",
+        "cpf": "cpf_cnpj_user", "nascimento": "data_nasc", "status": "status_user",
+        "endereco": "endereco_user", "numero": "numero_end_user", "bairro": "bairro_user",
         "cep": "cep_user",
     },
     "professores": {
-        "nome": "nome",
-        "email": "email_prof",
-        "telefone": "telefone_prof",
-        "cpf": "cpf_cnpj_prof",
-        "nascimento": "data_nasc_prof",
-        "status": "status_prof",
+        "nome": "nome", "email": "email_prof", "telefone": "telefone_prof",
+        "cpf": "cpf_cnpj_prof", "nascimento": "data_nasc_prof", "status": "status_prof",
     },
 }
 SINONIMOS_MULTIUNIDADE = {
@@ -364,13 +332,9 @@ def _valor_por_sinonimo(valores: dict, campo: str) -> str:
     return ""
 
 
-def analisar_aplicar_multiunidade(
-    conteudo: bytes,
-    rede,
-    tipo: str = "alunos",
-    atualizar_existentes: bool = False,
-    dry_run: bool = False,
-) -> dict:
+def analisar_aplicar_multiunidade(conteudo: bytes, rede, tipo: str = "alunos",
+                                  atualizar_existentes: bool = False,
+                                  dry_run: bool = False) -> dict:
     """Importacao com coluna ``unidade`` e relatorio de conferencia por unidade (RF-RED-023).
 
     Aceita o nome ou o codigo da unidade em cada linha; o relatorio agrupa o resultado
@@ -390,32 +354,23 @@ def analisar_aplicar_multiunidade(
         return {"ok": False, "mensagem": "Arquivo vazio ou sem linhas de dados.", "por_unidade": {}}
 
     if not _valor_por_sinonimo(linhas[0], "unidade") and "unidade" not in linhas[0]:
-        return {
-            "ok": False,
-            "por_unidade": {},
-            "mensagem": "Para importar em varias unidades, inclua a coluna 'unidade' "
-            "(nome ou codigo da unidade).",
-        }
+        return {"ok": False, "por_unidade": {},
+                "mensagem": "Para importar em varias unidades, inclua a coluna 'unidade' "
+                            "(nome ou codigo da unidade)."}
 
     modelo = Usuario if tipo == "alunos" else _modelo_de_professores()
     mapa = MAPA_MULTIUNIDADE.get(tipo, MAPA_MULTIUNIDADE["alunos"])
     campos_validos = set(_campos_do_modelo(modelo, list(mapa.values())))
-    unidades = {
-        unidade.nome.strip().lower(): unidade for unidade in Unidade.objects.filter(rede=rede)
-    }
-    unidades.update(
-        {
-            (unidade.codigo or "").strip().lower(): unidade
-            for unidade in Unidade.objects.filter(rede=rede)
-            if unidade.codigo
-        }
-    )
+    unidades = {unidade.nome.strip().lower(): unidade for unidade in Unidade.objects.filter(rede=rede)}
+    unidades.update({(unidade.codigo or "").strip().lower(): unidade
+                     for unidade in Unidade.objects.filter(rede=rede) if unidade.codigo})
 
     por_unidade: dict[str, dict] = {}
     criados = 0
     for numero, valores in enumerate(linhas, start=2):
         rotulo = _valor_por_sinonimo(valores, "unidade")
-        relatorio = por_unidade.setdefault(rotulo or "(sem unidade)", {"criados": 0, "erros": []})
+        relatorio = por_unidade.setdefault(rotulo or "(sem unidade)",
+                                           {"criados": 0, "erros": []})
         unidade = unidades.get(rotulo.lower())
         if unidade is None:
             relatorio["erros"].append(f"linha {numero}: unidade {rotulo!r} nao encontrada na rede")
@@ -445,7 +400,7 @@ def analisar_aplicar_multiunidade(
             continue
         try:
             modelo.todos.create(rede=rede, unidade=unidade, **dados)
-        except Exception as erro:
+        except Exception as erro:  # noqa: BLE001 - relatorio linha a linha
             relatorio["erros"].append(f"linha {numero}: {str(erro)[:160]}")
             continue
         relatorio["criados"] += 1
@@ -460,7 +415,7 @@ def analisar_aplicar_multiunidade(
         "erros": total_erros,
         "por_unidade": por_unidade,
         "mensagem": f"{criados} registro(s) em {len(por_unidade)} unidade(s); "
-        f"{total_erros} linha(s) com problema.",
+                    f"{total_erros} linha(s) com problema.",
     }
 
 

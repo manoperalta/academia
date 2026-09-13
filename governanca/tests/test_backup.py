@@ -1,5 +1,4 @@
 """Backup, verificacao por restauracao de teste e retencao (RNF-005)."""
-
 from __future__ import annotations
 
 import json
@@ -12,10 +11,7 @@ from django.utils import timezone
 
 from governanca.models import RegistroBackup
 from governanca.servicos import (
-    DIAS_DE_RETENCAO,
-    aplicar_retencao_de_backups,
-    executar_backup,
-    exportar_tenant,
+    DIAS_DE_RETENCAO, aplicar_retencao_de_backups, executar_backup, exportar_tenant,
     verificar_backup,
 )
 
@@ -73,11 +69,9 @@ def test_retencao_simulada_nao_apaga(db, pasta_de_backup):
         caminho = pasta_de_backup / f"antigo-{dias}.json"
         caminho.write_text("[]")
         registro = RegistroBackup.objects.create(
-            arquivo=str(caminho), tamanho_bytes=2, situacao=RegistroBackup.Situacao.OK
-        )
+            arquivo=str(caminho), tamanho_bytes=2, situacao=RegistroBackup.Situacao.OK)
         RegistroBackup.objects.filter(pk=registro.pk).update(
-            criado_em=timezone.now() - timedelta(days=dias)
-        )
+            criado_em=timezone.now() - timedelta(days=dias))
         antigos.append(registro)
     resultado = aplicar_retencao_de_backups(dry_run=True)
     assert resultado["dry_run"] is True

@@ -1,5 +1,4 @@
 """Observabilidade por cliente: metricas, erros, alertas e log com contexto (RNF-008)."""
-
 from __future__ import annotations
 
 import logging
@@ -8,11 +7,7 @@ from django.urls import reverse
 
 from governanca.models import ErroTenant, MetricaTenant
 from governanca.servicos import (
-    agregar_metricas,
-    alertas_pendentes,
-    registrar_erro,
-    registrar_requisicao,
-    resumo_de_saude,
+    agregar_metricas, alertas_pendentes, registrar_erro, registrar_requisicao, resumo_de_saude,
 )
 
 

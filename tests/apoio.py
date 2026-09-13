@@ -110,7 +110,14 @@ def modelos_sem_rede_em_modelos():
 
     from core.models import TenantModel
 
-    ignorados = {"accounts.customuser", "api.apitoken", "api.registroauditoria"}
+    ignorados = {
+        "accounts.customuser",
+        "api.apitoken",
+        "api.registroauditoria",
+        "api.webhookdesaida",
+        "api.entregadewebhook",
+        "api.tarefaassincrona",
+    }
     pendentes = []
     for modelo in apps.get_models():
         rotulo = modelo._meta.label_lower

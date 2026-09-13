@@ -1,5 +1,4 @@
 """Fixtures da plataforma (Fase 3)."""
-
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,13 +13,8 @@ from plataforma.models import Assinatura, ModuloPacote, Pacote
 
 def criar_pacote(codigo, nome, alunos, professores, unidades, preco, modulos):
     return Pacote.objects.create(
-        nome=nome,
-        codigo=codigo,
-        limite_alunos=alunos,
-        limite_professores=professores,
-        limite_unidades=unidades,
-        preco_mensal=preco,
-        preco_anual=str(float(preco) * 12),
+        nome=nome, codigo=codigo, limite_alunos=alunos, limite_professores=professores,
+        limite_unidades=unidades, preco_mensal=preco, preco_anual=str(float(preco) * 12),
         modulos=modulos,
     )
 
@@ -28,10 +22,7 @@ def criar_pacote(codigo, nome, alunos, professores, unidades, preco, modulos):
 def criar_assinatura(rede, pacote, ciclo="mensal", dias=30, trial=False):
     hoje = timezone.localdate()
     return Assinatura.objects.create(
-        rede=rede,
-        pacote=pacote,
-        ciclo=ciclo,
-        inicio=hoje,
+        rede=rede, pacote=pacote, ciclo=ciclo, inicio=hoje,
         renovacao_em=hoje + timedelta(days=dias),
         trial_termina_em=(hoje + timedelta(days=dias)) if trial else None,
     )
@@ -42,11 +33,8 @@ def criar_alunos(rede, quantidade, status="Ativo"):
 
     return [
         Usuario.todos.create(
-            rede=rede,
-            nome=f"Aluno {indice}",
-            email_user=f"aluno{indice}@exemplo.com",
-            telefone_user="51999999999",
-            status_user=status,
+            rede=rede, nome=f"Aluno {indice}", email_user=f"aluno{indice}@exemplo.com",
+            telefone_user="51999999999", status_user=status,
         )
         for indice in range(quantidade)
     ]
@@ -59,22 +47,14 @@ def pacote_prata(db):
 
 @pytest.fixture
 def pacote_bronze(db):
-    return criar_pacote(
-        "bronze",
-        "Bronze",
-        150,
-        10,
-        1,
-        "250.00",
-        [ModuloPacote.WHATSAPP, ModuloPacote.RELATORIOS_AVANCADOS],
-    )
+    return criar_pacote("bronze", "Bronze", 150, 10, 1, "250.00",
+                        [ModuloPacote.WHATSAPP, ModuloPacote.RELATORIOS_AVANCADOS])
 
 
 @pytest.fixture
 def pacote_ouro(db):
-    return criar_pacote(
-        "ouro", "Ouro", None, None, None, "500.00", [modulo.value for modulo in ModuloPacote]
-    )
+    return criar_pacote("ouro", "Ouro", None, None, None, "500.00",
+                        [modulo.value for modulo in ModuloPacote])
 
 
 @pytest.fixture
@@ -85,9 +65,7 @@ def assinatura(db, rede, pacote_prata):
 @pytest.fixture
 def suporte(db):
     return get_user_model().objects.create_user(
-        username="suporte.teste",
-        password="SenhaSuporte123",
-        is_staff=True,
+        username="suporte.teste", password="SenhaSuporte123", is_staff=True,
         email="suporte@safestack.com.br",
     )
 
@@ -104,8 +82,7 @@ def cliente_plataforma(db, suporte):
     from governanca.models import Dispositivo2FA
 
     Dispositivo2FA.objects.update_or_create(
-        usuario=suporte,
-        defaults={"segredo": "JBSWY3DPEHPK3PXP", "confirmado_em": timezone.now()},
+        usuario=suporte, defaults={"segredo": "JBSWY3DPEHPK3PXP", "confirmado_em": timezone.now()},
     )
     cliente = Client()
     cliente.force_login(suporte)

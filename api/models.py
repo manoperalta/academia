@@ -167,3 +167,7 @@ class RegistroAuditoria(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValueError("Registro de auditoria nao pode ser apagado (append-only).")
+
+
+# Fase 7: webhooks de saida e tarefas assincronas
+from api.modelos_de_integracao import *  # noqa: F403, E402

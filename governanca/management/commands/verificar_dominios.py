@@ -1,5 +1,4 @@
 """Reconfere os dominios proprios e reemite certificados com falha (RF-PLT-051)."""
-
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand
@@ -12,9 +11,8 @@ class Command(BaseCommand):
     help = "Verifica os dominios proprios e marca para reemissao os certificados com erro."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "--emitir", action="store_true", help="marca para reemissao os certificados em erro"
-        )
+        parser.add_argument("--emitir", action="store_true",
+                           help="marca para reemissao os certificados em erro")
 
     def handle(self, *args, **options):
         verificados = reemitidos = 0
@@ -22,16 +20,10 @@ class Command(BaseCommand):
             resultado = verificar_dominio(rede, forcar=True)
             verificados += 1
             self.stdout.write(f"{rede.nome} ({rede.dominio}): {resultado['mensagem'][:110]}")
-            if (
-                options["emitir"]
-                and rede.certificado_status == StatusCertificado.ERRO
-                and rede.dominio_status == StatusDominio.PRONTO
-            ):
+            if (options["emitir"] and rede.certificado_status == StatusCertificado.ERRO
+                    and rede.dominio_status == StatusDominio.PRONTO):
                 reemitir_certificado(rede)
                 reemitidos += 1
-                self.stdout.write("  -> certificado marcado para reemissao")
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Dominios verificados: {verificados}; certificados reemitidos: {reemitidos}."
-            )
-        )
+                self.stdout.write(f"  -> certificado marcado para reemissao")
+        self.stdout.write(self.style.SUCCESS(
+            f"Dominios verificados: {verificados}; certificados reemitidos: {reemitidos}."))

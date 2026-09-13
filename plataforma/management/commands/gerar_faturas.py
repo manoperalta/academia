@@ -1,5 +1,4 @@
 """Gera as faturas dos ciclos que vencem (idempotente)."""
-
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -15,11 +14,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--hoje", help="Data de referencia (AAAA-MM-DD). Padrao: hoje")
-        parser.add_argument(
-            "--sem-cobranca",
-            action="store_true",
-            help="Somente cria as faturas (nao chama o gateway)",
-        )
+        parser.add_argument("--sem-cobranca", action="store_true",
+                            help="Somente cria as faturas (nao chama o gateway)")
 
     def handle(self, *args, **options):
         hoje = timezone.localdate()

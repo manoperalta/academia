@@ -1,23 +1,18 @@
 """Faturas, emissao de cobranca e regua de cobranca (idempotente)."""
-
 from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
 
+import pytest
 from django.utils import timezone
 
 from core.papeis import StatusRede
 from plataforma.models import (
-    EventoCobranca,
-    MarcoRegua,
-    StatusFatura,
+    Assinatura, EventoCobranca, Fatura, MarcoRegua, StatusFatura,
 )
 from plataforma.servicos import (
-    aplicar_regua,
-    emitir_cobranca_da_fatura,
-    gerar_fatura,
-    gerar_faturas_do_dia,
+    aplicar_regua, emitir_cobranca_da_fatura, gerar_fatura, gerar_faturas_do_dia,
     processar_evento_gateway,
 )
 from plataforma.tests.conftest import criar_assinatura
@@ -116,12 +111,10 @@ def test_pagamento_pelo_webhook_reativa_o_tenant(db, rede, assinatura):
     rede.refresh_from_db()
     assert rede.status == StatusRede.SUSPENSO
     emitir_cobranca_da_fatura(fatura)
-    processar_evento_gateway(
-        {
-            "id": "evt-pagamento-1",
-            "payment": {"id": fatura.gateway_id, "status": "RECEIVED", "value": 150.0},
-        }
-    )
+    processar_evento_gateway({
+        "id": "evt-pagamento-1",
+        "payment": {"id": fatura.gateway_id, "status": "RECEIVED", "value": 150.0},
+    })
     rede.refresh_from_db()
     fatura.refresh_from_db()
     assert rede.status == StatusRede.ATIVO
