@@ -11,6 +11,7 @@ ZERO = Decimal("0.00")
 
 class TipoDeComissao(models.TextChoices):
     POR_AULA = "por_aula", "Por aula dada"
+    POR_HORA = "por_hora", "Por hora trabalhada"
     POR_ALUNO = "por_aluno", "Por aluno ativo"
     PERCENTUAL = "percentual", "Percentual do que a unidade recebeu"
     FIXO = "fixo", "Valor fixo no periodo"
@@ -61,6 +62,11 @@ class RegraDeComissao(models.Model):
     def __str__(self) -> str:
         alvo = self.professor or self.unidade or self.rede
         return f"{alvo} · {self.get_tipo_display()}"
+
+    @property
+    def valor_da_hora(self):
+        """Atalho de leitura: regra ``por_hora`` guarda o valor da hora em ``valor``."""
+        return self.valor
 
     def vale_em(self, referencia) -> bool:
         if not self.ativo:

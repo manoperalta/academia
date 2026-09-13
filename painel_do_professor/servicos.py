@@ -187,6 +187,38 @@ def avaliacoes_do_aluno(aluno, limite: int = 24):
 
 
 # ------------------------------------------------------------------ comissoes
+def meu_financeiro(professor, referencia=None) -> dict:
+    """O que o professor precisa ver: valor da hora, horas do mes e a previsao do repasse.
+
+    O valor da hora vem do painel do admin/gestor (regra ``por_hora`` vigente) -- o professor
+    confere o numero, nao define.
+    """
+    from remuneracao.servicos import ErroDeRemuneracao, calcular_apuracao, competencia
+    from remuneracao.servicos import horas_trabalhadas
+
+    inicio, fim = competencia(referencia)
+    horas, fonte = horas_trabalhadas(professor, professor.unidade, inicio, fim)
+    previsao = None
+    pendencia = ""
+    try:
+        calculo = calcular_apuracao(professor, professor.unidade, inicio, fim)
+        previsao = calculo["total"]
+        linhas = calculo["linhas"]
+    except ErroDeRemuneracao as erro:
+        pendencia = str(erro)
+        linhas = []
+    return {
+        "valor_por_hora": professor.valor_por_hora,
+        "horas_no_mes": horas,
+        "fonte_das_horas": fonte,
+        "inicio": inicio,
+        "fim": fim,
+        "previsao": previsao,
+        "linhas": linhas,
+        "pendencia": pendencia,
+    }
+
+
 def minhas_comissoes(professor, limite: int = 24) -> dict:
     """Extrato do proprio trabalho: apuracoes por competencia e quanto ja foi pago."""
     from remuneracao.models import ApuracaoDeComissao

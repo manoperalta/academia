@@ -156,6 +156,33 @@ class ProfessorForm(PessoaForm):
     campo_email = "email_prof"
     flag_usuario = {"is_professor": True}
 
+    valor_por_hora = forms.DecimalField(
+        label="Valor por hora (R$)",
+        required=False,
+        min_value=0,
+        max_digits=12,
+        decimal_places=2,
+        help_text=(
+            "Quanto este professor recebe por hora de atendimento. É este valor que aparece no "
+            "financeiro dele; em branco = ainda não definido."
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            valor = self.instance.valor_por_hora
+            if valor is not None:
+                self.fields["valor_por_hora"].initial = valor
+
+    def save(self, commit=True):
+        instancia = super().save(commit=commit)
+        if commit and instancia.pk:
+            valor = self.cleaned_data.get("valor_por_hora")
+            if valor is not None and valor != instancia.valor_por_hora:
+                instancia.definir_valor_por_hora(valor)
+        return instancia
+
 
 class FichaSaudeForm(EstiloMixin, forms.ModelForm):
     class Meta:

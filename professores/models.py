@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from core.models import TenantModel
 from core.validadores import validar_imagem_de_capa
@@ -44,6 +47,56 @@ class Professor(TenantModel):
 
     def __str__(self):
         return self.nome
+
+    # ------------------------------------------------------------------ valor da hora
+    @property
+    def regra_do_valor_por_hora(self):
+        """Regra ``por_hora`` vigente deste professor (a fonte unica do quanto ele recebe)."""
+        from remuneracao.models import RegraDeComissao, TipoDeComissao
+
+        regras = RegraDeComissao.objects.filter(
+            rede=self.rede, professor=self, tipo=TipoDeComissao.POR_HORA, ativo=True
+        ).order_by("-criado_em")
+        hoje = timezone.localdate()
+        return next((regra for regra in regras if regra.vale_em(hoje)), None)
+
+    @property
+    def valor_por_hora(self):
+        """Valor da hora em reais (``None`` quando ainda nao foi definido no painel)."""
+        regra = self.regra_do_valor_por_hora
+        return regra.valor if regra is not None else None
+
+    def definir_valor_por_hora(self, valor, *, vigencia=None, usuario=None):
+        """Define o valor da hora do professor, encerrando a regra anterior.
+
+        Historico em vez de sobrescrita: a regra anterior fica com vigencia encerrada e a nova
+        nasce hoje -- assim a comissao de meses passados continua reproduzivel. Quem chama e o
+        painel do admin da rede / gestor da unidade.
+        """
+        from remuneracao.models import RegraDeComissao, TipoDeComissao
+
+        hoje = vigencia or timezone.localdate()
+        RegraDeComissao.objects.filter(
+            rede=self.rede, professor=self, tipo=TipoDeComissao.POR_HORA, ativo=True
+        ).update(ativo=False, fim_vigencia=hoje - timedelta(days=1))
+        regra = RegraDeComissao.objects.create(
+            rede=self.rede,
+            unidade=self.unidade,
+            professor=self,
+            tipo=TipoDeComissao.POR_HORA,
+            valor=valor,
+            inicio_vigencia=hoje,
+            descricao="Valor por hora definido no painel",
+        )
+        from api.auditoria import registrar
+
+        registrar(
+            "valor_por_hora",  # a coluna de acao aceita 20 caracteres
+            "professor",
+            entidade_id=self.pk,
+            descricao=f"Valor por hora de {self.nome} definido em R$ {valor}",
+        )
+        return regra
 
     class Meta:
         verbose_name = "Professor"

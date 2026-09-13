@@ -70,40 +70,62 @@ def receita_recebida(unidade, inicio: date, fim: date) -> Decimal:
     return _arredonda(total)
 
 
-def aulas_dadas(professor, unidade, inicio: date, fim: date) -> tuple[int, str]:
-    """Conta aulas do professor no periodo quando a agenda permite; diz a fonte usada."""
-    from django.apps import apps
+#: Status que contam como atendimento feito (o resto nao gera remuneracao).
+STATUS_DE_ATENDIMENTO_FEITO = ("Concluido", "Presente", "Realizado", "concluido", "presente", "realizado")
 
-    try:
-        agendamento = apps.get_model("agendamento", "Agendamento")
-        painel = apps.get_model("painel", "Painel")
-    except LookupError:
-        return 0, "agenda indisponivel neste cliente"
-    campos_do_painel = {campo.name for campo in painel._meta.get_fields()}
-    if "professor" not in campos_do_painel:
-        return 0, "painel sem professor vinculado (comissao por aula nao apuravel)"
-    campos = {campo.name for campo in agendamento._meta.get_fields()}
-    campo_data = next(
-        (
-            nome
-            for nome in ("data_agendamento", "data", "data_inicio", "criado_em")
-            if nome in campos
-        ),
-        None,
-    )
-    if campo_data is None:
-        return 0, "agendamento sem campo de data"
+
+def _atendimentos(professor, unidade, inicio: date, fim: date):
+    """Agendamentos feitos do professor no periodo.
+
+    A ligacao com o professor e o **responsavel da turma** (``painel.responsavel``, que e o
+    usuario dele) -- o schema de ``painel`` nao tem FK de professor. O periodo e o da turma
+    (``painel.data``), nao o da reserva.
+    """
+    from agendamento.models import Agendamento
+
     filtro = {
-        f"{campo_data}__gte": inicio,
-        f"{campo_data}__lte": fim,
-        "painel__professor": professor,
+        "rede": professor.rede,
+        "painel__responsavel": professor.user,
+        "painel__data__gte": inicio,
+        "painel__data__lte": fim,
+        "status__in": list(STATUS_DE_ATENDIMENTO_FEITO),
     }
-    if "unidade" in campos and unidade is not None:
+    if unidade is not None:
         filtro["unidade"] = unidade
-    if "status" in campos:
-        filtro["status__in"] = ["concluido", "presente", "realizado", "ativo"]
-    total = agendamento.objects.filter(**filtro).count()
+    return Agendamento.todos.filter(**filtro)
+
+
+def aulas_dadas(professor, unidade, inicio: date, fim: date) -> tuple[int, str]:
+    """Quantas turmas o professor atendeu no periodo (agendamento concluido conta uma vez)."""
+    if getattr(professor, "user_id", None) is None:
+        return 0, "professor sem usuario vinculado (comissao por aula nao apuravel)"
+    consulta = _atendimentos(professor, unidade, inicio, fim)
+    total = consulta.values("painel_id").distinct().count()
     return total, f"{total} aula(s) pela agenda"
+
+
+def horas_trabalhadas(professor, unidade, inicio: date, fim: date) -> tuple[Decimal, str]:
+    """Horas de atendimento do professor no periodo -- a base do valor por hora.
+
+    Cada turma conta uma vez, pelo tempo da janela (``hora_inicio`` -> ``hora_fim``); turma sem
+    horario fechado nao entra. Turma repetida (dois alunos no mesmo horario) nao infla a hora.
+    """
+    if getattr(professor, "user_id", None) is None:
+        return ZERO, "professor sem usuario vinculado (valor por hora nao apuravel)"
+    janelas = (
+        _atendimentos(professor, unidade, inicio, fim)
+        .values_list("painel_id", "painel__hora_inicio", "painel__hora_fim")
+        .distinct()
+    )
+    minutos = 0
+    for _, hora_inicio, hora_fim in janelas:
+        if hora_inicio is None or hora_fim is None:
+            continue
+        inicio_do_dia = hora_inicio.hour * 60 + hora_inicio.minute
+        fim_do_dia = hora_fim.hour * 60 + hora_fim.minute
+        minutos += max(0, fim_do_dia - inicio_do_dia)
+    horas = (Decimal(minutos) / Decimal(60)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return horas, f"{minutos} minuto(s) em {len(janelas)} turma(s)"
 
 
 def calcular_apuracao(professor, unidade, inicio: date, fim: date) -> dict:
@@ -124,6 +146,18 @@ def calcular_apuracao(professor, unidade, inicio: date, fim: date) -> dict:
             {
                 "tipo": "por_aula",
                 "descricao": f"Comissao por aula ({fonte})",
+                "base": base,
+                "percentual": ZERO,
+                "valor": valor,
+            }
+        )
+    elif regra.tipo == TipoDeComissao.POR_HORA:
+        base, fonte = horas_trabalhadas(professor, unidade, inicio, fim)
+        valor = _arredonda(base * regra.valor)
+        linhas.append(
+            {
+                "tipo": "por_hora",
+                "descricao": f"Hora de atendimento x R$ {regra.valor} ({fonte})",
                 "base": base,
                 "percentual": ZERO,
                 "valor": valor,

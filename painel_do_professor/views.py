@@ -369,6 +369,7 @@ class MinhasComissoesView(ContextoDoProfessorMixin, TemplateView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         contexto["comissoes"] = servicos.minhas_comissoes(self.professor)
+        contexto["financeiro"] = servicos.meu_financeiro(self.professor)
         return contexto
 
 
