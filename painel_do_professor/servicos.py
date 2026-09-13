@@ -19,7 +19,7 @@ from professores.models import Professor
 from treinos.models import AvaliacaoFisica, Treino
 from usuarios.models import Usuario
 
-SITUACOES_DE_PRESENCA = {"presente": "presente", "falta": "falta", "cancelado": "cancelado"}
+SITUACOES_DE_PRESENCA = {"presente": "Concluido", "falta": "Faltou", "cancelado": "Cancelado"}
 
 
 class ErroDoProfessor(Exception):
@@ -68,8 +68,8 @@ def agenda_do_dia(professor, dia: date | None = None) -> dict:
             for turma in turmas
         ],
         "total_de_alunos": agendamentos.count(),
-        "presencas": agendamentos.filter(status="presente").count(),
-        "faltas": agendamentos.filter(status="falta").count(),
+        "presencas": agendamentos.filter(status="Concluido").count(),
+        "faltas": agendamentos.filter(status="Faltou").count(),
     }
 
 
@@ -163,12 +163,12 @@ def frequencia_do_aluno(aluno, dias: int = 90) -> dict:
         aluno=aluno.user, data_agendamento__gte=desde, arquivado_em__isnull=True
     )
     total = agendamentos.count()
-    presencas = agendamentos.filter(status="presente").count()
+    presencas = agendamentos.filter(status="Concluido").count()
     return {
         "dias": dias,
         "agendamentos": total,
         "presencas": presencas,
-        "faltas": agendamentos.filter(status="falta").count(),
+        "faltas": agendamentos.filter(status="Faltou").count(),
         "taxa_de_presenca": round(presencas * 100 / total, 1) if total else 0.0,
     }
 

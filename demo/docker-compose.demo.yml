@@ -1,0 +1,48 @@
+# Demonstracao: soma-se ao compose de dev (-f docker-compose.dev.yml -f docker-compose.demo.yml),
+# reaproveitando o Postgres e a rede de dev, com banco PROPRIO (academia_demo) e sem nginx.
+# Nao publica nada na internet: o tunel reverso leva 18084 -> 127.0.0.1:8004.
+#
+# O `--mount /demo=...` e o que faz o uWSGI destacar o prefixo: ele tira `/demo` do caminho e avisa o
+# Django pelo SCRIPT_NAME. Sem isso o Django recebe `/demo/` e responde 404 (foi o primeiro erro).
+services:
+  demo:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: academia_demo_web
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    ports:
+      - "127.0.0.1:8004:8000"
+    environment:
+      DJANGO_ENV: demo
+      DJANGO_SECRET_KEY: demo-nao-e-segredo
+      DJANGO_DEBUG: "1"
+      DJANGO_DEBUG_TOKEN: demo
+      DJANGO_STATIC_ROOT: /app/staticfiles
+      DJANGO_ALLOWED_HOSTS: academia.safestack.com.br,localhost,127.0.0.1,testserver
+      DATABASE_URL: postgres://academia:academia@db:5432/academia_demo
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    command:
+      - uwsgi
+      - --http
+      - ":8000"
+      - --master
+      - --processes
+      - "2"
+      - --threads
+      - "4"
+      - --harakiri
+      - "60"
+      - --mount
+      - /demo=app.wsgi:application
+      - --manage-script-name
+      - --static-map
+      - /demo/static=/app/staticfiles
+      - --static-map
+      - /demo/media=/app/media

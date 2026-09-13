@@ -1,0 +1,10 @@
+{
+ "todos": true,
+ "ajustes": [
+  [
+   "portal_do_aluno/tests/test_portal.py",
+   "\"cancelado\"",
+   "\"Cancelado\""
+  ]
+ ]
+}

@@ -1,0 +1,59 @@
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --dark-bg: #212529;
+    --light-bg: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar-brand img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.footer {
+    background-color: var(--dark-bg);
+    color: white;
+    padding: 2rem 0;
+    margin-top: auto;
+}
+
+.status-badge {
+    padding: 0.25em 0.6em;
+    border-radius: 10rem;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+.status-ativo { background-color: #198754; color: white; }
+.status-inativo { background-color: #dc3545; color: white; }
+.status-agendado { background-color: #0d6efd; color: white; }
+.status-concluido { background-color: #198754; color: white; }
+
+.auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding-top: 50px;
+}

@@ -10,6 +10,7 @@ from painel.models import Painel  # Importando o modelo correto
 class Agendamento(TenantModel):
     STATUS_CHOICES = (
         ("Agendado", "Agendado"),
+        ("Faltou", "Faltou (aluno ausente)"),
         ("Cancelado", "Cancelado"),
         ("Concluido", "Concluído"),
     )

@@ -321,8 +321,8 @@ def resumo_do_aluno(aluno) -> dict:
         "treinos_ativos": treinos.filter(situacao=Treino.Situacao.ATIVO).count(),
         "treinos_total": treinos.count(),
         "agendamentos": agendamentos.count(),
-        "presencas": agendamentos.filter(status="presente").count(),
-        "faltas": agendamentos.filter(status="falta").count(),
+        "presencas": agendamentos.filter(status="Concluido").count(),
+        "faltas": agendamentos.filter(status="Faltou").count(),
         "avaliacoes": avaliacoes.count(),
         "ultima_avaliacao": avaliacoes.order_by("-data").first(),
     }

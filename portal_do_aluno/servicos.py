@@ -34,14 +34,14 @@ def turmas_disponiveis(aluno, dias: int = 14) -> list[dict]:
     )
     meus = set(
         Agendamento.todos.filter(aluno=aluno.user, arquivado_em__isnull=True)
-        .exclude(status="cancelado")
+        .exclude(status="Cancelado")
         .values_list("painel_id", flat=True)
     )
     linhas = []
     for turma in turmas:
         ocupados = (
             Agendamento.todos.filter(painel=turma, arquivado_em__isnull=True)
-            .exclude(status="cancelado")
+            .exclude(status="Cancelado")
             .count()
         )
         linhas.append(
@@ -68,14 +68,14 @@ def agendar(*, aluno, turma: Painel) -> Agendamento:
         raise ErroDoPortal("Esta turma ja aconteceu.")
     existente = (
         Agendamento.todos.filter(aluno=aluno.user, painel=turma, arquivado_em__isnull=True)
-        .exclude(status="cancelado")
+        .exclude(status="Cancelado")
         .first()
     )
     if existente is not None:
         raise ErroDoPortal("Voce ja esta nesta turma.")
     ocupados = (
         Agendamento.objects.filter(painel=turma, arquivado_em__isnull=True)
-        .exclude(status="cancelado")
+        .exclude(status="Cancelado")
         .count()
     )
     if ocupados >= turma.numero_de_user:
@@ -110,9 +110,9 @@ def cancelar_agendamento(*, aluno, agendamento: Agendamento) -> dict:
     """Cancela o proprio agendamento e chama o proximo da fila de espera."""
     if agendamento.aluno_id != aluno.user_id:
         raise ErroDoPortal("Este agendamento nao e seu.")
-    if agendamento.status == "cancelado":
+    if agendamento.status == "Cancelado":
         raise ErroDoPortal("Este agendamento ja foi cancelado.")
-    agendamento.status = "cancelado"
+    agendamento.status = "Cancelado"
     agendamento.save(update_fields=["status"])
     proximo = (
         ListaDeEspera.objects.filter(turma=agendamento.painel, avisado=False)

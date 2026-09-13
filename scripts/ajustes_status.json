@@ -1,0 +1,50 @@
+{
+ "ajustes": [
+  [
+   "agendamento/models.py",
+   "STATUS_CHOICES = (\n        (\"Agendado\", \"Agendado\"),",
+   "STATUS_CHOICES = (\n        (\"Agendado\", \"Agendado\"),\n        (\"Faltou\", \"Faltou (aluno ausente)\"),"
+  ],
+  [
+   "painel_do_professor/servicos.py",
+   "SITUACOES_DE_PRESENCA = {\"presente\": \"presente\", \"falta\": \"falta\", \"cancelado\": \"cancelado\"}",
+   "SITUACOES_DE_PRESENCA = {\"presente\": \"Concluido\", \"falta\": \"Faltou\", \"cancelado\": \"Cancelado\"}"
+  ],
+  [
+   "painel_do_professor/servicos.py",
+   "        \"presencas\": agendamentos.filter(status=\"presente\").count(),\n        \"faltas\": agendamentos.filter(status=\"falta\").count(),",
+   "        \"presencas\": agendamentos.filter(status=\"Concluido\").count(),\n        \"faltas\": agendamentos.filter(status=\"Faltou\").count(),"
+  ],
+  [
+   "painel_do_professor/servicos.py",
+   "    presencas = agendamentos.filter(status=\"presente\").count()",
+   "    presencas = agendamentos.filter(status=\"Concluido\").count()"
+  ],
+  [
+   "painel_do_professor/servicos.py",
+   "        \"faltas\": agendamentos.filter(status=\"falta\").count(),",
+   "        \"faltas\": agendamentos.filter(status=\"Faltou\").count(),"
+  ],
+  [
+   "portal_do_aluno/servicos.py",
+   "        .exclude(status=\"cancelado\")",
+   "        .exclude(status=\"Cancelado\")"
+  ],
+  [
+   "portal_do_aluno/servicos.py",
+   "            .exclude(status=\"cancelado\")",
+   "            .exclude(status=\"Cancelado\")"
+  ],
+  [
+   "portal_do_aluno/servicos.py",
+   "    if agendamento.status == \"cancelado\":\n        raise ErroDoPortal(\"Este agendamento ja foi cancelado.\")\n    agendamento.status = \"cancelado\"",
+   "    if agendamento.status == \"Cancelado\":\n        raise ErroDoPortal(\"Este agendamento ja foi cancelado.\")\n    agendamento.status = \"Cancelado\""
+  ],
+  [
+   "treinos/servicos.py",
+   "        \"presencas\": agendamentos.filter(status=\"presente\").count(),\n        \"faltas\": agendamentos.filter(status=\"falta\").count(),",
+   "        \"presencas\": agendamentos.filter(status=\"Concluido\").count(),\n        \"faltas\": agendamentos.filter(status=\"Faltou\").count(),"
+  ]
+ ],
+ "todos": true
+}

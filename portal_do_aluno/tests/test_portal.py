@@ -108,7 +108,7 @@ def test_cancelar_avisa_o_proximo_da_fila(aluno, turma, rede, unidade):
 
     resultado = servicos.cancelar_agendamento(aluno=aluno, agendamento=agendamento)
     agendamento.refresh_from_db()
-    assert agendamento.status == "cancelado"
+    assert agendamento.status == "Cancelado"
     assert resultado["avisado"] == "Aluno na fila"
     assert ListaDeEspera.objects.get(turma=turma, aluno=esperando).avisado is True
 
@@ -228,7 +228,7 @@ def test_agendar_e_cancelar_pelas_telas(cliente_aluno, aluno, turma):
         == 302
     )
     agendamento.refresh_from_db()
-    assert agendamento.status == "cancelado"
+    assert agendamento.status == "Cancelado"
 
 
 def test_baixar_meus_dados_pela_tela(cliente_aluno, aluno):
