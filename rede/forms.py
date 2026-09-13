@@ -128,7 +128,17 @@ class RegraDeRepasseForm(EstiloDaRedeMixin, forms.ModelForm):
 class PoliticaDaRedeForm(EstiloDaRedeMixin, forms.ModelForm):
     class Meta:
         model = PoliticaDaRede
-        exclude = ["rede", "atualizado_em"]
+        fields = [
+            "trava_planos_e_precos",
+            "trava_politica_de_desconto",
+            "teto_de_desconto",
+            "trava_regua_de_cobranca",
+            "trava_contratos",
+            "trava_cancelamento",
+            "trava_templates_de_mensagem",
+            "permitir_sobrescrita_branding",
+            "dia_de_fechamento",
+        ]
 
 
 class ComunicadoForm(EstiloDaRedeMixin, forms.ModelForm):
