@@ -1,0 +1,43 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<h2 class="mb-3 text-lg font-semibold text-slate-900">Cobranças</h2>
+<form class="mb-3 flex items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Situação
+    <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in situacoes %}<option value="{{ valor }}" {% if filtro == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Aluno</th><th class="px-4 py-3">Competência</th><th class="px-4 py-3">Vencimento</th>
+          <th class="px-4 py-3">Valor</th><th class="px-4 py-3">Situação</th><th class="px-4 py-3">Tentativas</th>
+          <th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for cobranca in cobrancas %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ cobranca.aluno.nome }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ cobranca.competencia|date:"m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ cobranca.vencimento|date:"d/m/Y" }}{% if cobranca.dias_de_atraso %} <span class="text-xs text-rose-600">{{ cobranca.dias_de_atraso }}d em atraso</span>{% endif %}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ cobranca.valor }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ cobranca.get_situacao_display }}{% if cobranca.motivo_da_recusa %} — {{ cobranca.motivo_da_recusa }}{% endif %}</td>
+        <td class="px-4 py-3 text-slate-600">{{ cobranca.tentativas }}</td>
+        <td class="px-4 py-3 text-right">
+          {% if cobranca.situacao == "prevista" or cobranca.situacao == "recusada" %}
+          <form method="post" action="{% url 'cobranca:enviar' cobranca.pk %}">{% csrf_token %}
+            <button class="text-xs text-sky-700 underline">Enviar ao banco</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma cobrança com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
