@@ -12,9 +12,19 @@ from django.conf import settings
 from django.db import models
 
 from core.models import Rede, Unidade
+from core.validadores import TAMANHO_MAXIMO_DE_IMAGEM, TAMANHO_MAXIMO_DE_VIDEO
 
 TAMANHO_DA_PARTE = 4 * 1024 * 1024
 TAMANHO_MAXIMO = 2 * 1024 * 1024 * 1024
+
+#: Limite por tipo de midia. O video de aula para em 450 MB e a capa em 5 MB -- o teto
+#: absoluto (``TAMANHO_MAXIMO``) existe para o que nao e video nem capa.
+LIMITES_POR_TIPO = {
+    "video": TAMANHO_MAXIMO_DE_VIDEO,
+    "imagem": TAMANHO_MAXIMO_DE_IMAGEM,
+    "audio": 60 * 1024 * 1024,
+    "documento": 60 * 1024 * 1024,
+}
 
 
 class ArquivoDeMidia(models.Model):
@@ -83,6 +93,11 @@ class ArquivoDeMidia(models.Model):
 
     def __str__(self) -> str:
         return f"{self.titulo} ({self.get_situacao_display()})"
+
+    @staticmethod
+    def limite_do_tipo(tipo: str) -> int:
+        """Teto de tamanho do tipo informado (video 450 MB, imagem 5 MB...)."""
+        return min(LIMITES_POR_TIPO.get(tipo, TAMANHO_MAXIMO), TAMANHO_MAXIMO)
 
     # ------------------------------------------------------------- conveniencias
     @property

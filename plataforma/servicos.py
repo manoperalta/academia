@@ -103,6 +103,60 @@ def modulo_disponivel(rede, modulo: str) -> bool:
     return assinatura.tem_modulo(modulo)
 
 
+# ------------------------------------------------------- ARMAZENAMENTO E COMPRA
+def limite_de_armazenamento(rede) -> int | None:
+    """Teto de armazenamento do tenant em **bytes** (``None`` = sem teto).
+
+    O pacote guarda o limite em GB; aqui vira byte porque e assim que o envio de midia
+    compara com o tamanho do arquivo.
+    """
+    assinatura = assinatura_da(rede)
+    if assinatura is None:
+        return None
+    gb = assinatura.limite_efetivo("armazenamento")
+    return None if not gb else int(gb) * 1024**3
+
+
+def uso_de_armazenamento(rede) -> int:
+    """Bytes ja ocupados pela rede (midia removida nao conta)."""
+    from django.db.models import Sum
+
+    from midia.models import ArquivoDeMidia
+
+    total = (
+        ArquivoDeMidia.objects.filter(rede=rede)
+        .exclude(situacao=ArquivoDeMidia.Situacao.REMOVIDO)
+        .aggregate(total=Sum("tamanho_bytes"))["total"]
+        or 0
+    )
+    return int(total)
+
+
+def espaco_disponivel(rede, bytes_novos: int = 0) -> tuple[bool, str]:
+    """Diz se o arquivo cabe no pacote (mensagem pronta quando nao cabe)."""
+    from core.validadores import tamanho_legivel
+
+    limite = limite_de_armazenamento(rede)
+    if limite is None:
+        return True, ""
+    usado = uso_de_armazenamento(rede)
+    disponivel = max(limite - usado, 0)
+    if bytes_novos and bytes_novos > disponivel:
+        pacote = getattr(assinatura_da(rede), "pacote", None)
+        nome = getattr(pacote, "nome", "atual")
+        return False, (
+            f"Espaco insuficiente no pacote {nome}: o plano guarda {tamanho_legivel(limite)}, "
+            f"ja em uso {tamanho_legivel(usado)} e este arquivo tem "
+            f"{tamanho_legivel(bytes_novos)}. Remova midia antiga ou mude de pacote."
+        )
+    return True, ""
+
+
+def compra_de_pacote_liberada() -> bool:
+    """Interruptor da plataforma (Django admin): a compra de pacote nasce **desligada**."""
+    return bool(ConfiguracaoPlataforma.obter().permitir_compra_de_pacote)
+
+
 def alertas_de_limite(rede) -> list[dict]:
     """Avisos de 80% e 95% (RF-TEN-041) calculados na hora."""
     assinatura = assinatura_da(rede)
@@ -559,6 +613,11 @@ def cadastrar_tenant_publico(
         raise CadastroError(mensagem)
     if not pacote.ativo:
         raise CadastroError("Este pacote nao esta disponivel no momento.")
+    if modalidade != "trial" and not compra_de_pacote_liberada():
+        raise CadastroError(
+            "A compra de pacote esta desabilitada nesta plataforma no momento. "
+            "Comece pelo periodo de teste ou fale com o comercial para assinar."
+        )
 
     configuracao = ConfiguracaoPlataforma.obter()
     hoje = timezone.localdate()

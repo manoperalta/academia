@@ -1,74 +1,71 @@
+"""Telas legadas de professor: apontam para o painel (fonte unica de cadastro).
+
+Escolha de projeto: o cadastro de professor e do **painel**, com o modulo ``PROFESSORES`` na matriz
+de permissoes -- administrador da rede e gestor da unidade. Antes existia aqui um ``professor_create``
+que so exigia estar logado, o que deixava qualquer aluno criar professor.
+"""
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 
-from .forms import ProfessorForm, ProfessorProfileForm
 from .models import Professor
 
 
 @login_required
 def professor_list(request):
-    professores = Professor.objects.all()
-    return render(request, "professores/professor_list.html", {"professores": professores})
+    """Atalho para a lista do painel (escopada por rede)."""
+    return redirect("gestao:professores")
 
 
 @login_required
 def professor_create(request):
-    if request.method == "POST":
-        form = ProfessorForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Professor criado com sucesso!")
-            return redirect("professor_list")
-    else:
-        form = ProfessorForm()
-    return render(
-        request, "professores/professor_form.html", {"form": form, "title": "Novo Professor"}
-    )
+    """Atalho para o cadastro do painel (la a permissao e checada)."""
+    return redirect("gestao:professor_novo")
 
 
 @login_required
 def professor_update(request, pk):
-    professor = get_object_or_404(Professor, pk=pk)
-    if request.method == "POST":
-        form = ProfessorForm(request.POST, instance=professor)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Professor atualizado com sucesso!")
-            return redirect("professor_list")
-    else:
-        form = ProfessorForm(instance=professor)
-    return render(
-        request, "professores/professor_form.html", {"form": form, "title": "Editar Professor"}
-    )
+    return redirect("gestao:professor_editar", pk=pk)
 
 
 @login_required
 def professor_delete(request, pk):
-    professor = get_object_or_404(Professor, pk=pk)
-    if request.method == "POST":
-        professor.delete()
-        messages.success(request, "Professor excluído com sucesso!")
-        return redirect("professor_list")
-    return render(request, "professores/professor_confirm_delete.html", {"professor": professor})
+    return redirect("gestao:professor_arquivar", pk=pk)
 
 
 @login_required
 def complete_profile_professor(request):
-    # Tenta obter o perfil do professor logado
-    try:
-        professor = request.user.professor_profile
-    except Professor.DoesNotExist:
-        # Se não existir, cria um
-        professor = Professor.objects.create(user=request.user, nome=request.user.username)
+    """O professor completa o proprio perfil -- mas o cadastro quem faz e o painel.
+
+    O registro nunca e criado aqui: se nao existe professor para este acesso, a pessoa e
+    encaminhada para o painel (onde admin da rede/gestor cadastram).
+    """
+    professor = getattr(request.user, "professor_profile", None)
+    if professor is None:
+        messages.error(
+            request,
+            "Nao existe cadastro de professor para este acesso. "
+            "Peca ao administrador da rede ou ao gestor da unidade para cadastrar voce no painel.",
+        )
+        return redirect("gestao:professores")
+
+    from gestao.forms import ProfessorForm as ProfessorDoPainelForm
 
     if request.method == "POST":
-        form = ProfessorProfileForm(request.POST, request.FILES, instance=professor)
+        form = ProfessorDoPainelForm(request.POST, request.FILES, instance=professor)
         if form.is_valid():
             form.save()
-            messages.success(request, "Perfil completado com sucesso!")
-            return redirect("dashboard")
+            messages.success(request, "Perfil atualizado com sucesso.")
+            return redirect("painel_do_professor:agenda")
     else:
-        form = ProfessorProfileForm(instance=professor)
+        form = ProfessorDoPainelForm(instance=professor)
 
     return render(request, "professores/complete_profile.html", {"form": form})
+
+
+def perfil_do_professor(usuario):
+    """Professor do usuario logado (ou None) -- usado por telas de perfil."""
+    if not getattr(usuario, "is_authenticated", False):
+        return None
+    return Professor.todos.filter(user=usuario).first()

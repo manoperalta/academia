@@ -59,8 +59,20 @@ class CadastroPublicoForm(EstiloPublicoMixin, forms.Form):
     )
 
     def __init__(self, *args, pacote: Pacote | None = None, **kwargs):
+        from plataforma.servicos import compra_de_pacote_liberada
+
         super().__init__(*args, **kwargs)
         self.pacote = pacote
+        self.compra_liberada = compra_de_pacote_liberada()
+        if not self.compra_liberada:
+            # Compra de pacote desabilitada na plataforma (interruptor do Django admin):
+            # o cadastro segue existindo, mas sem vender pacote -- so o periodo de teste.
+            self.fields["modalidade"].choices = [("trial", "Testar os dias de teste gratis")]
+            self.fields["modalidade"].initial = "trial"
+            self.fields["modalidade"].help_text = (
+                "A compra de pacote esta desabilitada nesta plataforma. "
+                "Fale com o comercial para assinar."
+            )
         if not self.is_bound and pacote is not None and not self.initial.get("slug"):
             self.fields["slug"].initial = ""
 

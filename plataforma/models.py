@@ -82,6 +82,12 @@ class Pacote(models.Model):
     limite_alunos = models.PositiveIntegerField("limite de alunos", null=True, blank=True)
     limite_professores = models.PositiveIntegerField("limite de professores", null=True, blank=True)
     limite_unidades = models.PositiveIntegerField("limite de unidades", null=True, blank=True)
+    limite_armazenamento_gb = models.PositiveIntegerField(
+        "limite de armazenamento (GB)",
+        null=True,
+        blank=True,
+        help_text="Teto de video e imagem da rede. Em branco = sem teto.",
+    )
     preco_mensal = models.DecimalField(
         "preco mensal", max_digits=10, decimal_places=2, default=Decimal("0")
     )
@@ -103,11 +109,15 @@ class Pacote(models.Model):
         return self.nome
 
     def limite_de(self, recurso: str) -> int | None:
-        """Limite do pacote para ``alunos``, ``professores`` ou ``unidades`` (None = ilimitado)."""
+        """Limite do pacote para ``alunos``, ``professores``, ``unidades`` ou ``armazenamento``.
+
+        ``None`` = ilimitado. O armazenamento vem em **GB**.
+        """
         return {
             "alunos": self.limite_alunos,
             "professores": self.limite_professores,
             "unidades": self.limite_unidades,
+            "armazenamento": self.limite_armazenamento_gb,
         }.get(recurso)
 
     def tem_modulo(self, modulo: str) -> bool:
@@ -142,6 +152,9 @@ class Assinatura(models.Model):
     )
     limite_unidades_custom = models.PositiveIntegerField(
         "limite de unidades (excecao)", null=True, blank=True
+    )
+    limite_armazenamento_gb_custom = models.PositiveIntegerField(
+        "limite de armazenamento (GB, excecao)", null=True, blank=True
     )
     motivo_excecao = models.TextField("motivo da excecao", blank=True)
     autorizado_por = models.ForeignKey(
@@ -193,6 +206,7 @@ class Assinatura(models.Model):
             "alunos": self.limite_alunos_custom,
             "professores": self.limite_professores_custom,
             "unidades": self.limite_unidades_custom,
+            "armazenamento": self.limite_armazenamento_gb_custom,
         }.get(recurso)
         if custom is None:
             return do_pacote
@@ -452,6 +466,14 @@ class ConfiguracaoPlataforma(models.Model):
         "juros ao dia (%)", max_digits=6, decimal_places=3, default=Decimal("0.033")
     )
     regua_ativa = models.BooleanField("regua de cobranca ativa", default=True)
+    permitir_compra_de_pacote = models.BooleanField(
+        "permitir compra de pacote no cadastro",
+        default=False,
+        help_text=(
+            "Desligado por padrao: o cadastro nao oferece compra de pacote. "
+            "Ligue aqui para habilitar a compra no cadastro e na troca de pacote."
+        ),
+    )
     atualizado_em = models.DateTimeField("atualizado em", auto_now=True)
 
     class Meta:

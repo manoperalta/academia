@@ -99,6 +99,13 @@ def test_downgrade_nao_apaga_dados_e_bloqueia_cadastro(db, rede, pacote_bronze, 
 
 
 def test_cliente_troca_pacote_pelo_painel(cliente_logado, rede, pacote_prata, pacote_ouro):
+    from plataforma.models import ConfiguracaoPlataforma
+
+    # A compra de pacote nasce desabilitada; esta tela so opera com ela habilitada.
+    configuracao = ConfiguracaoPlataforma.obter()
+    configuracao.permitir_compra_de_pacote = True
+    configuracao.save(update_fields=["permitir_compra_de_pacote"])
+
     criar_assinatura(rede, pacote_prata)
     resposta = cliente_logado.post(reverse("gestao:plano_mudar", args=[pacote_ouro.pk]))
     assert resposta.status_code == 302

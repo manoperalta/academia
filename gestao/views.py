@@ -352,7 +352,7 @@ class MeuPlanoView(PainelMixin, TemplateView):
     subtitulo = "Pacote, limites e faturas"
 
     def get_context_data(self, **kwargs):
-        from plataforma.servicos import situacao_do_tenant
+        from plataforma.servicos import compra_de_pacote_liberada, situacao_do_tenant
 
         contexto = super().get_context_data(**kwargs)
         situacao = situacao_do_tenant(self.request.rede)
@@ -364,6 +364,7 @@ class MeuPlanoView(PainelMixin, TemplateView):
             modulos_disponiveis=dict(ModuloPacote.choices),
             outros_pacotes=outros,
             aguardando_troca=getattr(situacao["assinatura"], "pacote_agendado", None),
+            compra_liberada=compra_de_pacote_liberada(),
         )
         return contexto
 
@@ -375,8 +376,19 @@ class MudarPacoteView(PainelMixin, View):
     nivel_minimo = "admin"
 
     def post(self, request, pk):
-        from plataforma.servicos import CadastroError, trocar_pacote_do_tenant
+        from plataforma.servicos import (
+            CadastroError,
+            compra_de_pacote_liberada,
+            trocar_pacote_do_tenant,
+        )
 
+        if not compra_de_pacote_liberada():
+            messages.error(
+                request,
+                "A troca de pacote esta desabilitada nesta plataforma. "
+                "Fale com o comercial para alterar o seu plano.",
+            )
+            return redirect("gestao:plano")
         pacote = get_object_or_404(Pacote, pk=pk, ativo=True)
         try:
             resultado = trocar_pacote_do_tenant(

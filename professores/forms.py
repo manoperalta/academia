@@ -17,6 +17,7 @@ class ProfessorForm(forms.ModelForm):
             "bairro_prof",
             "cep_prof",
             "status_prof",
+            "foto_prof",
         ]
         widgets = {
             "data_nasc": forms.DateInput(attrs={"type": "date", "class": "form-control"}),

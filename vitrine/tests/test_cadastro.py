@@ -56,6 +56,13 @@ def test_cadastro_trial_provisiona_a_academia(client, pacotes_publicos, dados_ca
 
 
 def test_cadastro_com_pagamento_gera_fatura_pix(client, pacotes_publicos, dados_cadastro):
+    from plataforma.models import ConfiguracaoPlataforma
+
+    # A compra no cadastro nasce desabilitada (interruptor do Django admin).
+    configuracao = ConfiguracaoPlataforma.obter()
+    configuracao.permitir_compra_de_pacote = True
+    configuracao.save(update_fields=["permitir_compra_de_pacote"])
+
     resposta = _post(client, pacotes_publicos["ouro"], dados_cadastro, modalidade="pagamento")
     assert resposta.status_code == 302
     rede = Rede.todos.get(slug="academia-forca")

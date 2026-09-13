@@ -21,9 +21,12 @@ def pacotes_publicos():
 
 class BasePublica(TemplateView):
     def get_context_data(self, **kwargs):
+        from plataforma.servicos import compra_de_pacote_liberada
+
         contexto = super().get_context_data(**kwargs)
         contexto.setdefault("modulos_pacote", list(ModuloPacote.choices))
         contexto.setdefault("configuracao", ConfiguracaoPlataforma.obter())
+        contexto["compra_liberada"] = compra_de_pacote_liberada()
         return contexto
 
 

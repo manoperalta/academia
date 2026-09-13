@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 
 from core.models import TenantModel
+from core.validadores import validar_imagem_de_capa
 
 
 class Professor(TenantModel):
@@ -30,7 +31,12 @@ class Professor(TenantModel):
     data_create_prof = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_prof = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
     foto_prof = models.ImageField(
-        upload_to="professores_fotos/", null=True, blank=True, verbose_name="Foto de Perfil"
+        upload_to="professores_fotos/",
+        null=True,
+        blank=True,
+        verbose_name="Foto de Perfil",
+        validators=[validar_imagem_de_capa],
+        help_text="png, jpeg ou webp ate 5 MB. E a foto que o aluno ve ao escolher o professor.",
     )
     status_prof = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default="Ativo", verbose_name="Status"

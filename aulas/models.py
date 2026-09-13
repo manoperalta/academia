@@ -3,6 +3,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 
 from core.models import TenantModel
+from core.validadores import EXTENSOES_DE_VIDEO, validar_imagem_de_capa, validar_video_de_aula
 
 
 class Aulas(TenantModel):
@@ -36,8 +37,13 @@ class Aulas(TenantModel):
         blank=True,
         verbose_name="Arquivo de Vídeo",
         validators=[
-            FileExtensionValidator(allowed_extensions=["mp4", "webm", "ogg", "mkv", "mov", "avi"])
+            FileExtensionValidator(allowed_extensions=list(EXTENSOES_DE_VIDEO)),
+            validar_video_de_aula,
         ],
+        help_text=(
+            "Video de atividade de ate 450 MB (mp4, webm, ogg, mkv, mov ou avi). "
+            "Para arquivo grande, use o envio em partes do painel de midia."
+        ),
     )
     # Para imagens, utilizaremos um modelo relacionado para permitir múltiplas imagens (até 5)
     professor = models.ForeignKey(
@@ -65,7 +71,11 @@ class Aulas(TenantModel):
 
 class ImagemAula(TenantModel):
     aula = models.ForeignKey(Aulas, related_name="imagens", on_delete=models.CASCADE)
-    imagem = models.ImageField(upload_to="imagens_aulas/")
+    imagem = models.ImageField(
+        upload_to="imagens_aulas/",
+        validators=[validar_imagem_de_capa],
+        help_text="Capa da aula: png, jpeg ou webp ate 5 MB.",
+    )
 
     def __str__(self):
         return f"Imagem de {self.aula.nome}"

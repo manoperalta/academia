@@ -18,6 +18,7 @@ from django.core import signing
 from django.db.models import Sum
 from django.utils import timezone
 
+from core.validadores import MIMES_DE_IMAGEM, MIMES_DE_VIDEO, tipo_real_do_arquivo
 from midia.models import (
     TAMANHO_DA_PARTE,
     TAMANHO_MAXIMO,
@@ -83,8 +84,15 @@ def iniciar_envio(
         raise ErroDeMidia("Tipo de arquivo nao suportado.")
     if tamanho <= 0:
         raise ErroDeMidia("Informe o tamanho do arquivo.")
-    if tamanho > TAMANHO_MAXIMO:
-        raise ErroDeMidia(f"Arquivo maior que o limite de {tamanho_legivel(TAMANHO_MAXIMO)}.")
+    limite = ArquivoDeMidia.limite_do_tipo(tipo)
+    if tamanho > limite:
+        rotulo = dict(ArquivoDeMidia.Tipo.choices).get(tipo, tipo)
+        raise ErroDeMidia(f"{rotulo} acima do limite de {tamanho_legivel(limite)}.")
+    from plataforma.servicos import espaco_disponivel
+
+    cabe, motivo = espaco_disponivel(rede, bytes_novos=tamanho)
+    if not cabe:
+        raise ErroDeMidia(motivo)
     if not (titulo or "").strip():
         raise ErroDeMidia("Dê um titulo para o arquivo.")
     if not mime:
@@ -174,6 +182,18 @@ def concluir_envio(arquivo: ArquivoDeMidia) -> ArquivoDeMidia:
         destino.unlink(missing_ok=True)
         _marcar_erro(arquivo, "O hash do arquivo final nao confere com o do original.")
         raise ErroDeMidia("O arquivo chegou diferente do original (hash nao confere). Recomece.")
+
+    aceitos = {"video": MIMES_DE_VIDEO, "imagem": MIMES_DE_IMAGEM}.get(arquivo.tipo)
+    tipo_real = tipo_real_do_arquivo(destino)
+    if aceitos and tipo_real and tipo_real not in aceitos:
+        destino.unlink(missing_ok=True)
+        _marcar_erro(
+            arquivo, f"O conteudo enviado e {tipo_real}, que nao e um {arquivo.tipo} valido."
+        )
+        raise ErroDeMidia(
+            f"O arquivo enviado e {tipo_real}, que nao corresponde ao tipo escolhido "
+            f"({arquivo.tipo}). Envie o arquivo correto."
+        )
 
     arquivo.caminho = str(destino.relative_to(raiz_da_midia()))
     arquivo.tamanho_bytes = gravado
