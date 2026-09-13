@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.test import Client
 from django.urls import NoReverseMatch, reverse
 
@@ -51,7 +52,9 @@ for email, nomes in PERFIS.items():
         except NoReverseMatch:
             faltando.add(nome)
             continue
-        resposta = cliente.get(caminho)
+        # no cliente de teste nao existe uWSGI para tirar o prefixo: o pedido vai sem ele
+        efetivo = caminho[len(settings.FORCE_SCRIPT_NAME):] if settings.FORCE_SCRIPT_NAME else caminho
+        resposta = cliente.get(efetivo or "/")
         if resposta.status_code >= 400:
             problemas.append(f"{email} {nome} ({caminho}) -> {resposta.status_code}")
         marca = "ok" if resposta.status_code < 400 else "PROBLEMA"
