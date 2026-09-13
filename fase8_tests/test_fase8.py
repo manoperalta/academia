@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.utils import timezone
 
 from area_do_aluno.models import CheckinDoAluno
 from area_do_aluno.servicos import ErroDeCheckin, registrar_checkin
@@ -270,10 +268,8 @@ def test_checkin_recusa_unidade_de_outra_rede_e_matricula_inativa(db, rede, unid
 def test_area_do_aluno_exige_login_e_mostra_acessibilidade(client, db, aluno):
     resposta = client.get("/aluno/")
     assert (
-        resposta.status_code == 302
-        and "/entrar" in resposta["Location"]
-        or resposta.status_code == 302
-    )
+        resposta.status_code == 302 and "/entrar" in resposta["Location"]
+    ) or resposta.status_code == 302
     client.force_login(aluno.user)
     pagina = client.get("/aluno/")
     assert pagina.status_code == 200
