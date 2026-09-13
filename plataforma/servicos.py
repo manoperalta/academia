@@ -467,6 +467,7 @@ def criar_convite_do_dono(rede, email: str, papel=Papel.ADMIN_REDE, dias: int = 
         unidade=None,
         email=email.strip().lower(),
         papel=papel,
+        papeis=[papel],
         token=ConviteEquipe.gerar_token(),
         expira_em=timezone.now() + timedelta(days=dias),
     )

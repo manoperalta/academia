@@ -317,18 +317,49 @@ class WhatsappConfigForm(EstiloMixin, forms.ModelForm):
 
 
 class ConviteForm(EstiloMixin, forms.ModelForm):
+    """Convite para a equipe -- aceita mais de um papel (rede + unidade)."""
+
+    papeis = forms.MultipleChoiceField(
+        label="Papéis",
+        widget=forms.CheckboxSelectMultiple,
+        help_text=(
+            "Marque um ou mais papéis. O administrador da rede e o gestor da "
+            "unidade podem ser a mesma pessoa."
+        ),
+    )
+
     class Meta:
         model = ConviteEquipe
-        fields = ["email", "papel", "unidade"]
-        labels = {"email": "E-mail", "papel": "Papel", "unidade": "Unidade"}
+        fields = ["email", "papeis", "unidade"]
+        labels = {"email": "E-mail", "papeis": "Papéis", "unidade": "Unidade"}
 
     def __init__(self, *args, usuario=None, unidades=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["papel"].choices = [(p.value, p.label) for p in Papel if p != Papel.ALUNO]
+        self.fields["papeis"].choices = [(p.value, p.label) for p in Papel if p != Papel.ALUNO]
+        if self.instance and self.instance.pk:
+            self.initial["papeis"] = self.instance.lista_de_papeis()
         if unidades is not None:
             self.fields["unidade"].queryset = unidades
         self.fields["unidade"].required = False
-        self.fields["unidade"].help_text = "Em branco = acesso a todas as unidades da rede."
+        self.fields["unidade"].help_text = (
+            "Em branco = acesso a todas as unidades da rede. Papéis de rede "
+            "(admin, financeiro, auditor) valem para a rede inteira."
+        )
+
+    def clean_papeis(self):
+        papeis = self.cleaned_data["papeis"]
+        if not papeis:
+            raise forms.ValidationError("Marque pelo menos um papel.")
+        return papeis
+
+    def save(self, commit=True):
+        convite = super().save(commit=False)
+        papeis = list(self.cleaned_data["papeis"])
+        convite.papeis = papeis
+        convite.papel = papeis[0]
+        if commit:
+            convite.save()
+        return convite
 
 
 class NovaContaForm(EstiloMixin, forms.Form):

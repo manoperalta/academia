@@ -37,7 +37,7 @@
         {% for convite in convites %}
           <li class="py-2">
             <p class="font-medium">{{ convite.email }}</p>
-            <p class="text-xs text-slate-500">{{ convite.get_papel_display }} · {{ convite.get_status_display }}</p>
+            <p class="text-xs text-slate-500">{{ convite.rotulos_dos_papeis }} · {{ convite.get_status_display }}</p>
             {% if pode_editar and convite.status == "pendente" %}
               <form method="post" action="{% url 'gestao:convite_cancelar' convite.pk %}" class="mt-1">
                 {% csrf_token %}<button class="text-xs text-red-600 hover:underline">Cancelar</button>

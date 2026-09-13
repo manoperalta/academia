@@ -1311,7 +1311,7 @@ class ConviteNovo(EdicaoMixin, CreateView):
             enviar_email(
                 self.request.rede,
                 f"Convite para acessar o painel de {self.request.rede.nome}",
-                f"Voce foi convidado como {convite.get_papel_display()}.\n\nAceite em: {link}"
+                f"Voce foi convidado como {convite.rotulos_dos_papeis()}.\n\nAceite em: {link}"
                 "\n\nO link expira em 7 dias.",
                 [convite.email],
             )
@@ -1322,7 +1322,7 @@ class ConviteNovo(EdicaoMixin, CreateView):
             "criar",
             "convite",
             entidade_id=convite.pk,
-            descricao=f"Convite para {convite.email} ({convite.get_papel_display()})",
+            descricao=f"Convite para {convite.email} ({convite.rotulos_dos_papeis()})",
             request=self.request,
         )
         if enviado:

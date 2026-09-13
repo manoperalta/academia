@@ -9,7 +9,7 @@ from django.db import models
 from django.utils import timezone
 
 from core.managers import SemEscopoManager, TenantManager
-from core.papeis import Papel, StatusRede, StatusUnidade, TipoUnidade
+from core.papeis import PAPEIS_DA_REDE, Papel, StatusRede, StatusUnidade, TipoUnidade
 
 
 # Estado do dominio proprio e do subdominio (RF-PLT-052)
@@ -281,6 +281,7 @@ class ConviteEquipe(models.Model):
     )
     email = models.EmailField("e-mail")
     papel = models.CharField("papel", max_length=32, choices=Papel.choices)
+    papeis = models.JSONField("papéis", default=list, blank=True)
     token = models.CharField(max_length=64, unique=True, db_index=True)
     status = models.CharField(
         max_length=16, choices=Status.choices, default=Status.PENDENTE, db_index=True
@@ -311,7 +312,34 @@ class ConviteEquipe(models.Model):
         ordering = ("-criado_em",)
 
     def __str__(self) -> str:
-        return f"{self.email} ({self.get_papel_display()})"
+        return f"{self.email} ({self.rotulos_dos_papeis()})"
+
+    def lista_de_papeis(self) -> list[str]:
+        """Papeis do convite.
+
+        A lista ``papeis`` e a fonte da verdade (um convite pode conceder mais de
+        um papel -- o mesmo CPF pode ser admin da rede e gestor de uma unidade).
+        ``papel`` continua sendo o "papel principal" por compatibilidade.
+        """
+        validos = {p.value for p in Papel}
+        escolhidos = [p for p in (self.papeis or []) if p in validos]
+        if self.papel and self.papel not in escolhidos:
+            escolhidos.insert(0, self.papel)
+        return escolhidos
+
+    def rotulos_dos_papeis(self) -> str:
+        """Papeis do convite prontos para exibicao."""
+        rotulos = {p.value: str(p.label) for p in Papel}
+        return " + ".join(rotulos.get(p, p) for p in self.lista_de_papeis())
+
+    def escopo_do_papel(self, papel: str):
+        """Unidade em que o papel vale.
+
+        Papeis de rede (admin da rede, financeiro, auditor) valem para a rede
+        inteira -- a unidade do convite fica nula para eles. Os demais ficam na
+        unidade escolhida (nula = todas as unidades, como no resto do sistema).
+        """
+        return None if papel in PAPEIS_DA_REDE else self.unidade
 
     @staticmethod
     def gerar_token() -> str:
@@ -325,19 +353,22 @@ class ConviteEquipe(models.Model):
         return self.status == self.Status.PENDENTE and not self.expirado
 
     def aceitar(self, usuario):
-        """Cria (ou ajusta) o vinculo do usuario e marca o convite como aceito."""
-        vinculo, _ = VinculoUsuario.objects.get_or_create(
-            usuario=usuario,
-            rede=self.rede,
-            unidade=self.unidade,
-            defaults={"papel": self.papel, "ativo": True},
-        )
-        if vinculo.papel != self.papel or not vinculo.ativo:
-            vinculo.papel = self.papel
-            vinculo.ativo = True
-            vinculo.save(update_fields=["papel", "ativo"])
+        """Cria (ou reativa) um vinculo por papel do convite e marca como aceito."""
+        vinculos = []
+        for papel in self.lista_de_papeis():
+            vinculo, _ = VinculoUsuario.objects.get_or_create(
+                usuario=usuario,
+                rede=self.rede,
+                unidade=self.escopo_do_papel(papel),
+                papel=papel,
+                defaults={"ativo": True},
+            )
+            if not vinculo.ativo:
+                vinculo.ativo = True
+                vinculo.save(update_fields=["ativo"])
+            vinculos.append(vinculo)
         self.status = self.Status.ACEITO
         self.aceito_em = timezone.now()
         self.aceito_por = usuario
         self.save(update_fields=["status", "aceito_em", "aceito_por"])
-        return vinculo
+        return vinculos
