@@ -495,6 +495,16 @@ def executar_backup(metodo: str = "auto", agora=None) -> RegistroBackup:
     return registro
 
 
+def backup_vai_rodar_hoje(agora=None) -> bool:
+    """Evita dois backups no mesmo dia (a rotina roda de hora em hora)."""
+    hoje = (agora or timezone.now()).date()
+    return not RegistroBackup.objects.filter(
+        tipo=RegistroBackup.Tipo.BANCO,
+        criado_em__date=hoje,
+        situacao=RegistroBackup.Situacao.OK,
+    ).exists()
+
+
 def verificar_backup(registro: RegistroBackup | None = None) -> dict:
     """Restauracao de teste: confere arquivo, hash e conteudo legivel (RNF-005)."""
     registro = (

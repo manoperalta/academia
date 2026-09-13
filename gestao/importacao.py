@@ -308,3 +308,163 @@ def aplicar(resultado: Resultado, rede) -> dict:
         ),
     )
     return resumo
+
+
+def _campos_do_modelo(modelo, desejados):
+    nomes = {campo.name for campo in modelo._meta.get_fields()}
+    return [nome for nome in desejados if nome in nomes]
+
+
+#: cabecalho aceito -> campo do modelo (por tipo de cadastro)
+MAPA_MULTIUNIDADE = {
+    "alunos": {
+        "nome": "nome",
+        "email": "email_user",
+        "telefone": "telefone_user",
+        "cpf": "cpf_cnpj_user",
+        "nascimento": "data_nasc",
+        "status": "status_user",
+        "endereco": "endereco_user",
+        "numero": "numero_end_user",
+        "bairro": "bairro_user",
+        "cep": "cep_user",
+    },
+    "professores": {
+        "nome": "nome",
+        "email": "email_prof",
+        "telefone": "telefone_prof",
+        "cpf": "cpf_cnpj_prof",
+        "nascimento": "data_nasc_prof",
+        "status": "status_prof",
+    },
+}
+SINONIMOS_MULTIUNIDADE = {
+    "email": {"email", "e-mail", "email_user", "email_prof"},
+    "telefone": {"telefone", "celular", "whatsapp", "fone"},
+    "cpf": {"cpf", "cpf_cnpj", "documento"},
+    "nascimento": {"nascimento", "data_de_nascimento", "data_nasc", "aniversario"},
+    "status": {"status", "situacao", "ativo"},
+    "endereco": {"endereco", "rua", "logradouro"},
+    "numero": {"numero", "num", "n"},
+    "bairro": {"bairro"},
+    "cep": {"cep"},
+    "nome": {"nome", "nome_completo", "aluno", "professor"},
+    "unidade": {"unidade", "unidade_nome", "filial", "codigo_da_unidade"},
+}
+
+
+def _linha_normalizada(linha: dict) -> dict:
+    return {_chave(chave or ""): (valor or "").strip() for chave, valor in linha.items()}
+
+
+def _valor_por_sinonimo(valores: dict, campo: str) -> str:
+    for apelido in SINONIMOS_MULTIUNIDADE.get(campo, {campo}):
+        if valores.get(apelido):
+            return valores[apelido]
+    return ""
+
+
+def analisar_aplicar_multiunidade(
+    conteudo: bytes,
+    rede,
+    tipo: str = "alunos",
+    atualizar_existentes: bool = False,
+    dry_run: bool = False,
+) -> dict:
+    """Importacao com coluna ``unidade`` e relatorio de conferencia por unidade (RF-RED-023).
+
+    Aceita o nome ou o codigo da unidade em cada linha; o relatorio agrupa o resultado
+    por unidade, para o cliente conferir antes de considerar a migracao concluida.
+    """
+    from core.models import Unidade
+    from usuarios.models import Usuario
+
+    texto = decodificar(conteudo)
+    delimitador = detectar_delimitador(texto)
+    linhas = [
+        _linha_normalizada(linha)
+        for linha in csv.DictReader(io.StringIO(texto), delimiter=delimitador)
+        if any((valor or "").strip() for valor in linha.values())
+    ]
+    if not linhas:
+        return {"ok": False, "mensagem": "Arquivo vazio ou sem linhas de dados.", "por_unidade": {}}
+
+    if not _valor_por_sinonimo(linhas[0], "unidade") and "unidade" not in linhas[0]:
+        return {
+            "ok": False,
+            "por_unidade": {},
+            "mensagem": "Para importar em varias unidades, inclua a coluna 'unidade' "
+            "(nome ou codigo da unidade).",
+        }
+
+    modelo = Usuario if tipo == "alunos" else _modelo_de_professores()
+    mapa = MAPA_MULTIUNIDADE.get(tipo, MAPA_MULTIUNIDADE["alunos"])
+    campos_validos = set(_campos_do_modelo(modelo, list(mapa.values())))
+    unidades = {
+        unidade.nome.strip().lower(): unidade for unidade in Unidade.objects.filter(rede=rede)
+    }
+    unidades.update(
+        {
+            (unidade.codigo or "").strip().lower(): unidade
+            for unidade in Unidade.objects.filter(rede=rede)
+            if unidade.codigo
+        }
+    )
+
+    por_unidade: dict[str, dict] = {}
+    criados = 0
+    for numero, valores in enumerate(linhas, start=2):
+        rotulo = _valor_por_sinonimo(valores, "unidade")
+        relatorio = por_unidade.setdefault(rotulo or "(sem unidade)", {"criados": 0, "erros": []})
+        unidade = unidades.get(rotulo.lower())
+        if unidade is None:
+            relatorio["erros"].append(f"linha {numero}: unidade {rotulo!r} nao encontrada na rede")
+            continue
+
+        dados: dict = {}
+        for campo in mapa:
+            valor = _valor_por_sinonimo(valores, campo)
+            if not valor:
+                continue
+            if campo == "nascimento":
+                valor = _data(valor)
+                if valor is None:
+                    relatorio["erros"].append(f"linha {numero}: data de nascimento invalida")
+                    continue
+            if campo == "status":
+                valor = _status(valor, "Ativo" if tipo == "alunos" else "Ativo")
+            dados[campo] = valor
+
+        if not dados.get("nome"):
+            relatorio["erros"].append(f"linha {numero}: sem nome")
+            continue
+        dados = {campo: valor for campo, valor in dados.items() if campo in campos_validos}
+        if dry_run:
+            relatorio["criados"] += 1
+            criados += 1
+            continue
+        try:
+            modelo.todos.create(rede=rede, unidade=unidade, **dados)
+        except Exception as erro:
+            relatorio["erros"].append(f"linha {numero}: {str(erro)[:160]}")
+            continue
+        relatorio["criados"] += 1
+        criados += 1
+
+    total_erros = sum(len(dados["erros"]) for dados in por_unidade.values())
+    return {
+        "ok": criados > 0,
+        "tipo": tipo,
+        "criados": criados,
+        "atualizados": 0,
+        "erros": total_erros,
+        "por_unidade": por_unidade,
+        "mensagem": f"{criados} registro(s) em {len(por_unidade)} unidade(s); "
+        f"{total_erros} linha(s) com problema.",
+    }
+
+
+def _modelo_de_professores():
+    from professores.models import Professor
+
+    return Professor

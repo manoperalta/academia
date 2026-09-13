@@ -48,6 +48,7 @@ TERCEIROS = [
 
 LOCAIS = [
     "core",
+    "rede",
     "governanca",
     "vitrine",
     "plataforma",

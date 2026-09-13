@@ -126,6 +126,7 @@ def modelos_sem_rede_em_modelos():
             "core",
             "governanca",
             "plataforma",
+            "rede",
         }:
             continue
         pendentes.append(rotulo)

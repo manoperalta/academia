@@ -26,6 +26,13 @@ class Modulo(models.TextChoices):
     PRIVACIDADE = "privacidade", "Privacidade e LGPD"
     DOMINIO = "dominio", "Domínio e endereço"
     AUDITORIA = "auditoria", "Auditoria"
+    REDE = "rede", "Painel da rede"
+    UNIDADES = "unidades", "Unidades"
+    REPASSES = "repasses", "Repasses e royalties"
+    GOVERNANCA = "governanca", "Governança da rede"
+    COMUNICADOS = "comunicados", "Comunicados"
+    APROVACOES = "aprovacoes", "Alçadas e aprovações"
+    CATALOGO = "catalogo", "Catálogo da rede"
 
 
 NIVEIS: dict[str | None, int] = {None: 0, "ver": 1, "editar": 2, "admin": 3}
@@ -51,6 +58,12 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.PLANO: "admin",
         Modulo.AUDITORIA: "ver",
         Modulo.PRIVACIDADE: "ver",
+        Modulo.REDE: "ver",
+        Modulo.UNIDADES: "ver",
+        Modulo.REPASSES: "ver",
+        Modulo.COMUNICADOS: "editar",
+        Modulo.APROVACOES: "editar",
+        Modulo.CATALOGO: "editar",
     },
     Papel.RECEPCAO: {
         Modulo.VISAO_GERAL: "ver",
@@ -59,6 +72,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.PROFESSORES: "ver",
         Modulo.AULAS: "ver",
         Modulo.FINANCEIRO: "ver",
+        Modulo.COMUNICADOS: "ver",
     },
     Papel.PROFESSOR: {
         Modulo.VISAO_GERAL: "ver",
@@ -74,6 +88,8 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.PLANO: "ver",
         Modulo.RELATORIOS: "ver",
         Modulo.AUDITORIA: "ver",
+        Modulo.REPASSES: "editar",
+        Modulo.COMUNICADOS: "ver",
     },
     Papel.AUDITOR_REDE: SO_LEITURA,
     Papel.ALUNO: {},

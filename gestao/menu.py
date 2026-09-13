@@ -16,5 +16,12 @@ ROTAS: dict[str, str] = {
     Modulo.PLANO: "gestao:plano",
     Modulo.PRIVACIDADE: "gestao:privacidade",
     Modulo.DOMINIO: "gestao:dominio",
+    Modulo.REDE: "rede:painel",
+    Modulo.UNIDADES: "rede:unidades",
+    Modulo.REPASSES: "rede:repasses",
+    Modulo.GOVERNANCA: "rede:governanca",
+    Modulo.COMUNICADOS: "rede:comunicados",
+    Modulo.APROVACOES: "rede:aprovacoes",
+    Modulo.CATALOGO: "rede:catalogo",
     Modulo.AUDITORIA: "gestao:auditoria",
 }

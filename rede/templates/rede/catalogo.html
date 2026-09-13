@@ -1,0 +1,32 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Distribuir aula/treino da rede</h2>
+    <p class="mt-1 text-xs text-slate-500">O conteúdo nasce na rede e é copiado para as unidades escolhidas (RF-RED-006).</p>
+    <form method="post" class="mt-3 space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="mb-1 block text-xs text-slate-500">{{ form.referencia.label }}</label>
+        {{ form.referencia }}
+        {% for erro in form.referencia.errors %}<p class="text-xs text-red-600">{{ erro }}</p>{% endfor %}
+      </div>
+      <div>
+        <label class="mb-1 block text-xs text-slate-500">{{ form.unidades.label }}</label>
+        <div class="grid grid-cols-2 gap-1 text-sm">{{ form.unidades }}</div>
+      </div>
+      <button class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white">Distribuir</button>
+    </form>
+  </div>
+  <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Últimas distribuições</h2>
+    <ul class="mt-3 space-y-2 text-xs text-slate-600">
+      {% for item in distribuicoes %}
+        <li class="rounded-lg border border-slate-100 px-3 py-2">{{ item.referencia }}
+          <span class="block text-slate-400">{{ item.criado_em|date:"d/m H:i" }} · até {{ item.unidades|length }} unidade(s)</span>
+        </li>
+      {% empty %}<li class="text-slate-400">Nenhuma distribuição ainda.</li>{% endfor %}
+    </ul>
+  </aside>
+</div>
+{% endblock %}

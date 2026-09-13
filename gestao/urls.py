@@ -1,12 +1,13 @@
 """Rotas do painel do tenant (/gestao/)."""
 
-from django.urls import path
+from django.urls import include, path
 
 from gestao import views
 
 app_name = "gestao"
 
 urlpatterns = [
+    path("rede/", include("rede.urls")),
     path("", views.VisaoGeralView.as_view(), name="visao_geral"),
     path("configuracao/", views.OnboardingView.as_view(), name="onboarding"),
     path("plano/", views.MeuPlanoView.as_view(), name="plano"),

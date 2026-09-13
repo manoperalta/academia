@@ -23,6 +23,7 @@ from academia import views as academia_views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("plataforma/", include("plataforma.urls")),
+    path("gestao/rede/", include("rede.urls")),
     path("gestao/", include("gestao.urls")),
     path('api/', include('api.urls')),
     path('accounts/', include('accounts.urls')),

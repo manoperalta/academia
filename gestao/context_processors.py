@@ -31,6 +31,13 @@ def menu_do_painel(request):
 ICONES = {
     "privacidade": "🛡️",
     "dominio": "🌐",
+    "rede": "🏬",
+    "unidades": "🏢",
+    "repasses": "💸",
+    "governanca": "⚖️",
+    "comunicados": "📣",
+    "aprovacoes": "✅",
+    "catalogo": "📚",
     Modulo.VISAO_GERAL: "📊",
     Modulo.ALUNOS: "🙋",
     Modulo.PROFESSORES: "🧑‍🏫",

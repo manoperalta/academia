@@ -9,6 +9,7 @@ alertas de backup).
 from __future__ import annotations
 
 import hashlib
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
@@ -329,3 +330,57 @@ class CodigoRecuperacao(models.Model):
     def gerar_hash(codigo: str) -> str:
         chave = (getattr(settings, "SECRET_KEY", "") or "sem-chave").encode()
         return hashlib.pbkdf2_hmac("sha256", codigo.encode(), chave, 100_000).hex()
+
+
+class RotinaAgendada(models.Model):
+    """Rotina periodica com o resultado da ultima execucao (fase 6/7: jobs)."""
+
+    class Periodicidade(models.TextChoices):
+        HORA = "hora", "De hora em hora"
+        DIA = "dia", "Diaria"
+        SEMANA = "semana", "Semanal"
+        MES = "mes", "Mensal"
+
+    class Situacao(models.TextChoices):
+        OK = "ok", "Concluida"
+        FALHOU = "falhou", "Falhou"
+        PULADA = "pulada", "Pulada"
+
+    nome = models.CharField("nome", max_length=60, unique=True)
+    descricao = models.CharField("descricao", max_length=200, blank=True)
+    periodicidade = models.CharField(
+        "periodicidade", max_length=10, choices=Periodicidade.choices, default=Periodicidade.DIA
+    )
+    ativa = models.BooleanField("ativa", default=True)
+    executa_dry_run = models.BooleanField(
+        "executa em modo simulacao", default=False, help_text="Roda a rotina sem gravar nada."
+    )
+    ultima_execucao = models.DateTimeField("ultima execucao", null=True, blank=True)
+    ultima_situacao = models.CharField(
+        "situacao da ultima execucao", max_length=10, choices=Situacao.choices, blank=True
+    )
+    ultimo_resultado = models.TextField("resultado da ultima execucao", blank=True)
+    duracao_ms = models.PositiveIntegerField("duracao (ms)", default=0)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "rotina agendada"
+        verbose_name_plural = "rotinas agendadas"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return self.nome
+
+    @property
+    def atrasada(self) -> bool:
+        if self.ultima_execucao is None:
+            return True
+        limites = {
+            "hora": timedelta(hours=2),
+            "dia": timedelta(days=1, hours=2),
+            "semana": timedelta(days=8),
+            "mes": timedelta(days=32),
+        }
+        return timezone.now() - self.ultima_execucao > limites.get(
+            self.periodicidade, timedelta(days=2)
+        )

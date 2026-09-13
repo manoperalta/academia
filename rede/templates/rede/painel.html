@@ -1,0 +1,111 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+  <form method="get" class="flex flex-wrap items-end gap-3">
+    <div><label class="mb-1 block text-xs text-slate-500">Início</label>
+      <input type="date" name="inicio" value="{{ inicio|date:'Y-m-d' }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm"></div>
+    <div><label class="mb-1 block text-xs text-slate-500">Fim</label>
+      <input type="date" name="fim" value="{{ fim|date:'Y-m-d' }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm"></div>
+    <button class="rounded-lg bg-slate-800 px-4 py-2 text-sm text-white">Aplicar</button>
+  </form>
+  <div class="ml-auto flex gap-2 text-xs">
+    <a href="{% url 'rede:metas' %}" class="rounded-lg border border-slate-300 px-3 py-2">Metas</a>
+    <a href="{% url 'rede:repasses' %}" class="rounded-lg border border-slate-300 px-3 py-2">Repasses</a>
+    <a href="{% url 'rede:regras' %}" class="rounded-lg border border-slate-300 px-3 py-2">Regras de repasse</a>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-xs text-slate-500">Receita recebida</p>
+    <p class="text-2xl font-semibold text-slate-900">R$ {{ consolidado.recebido }}</p>
+    <p class="text-xs text-slate-400">{{ consolidado.unidades }} unidade(s)</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-xs text-slate-500">A receber</p>
+    <p class="text-2xl font-semibold text-slate-900">R$ {{ consolidado.em_aberto }}</p>
+    <p class="text-xs text-slate-400">inadimplência embutida</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-xs text-slate-500">Despesas</p>
+    <p class="text-2xl font-semibold text-slate-900">R$ {{ consolidado.despesas }}</p>
+    <p class="text-xs text-slate-400">resultado: R$ {{ consolidado.resultado }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <p class="text-xs text-slate-500">Repasses do período</p>
+    <p class="text-2xl font-semibold text-slate-900">R$ {{ consolidado.repasses }}</p>
+    <p class="text-xs text-slate-400">ticket médio: R$ {{ consolidado.ticket_medio }}</p>
+  </div>
+</div>
+
+<div class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+  <h2 class="text-sm font-semibold text-slate-900">Comparativo entre unidades</h2>
+  <p class="mt-1 text-xs text-slate-500">Ranking por receita recebida no período.</p>
+  <div class="mt-3 overflow-x-auto">
+    <table class="min-w-full text-xs">
+      <thead class="bg-slate-50 text-left uppercase text-slate-500">
+        <tr><th class="px-3 py-2">#</th><th>Unidade</th><th>Tipo</th><th>Recebido</th><th>A receber</th>
+        <th>Inadimpl. %</th><th>Alunos</th><th>Novos</th><th>Ticket</th><th>Repasse</th><th>Despesas</th></tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for linha in consolidado.comparativo %}
+          <tr>
+            <td class="px-3 py-2">{{ linha.posicao }}º</td>
+            <td class="font-medium text-slate-800">{{ linha.unidade.nome }}</td>
+            <td>{{ linha.tipo }}</td>
+            <td>R$ {{ linha.recebido }}</td>
+            <td>R$ {{ linha.em_aberto }}</td>
+            <td>{{ linha.inadimplencia }}%</td>
+            <td>{{ linha.alunos_ativos }}</td>
+            <td>{{ linha.alunos_novos }}</td>
+            <td>R$ {{ linha.ticket_medio }}</td>
+            <td>R$ {{ linha.repasse }}</td>
+            <td>R$ {{ linha.despesas }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="11" class="px-3 py-3 text-slate-500">Nenhuma unidade cadastrada ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Metas do período</h2>
+    <ul class="mt-3 space-y-2 text-xs">
+      {% for meta in metas %}
+        <li class="rounded-lg border border-slate-100 px-3 py-2">
+          <p class="font-medium text-slate-700">{{ meta.get_indicador_display }} · {{ meta.unidade.nome|default:"Rede" }}</p>
+          <p class="text-slate-500">R$ {{ meta.realizado }} de R$ {{ meta.alvo }} ({{ meta.atingimento }}%)</p>
+          <div class="mt-1 h-1.5 rounded bg-slate-100"><div class="h-1.5 rounded {% if meta.atingida %}bg-emerald-500{% else %}bg-amber-500{% endif %}" style="width: {{ meta.atingimento }}%"></div></div>
+        </li>
+      {% empty %}
+        <li class="text-slate-500">Sem metas no período. <a class="underline" href="{% url 'rede:meta_criar' %}">Criar meta</a>.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Pendências</h2>
+    <ul class="mt-3 space-y-2 text-xs text-slate-600">
+      <li>Repasses atrasados: <strong>{{ repasses_atrasados|length }}</strong></li>
+      <li>Aprovações pendentes: <strong>{{ aprovacoes_pendentes|length }}</strong>
+        {% if aprovacoes_pendentes %}<a class="ml-1 underline" href="{% url 'rede:aprovacoes' %}">ver</a>{% endif %}</li>
+    </ul>
+    {% if repasses_atrasados %}
+      <ul class="mt-3 space-y-1 text-xs text-red-700">
+        {% for repasse in repasses_atrasados %}<li>• {{ repasse.unidade.nome }} venceu em {{ repasse.vencimento|date:"d/m" }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Governança em vigor</h2>
+    <ul class="mt-3 space-y-1 text-xs text-slate-600">
+      {% for campo, travado in travas.items %}
+        <li>{% if travado %}🔒{% else %}🔓{% endif %} {{ campo|capfirst }}</li>
+      {% endfor %}
+    </ul>
+    <a href="{% url 'rede:governanca' %}" class="mt-3 inline-block text-xs text-emerald-700 underline">Ajustar política</a>
+  </div>
+</div>
+{% endblock %}
