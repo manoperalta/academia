@@ -36,7 +36,7 @@ def professor_do_usuario(usuario, rede=None) -> Professor | None:
 
 def turmas_do_professor(professor, de: date | None = None, ate: date | None = None):
     """Turmas em que ele e responsavel (ou substituto registrado)."""
-    consulta = Painel.objects.filter(
+    consulta = Painel.todos.filter(
         responsavel=professor.user, arquivado_em__isnull=True
     ).select_related("unidade")
     if de is not None:
@@ -49,7 +49,7 @@ def turmas_do_professor(professor, de: date | None = None, ate: date | None = No
 def agenda_do_dia(professor, dia: date | None = None) -> dict:
     dia = dia or timezone.localdate()
     turmas = list(turmas_do_professor(professor, de=dia, ate=dia))
-    agendamentos = Agendamento.objects.filter(
+    agendamentos = Agendamento.todos.filter(
         painel__in=turmas, arquivado_em__isnull=True
     ).select_related("aluno", "painel")
     por_turma = {}
@@ -101,7 +101,7 @@ def chamada_do_dia(*, turma: Painel, professor: Professor, presencas: dict) -> d
     if turma.responsavel_id != professor.user_id:
         raise ErroDoProfessor("Esta turma nao e sua.")
     atualizados = 0
-    for agendamento in Agendamento.objects.filter(painel=turma, arquivado_em__isnull=True):
+    for agendamento in Agendamento.todos.filter(painel=turma, arquivado_em__isnull=True):
         situacao = presencas.get(str(agendamento.pk))
         if situacao in SITUACOES_DE_PRESENCA:
             agendamento.status = situacao
@@ -147,7 +147,7 @@ def ocorrencias_da_turma(turma: Painel, limite: int = 50):
 # ------------------------------------------------------------------ alunos
 def meus_alunos(professor, limite: int = 200):
     """Alunos que aparecem nas minhas turmas ou nos treinos que prescrevi."""
-    das_turmas = Agendamento.objects.filter(
+    das_turmas = Agendamento.todos.filter(
         painel__responsavel=professor.user, arquivado_em__isnull=True
     ).values_list("aluno_id", flat=True)
     dos_treinos = Treino.objects.filter(professor=professor).values_list(
@@ -159,7 +159,7 @@ def meus_alunos(professor, limite: int = 200):
 
 def frequencia_do_aluno(aluno, dias: int = 90) -> dict:
     desde = timezone.now() - timedelta(days=dias)
-    agendamentos = Agendamento.objects.filter(
+    agendamentos = Agendamento.todos.filter(
         aluno=aluno.user, data_agendamento__gte=desde, arquivado_em__isnull=True
     )
     total = agendamentos.count()

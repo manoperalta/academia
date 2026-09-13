@@ -68,7 +68,7 @@ class MinhaTurmaView(ContextoDoProfessorMixin, DetailView):
     context_object_name = "turma"
 
     def get_queryset(self):
-        return Painel.objects.filter(
+        return Painel.todos.filter(
             pk=self.kwargs["pk"],
             responsavel=self.professor.user,
             rede=self.professor.rede,
@@ -79,7 +79,7 @@ class MinhaTurmaView(ContextoDoProfessorMixin, DetailView):
         contexto = super().get_context_data(**kwargs)
         turma = self.object
         contexto["aulas"] = [item.aula for item in turma.itens.select_related("aula")]
-        contexto["agendamentos"] = Agendamento.objects.filter(
+        contexto["agendamentos"] = Agendamento.todos.filter(
             painel=turma, arquivado_em__isnull=True
         ).select_related("aluno")
         contexto["ocorrencias"] = servicos.ocorrencias_da_turma(turma)
@@ -93,7 +93,7 @@ class ChamadaView(ContextoDoProfessorMixin, View):
 
     def post(self, request, pk: int, *args, **kwargs):
         turma = get_object_or_404(
-            Painel.objects.filter(
+            Painel.todos.filter(
                 pk=pk,
                 responsavel=self.professor.user,
                 rede=self.professor.rede,
@@ -121,7 +121,7 @@ class ChamadaView(ContextoDoProfessorMixin, View):
 class OcorrenciaView(ContextoDoProfessorMixin, View):
     def post(self, request, pk: int, *args, **kwargs):
         turma = get_object_or_404(
-            Painel.objects.filter(
+            Painel.todos.filter(
                 pk=pk,
                 responsavel=self.professor.user,
                 rede=self.professor.rede,
@@ -150,7 +150,7 @@ class OcorrenciaView(ContextoDoProfessorMixin, View):
 class SubstituicaoView(ContextoDoProfessorMixin, View):
     def post(self, request, pk: int, *args, **kwargs):
         turma = get_object_or_404(
-            Painel.objects.filter(
+            Painel.todos.filter(
                 pk=pk,
                 responsavel=self.professor.user,
                 rede=self.professor.rede,

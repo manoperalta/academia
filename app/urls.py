@@ -51,6 +51,7 @@ urlpatterns = [
     path("", include("design.urls")),
     path("", include("treinos.urls")),
     path("", include("painel_do_professor.urls")),
+    path("", include("portal_do_aluno.urls")),
     path("", include("documentos.urls")),
     path("", include("governanca.urls")),
     path("academia/", academia_views.index, name="index"),
