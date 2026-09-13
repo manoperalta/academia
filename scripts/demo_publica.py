@@ -171,7 +171,15 @@ def povoar() -> None:
             restricoes="coluna" if indice == 3 else "",
             obs="Ficha criada para a demonstracao.",
         )
-    aluno = Usuario.todos.get(user=login_aluno)
+    # o aluno que loga no PWA tambem e uma ficha de aluno (a que tem treino e avaliacao)
+    aluno = Usuario.todos.create(
+        rede=rede, unidade=centro, user=login_aluno, nome="Aluno Demonstracao",
+        status_user="Ativo", email_user=f"aluno@{DOMINIO}",
+    )
+    FichaSaude.objects.create(
+        rede=rede, unidade=centro, usuario=aluno, altura=Decimal("1.74"), peso=Decimal("79.80"),
+        restricoes="", obs="Aluno de demonstracao (login do PWA).",
+    )
     print(f"[alunos] {Usuario.todos.filter(rede=rede).count()} alunos com ficha de saude")
 
     mensal = Plano.objects.create(
@@ -238,7 +246,7 @@ def povoar() -> None:
         aluno=aluno,
         professor=professor,
         nome="Treino A - adaptacao",
-        objetivo="Condicionamento geral",
+        objetivo="condicionamento",
         inicio=hoje - timedelta(days=20),
         situacao="ativo",
     )

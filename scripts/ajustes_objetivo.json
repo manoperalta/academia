@@ -1,0 +1,10 @@
+{
+ "todos": true,
+ "ajustes": [
+  [
+   "scripts/demo_publica.py",
+   "objetivo=\"Condicionamento geral\"",
+   "objetivo=\"condicionamento\""
+  ]
+ ]
+}
