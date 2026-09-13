@@ -23,3 +23,6 @@ _*.tgz
 # Uploads e midia gerados em execucao ficam no servidor, nao no repositorio
 # (o acervo de exemplo ja rastreado continua versionado)
 media/*/
+
+# Pasta legada dos CSV de tarefa (o padrao passou a ser MEDIA_ROOT/tarefas)
+/tarefas/
