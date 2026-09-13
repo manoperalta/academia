@@ -1,4 +1,5 @@
 """Mixins do painel da plataforma e bloqueio por modulo do pacote."""
+
 from __future__ import annotations
 
 from django.contrib.auth.mixins import LoginRequiredMixin

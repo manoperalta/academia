@@ -35,7 +35,8 @@ urlpatterns = [
     path('financeiro/', include('financeiro.urls')),
     path('relatorios/', include('relatorios.urls')),
     path('notificacoes/', include('notificacoes.urls')),
-    path('', academia_views.index, name='index'),
+    path("", include("vitrine.urls")),
+    path("academia/", academia_views.index, name="index"),
 ]
 
 # Serve media files in development

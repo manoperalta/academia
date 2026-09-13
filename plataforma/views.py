@@ -1,4 +1,5 @@
 """Painel da plataforma (SafeStack): tenants, pacotes, cobranca, regua e suporte."""
+
 from __future__ import annotations
 
 import csv
@@ -18,19 +19,36 @@ from api.auditoria import registrar
 from core.models import Rede
 from core.papeis import StatusRede
 from plataforma.forms import (
-    ConfiguracaoPlataformaForm, FaturaManualForm, ImpersonarForm, PacoteForm, TenantEdicaoForm,
+    ConfiguracaoPlataformaForm,
+    FaturaManualForm,
+    ImpersonarForm,
+    PacoteForm,
+    TenantEdicaoForm,
     TenantForm,
 )
 from plataforma.mixins import PlataformaMixin
 from plataforma.models import (
-    Assinatura, ConfiguracaoPlataforma, EventoCobranca, EventoGateway, Fatura, Impersonacao,
-    Pacote, StatusFatura,
-)
-from plataforma.servicos import (
-    assinatura_da, emitir_cobranca_da_fatura, gerar_fatura, impersonar,
-    metricas, processar_evento_gateway, provisionar_tenant, situacao_do_tenant, uso_do_tenant,
+    Assinatura,
+    ConfiguracaoPlataforma,
+    EventoCobranca,
+    EventoGateway,
+    Fatura,
+    Impersonacao,
+    Pacote,
+    StatusFatura,
 )
 from plataforma.servicos import _reativar_rede as reativar_rede
+from plataforma.servicos import (
+    assinatura_da,
+    emitir_cobranca_da_fatura,
+    gerar_fatura,
+    impersonar,
+    metricas,
+    processar_evento_gateway,
+    provisionar_tenant,
+    situacao_do_tenant,
+    uso_do_tenant,
+)
 
 
 # ------------------------------------------------------------------ METRICAS
@@ -46,10 +64,13 @@ class MetricasView(PlataformaMixin, TemplateView):
             dados,
             faturas_abertas=Fatura.objects.filter(
                 status__in=[StatusFatura.ABERTA, StatusFatura.VENCIDA]
-            ).select_related("rede").order_by("vencimento")[:10],
+            )
+            .select_related("rede")
+            .order_by("vencimento")[:10],
             ultimos_eventos=EventoCobranca.objects.select_related("rede")[:8],
             proximos_vencimentos=Assinatura.objects.select_related("rede", "pacote")
-            .filter(cancelada_em__isnull=True).order_by("renovacao_em")[:8],
+            .filter(cancelada_em__isnull=True)
+            .order_by("renovacao_em")[:8],
             modo_simulado=ConfiguracaoPlataforma.obter().gateway_em_modo_simulado,
         )
         return contexto
@@ -83,14 +104,16 @@ class TenantsView(PlataformaMixin, ListView):
         linhas = []
         for rede in contexto["object_list"]:
             assinatura = assinatura_da(rede)
-            linhas.append({
-                "rede": rede,
-                "assinatura": assinatura,
-                "pacote": getattr(assinatura, "pacote", None),
-                "uso": uso_do_tenant(rede),
-                "situacao": situacao_do_tenant(rede),
-                "mrr": assinatura.valor_do_ciclo() if assinatura else 0,
-            })
+            linhas.append(
+                {
+                    "rede": rede,
+                    "assinatura": assinatura,
+                    "pacote": getattr(assinatura, "pacote", None),
+                    "uso": uso_do_tenant(rede),
+                    "situacao": situacao_do_tenant(rede),
+                    "mrr": assinatura.valor_do_ciclo() if assinatura else 0,
+                }
+            )
         contexto.update(
             linhas=linhas,
             pacotes=Pacote.objects.all(),
@@ -106,17 +129,30 @@ class TenantCriarView(PlataformaMixin, View):
     titulo = "Novo cliente"
 
     def get(self, request):
-        return render(request, "plataforma/tenant_form.html", {
-            "plataforma": True, "titulo": self.titulo, "form": TenantForm(),
-            "impersonacao": None,
-        })
+        return render(
+            request,
+            "plataforma/tenant_form.html",
+            {
+                "plataforma": True,
+                "titulo": self.titulo,
+                "form": TenantForm(),
+                "impersonacao": None,
+            },
+        )
 
     def post(self, request):
         form = TenantForm(request.POST)
         if not form.is_valid():
-            return render(request, "plataforma/tenant_form.html", {
-                "plataforma": True, "titulo": self.titulo, "form": form, "impersonacao": None,
-            })
+            return render(
+                request,
+                "plataforma/tenant_form.html",
+                {
+                    "plataforma": True,
+                    "titulo": self.titulo,
+                    "form": form,
+                    "impersonacao": None,
+                },
+            )
         dados = form.cleaned_data
         dono = None
         if dados.get("dono_email"):
@@ -128,13 +164,24 @@ class TenantCriarView(PlataformaMixin, View):
                     "criado depois por convite.",
                 )
         rede, _assinatura = provisionar_tenant(
-            nome=dados["nome"], slug=dados["slug"], pacote=dados["pacote"], ciclo=dados["ciclo"],
-            cnpj=dados.get("cnpj", ""), email=dados.get("email", ""),
-            telefone=dados.get("telefone", ""), dominio=dados.get("dominio", ""),
-            trial=dados.get("trial", False), usuario_dono=dono,
+            nome=dados["nome"],
+            slug=dados["slug"],
+            pacote=dados["pacote"],
+            ciclo=dados["ciclo"],
+            cnpj=dados.get("cnpj", ""),
+            email=dados.get("email", ""),
+            telefone=dados.get("telefone", ""),
+            dominio=dados.get("dominio", ""),
+            trial=dados.get("trial", False),
+            usuario_dono=dono,
         )
-        registrar("criar", "rede", entidade_id=rede.pk,
-                  descricao=f"Tenant {rede.nome} criado pelo painel da plataforma", request=request)
+        registrar(
+            "criar",
+            "rede",
+            entidade_id=rede.pk,
+            descricao=f"Tenant {rede.nome} criado pelo painel da plataforma",
+            request=request,
+        )
         messages.success(request, f"Cliente {rede.nome} criado.")
         return redirect("plataforma:tenant_ficha", pk=rede.pk)
 
@@ -167,14 +214,23 @@ class TenantEditarView(PlataformaMixin, View):
     titulo = "Editar cliente"
 
     def _contexto(self, request, rede, form):
-        return {"plataforma": True, "titulo": self.titulo, "subtitulo": str(rede), "rede": rede,
-                "form": form, "impersonacao": None}
+        return {
+            "plataforma": True,
+            "titulo": self.titulo,
+            "subtitulo": str(rede),
+            "rede": rede,
+            "form": form,
+            "impersonacao": None,
+        }
 
     def _form(self, rede, dados=None):
         assinatura = assinatura_da(rede)
         inicial = {
-            "nome": rede.nome, "cnpj": rede.cnpj, "email_responsavel": rede.email_responsavel,
-            "telefone": rede.telefone, "dominio": rede.dominio,
+            "nome": rede.nome,
+            "cnpj": rede.cnpj,
+            "email_responsavel": rede.email_responsavel,
+            "telefone": rede.telefone,
+            "dominio": rede.dominio,
             "observacoes_internas": rede.observacoes_internas,
             "pacote": getattr(assinatura, "pacote_id", None),
             "ciclo": getattr(assinatura, "ciclo", "mensal"),
@@ -187,13 +243,17 @@ class TenantEditarView(PlataformaMixin, View):
 
     def get(self, request, pk):
         rede = get_object_or_404(Rede.todos, pk=pk)
-        return render(request, "plataforma/tenant_form.html", self._contexto(request, rede, self._form(rede)))
+        return render(
+            request, "plataforma/tenant_form.html", self._contexto(request, rede, self._form(rede))
+        )
 
     def post(self, request, pk):
         rede = get_object_or_404(Rede.todos, pk=pk)
         form = self._form(rede, request.POST)
         if not form.is_valid():
-            return render(request, "plataforma/tenant_form.html", self._contexto(request, rede, form))
+            return render(
+                request, "plataforma/tenant_form.html", self._contexto(request, rede, form)
+            )
         dados = form.cleaned_data
         rede.nome = dados["nome"]
         rede.cnpj = dados.get("cnpj", "")
@@ -211,12 +271,22 @@ class TenantEditarView(PlataformaMixin, View):
             assinatura.limite_professores_custom = dados.get("limite_professores_custom")
             assinatura.limite_unidades_custom = dados.get("limite_unidades_custom")
             assinatura.motivo_excecao = dados.get("motivo_excecao", "")
-            if any([dados.get("limite_alunos_custom"), dados.get("limite_professores_custom"),
-                    dados.get("limite_unidades_custom")]):
+            if any(
+                [
+                    dados.get("limite_alunos_custom"),
+                    dados.get("limite_professores_custom"),
+                    dados.get("limite_unidades_custom"),
+                ]
+            ):
                 assinatura.autorizado_por = request.user
             assinatura.save()
-        registrar("alterar", "rede", entidade_id=rede.pk,
-                  descricao=f"Cliente {rede.nome} editado pela plataforma", request=request)
+        registrar(
+            "alterar",
+            "rede",
+            entidade_id=rede.pk,
+            descricao=f"Cliente {rede.nome} editado pela plataforma",
+            request=request,
+        )
         messages.success(request, "Cliente atualizado.")
         return redirect("plataforma:tenant_ficha", pk=rede.pk)
 
@@ -244,8 +314,13 @@ class TenantAcaoView(PlataformaMixin, View):
             if assinatura is not None and not assinatura.cancelada:
                 assinatura.cancelada_em = timezone.localdate()
                 assinatura.save(update_fields=["cancelada_em", "atualizado_em"])
-        registrar(acao, "rede", entidade_id=rede.pk,
-                  descricao=f"Cliente {rede.nome}: {aviso}", request=request)
+        registrar(
+            acao,
+            "rede",
+            entidade_id=rede.pk,
+            descricao=f"Cliente {rede.nome}: {aviso}",
+            request=request,
+        )
         messages.success(request, aviso)
         return redirect("plataforma:tenant_ficha", pk=rede.pk)
 
@@ -270,17 +345,28 @@ class PacoteCriarView(PlataformaMixin, View):
     titulo = "Novo pacote"
 
     def get(self, request):
-        return render(request, "plataforma/pacote_form.html",
-                      {"plataforma": True, "titulo": self.titulo, "form": PacoteForm(), "impersonacao": None})
+        return render(
+            request,
+            "plataforma/pacote_form.html",
+            {"plataforma": True, "titulo": self.titulo, "form": PacoteForm(), "impersonacao": None},
+        )
 
     def post(self, request):
         form = PacoteForm(request.POST)
         if not form.is_valid():
-            return render(request, "plataforma/pacote_form.html",
-                          {"plataforma": True, "titulo": self.titulo, "form": form, "impersonacao": None})
+            return render(
+                request,
+                "plataforma/pacote_form.html",
+                {"plataforma": True, "titulo": self.titulo, "form": form, "impersonacao": None},
+            )
         pacote = form.save()
-        registrar("criar", "pacote", entidade_id=pacote.pk,
-                  descricao=f"Pacote {pacote.nome} criado", request=request)
+        registrar(
+            "criar",
+            "pacote",
+            entidade_id=pacote.pk,
+            descricao=f"Pacote {pacote.nome} criado",
+            request=request,
+        )
         messages.success(request, f"Pacote {pacote.nome} criado.")
         return redirect("plataforma:pacotes")
 
@@ -290,21 +376,40 @@ class PacoteEditarView(PlataformaMixin, View):
 
     def get(self, request, pk):
         pacote = get_object_or_404(Pacote, pk=pk)
-        return render(request, "plataforma/pacote_form.html", {
-            "plataforma": True, "titulo": self.titulo, "subtitulo": pacote.nome,
-            "form": PacoteForm(instance=pacote), "impersonacao": None,
-        })
+        return render(
+            request,
+            "plataforma/pacote_form.html",
+            {
+                "plataforma": True,
+                "titulo": self.titulo,
+                "subtitulo": pacote.nome,
+                "form": PacoteForm(instance=pacote),
+                "impersonacao": None,
+            },
+        )
 
     def post(self, request, pk):
         pacote = get_object_or_404(Pacote, pk=pk)
         form = PacoteForm(request.POST, instance=pacote)
         if not form.is_valid():
-            return render(request, "plataforma/pacote_form.html", {
-                "plataforma": True, "titulo": self.titulo, "form": form, "impersonacao": None,
-            })
+            return render(
+                request,
+                "plataforma/pacote_form.html",
+                {
+                    "plataforma": True,
+                    "titulo": self.titulo,
+                    "form": form,
+                    "impersonacao": None,
+                },
+            )
         pacote = form.save()
-        registrar("alterar", "pacote", entidade_id=pacote.pk,
-                  descricao=f"Pacote {pacote.nome} alterado", request=request)
+        registrar(
+            "alterar",
+            "pacote",
+            entidade_id=pacote.pk,
+            descricao=f"Pacote {pacote.nome} alterado",
+            request=request,
+        )
         messages.success(request, "Pacote atualizado.")
         return redirect("plataforma:pacotes")
 
@@ -355,10 +460,14 @@ class FaturaEmitirView(PlataformaMixin, View):
                 return redirect("plataforma:tenant_ficha", pk=rede.pk)
             dados = form.cleaned_data
             fatura = Fatura.objects.create(
-                rede=rede, assinatura=assinatura,
-                periodo_inicio=timezone.localdate(), periodo_fim=timezone.localdate(),
-                vencimento=dados["vencimento"], valor=dados["valor"],
-                desconto=dados["desconto"], valor_final=dados["valor"] - dados["desconto"],
+                rede=rede,
+                assinatura=assinatura,
+                periodo_inicio=timezone.localdate(),
+                periodo_fim=timezone.localdate(),
+                vencimento=dados["vencimento"],
+                valor=dados["valor"],
+                desconto=dados["desconto"],
+                valor_final=dados["valor"] - dados["desconto"],
                 observacao=dados["descricao"],
             )
             messages.success(request, f"Fatura avulsa {fatura.numero} criada.")
@@ -369,8 +478,13 @@ class FaturaEmitirView(PlataformaMixin, View):
                 return redirect("plataforma:tenant_ficha", pk=rede.pk)
             messages.success(request, f"Fatura {fatura.numero} gerada.")
         emitir_cobranca_da_fatura(fatura)
-        registrar("cobrar", "fatura", entidade_id=fatura.pk,
-                  descricao=f"Fatura {fatura.numero} emitida pela plataforma", request=request)
+        registrar(
+            "cobrar",
+            "fatura",
+            entidade_id=fatura.pk,
+            descricao=f"Fatura {fatura.numero} emitida pela plataforma",
+            request=request,
+        )
         return redirect("plataforma:tenant_ficha", pk=rede.pk)
 
 
@@ -380,8 +494,13 @@ class FaturaBaixarView(PlataformaMixin, View):
     def post(self, request, pk):
         fatura = get_object_or_404(Fatura.objects.select_related("rede"), pk=pk)
         mudou = fatura.marcar_paga(quando=timezone.localdate())
-        registrar("receber", "fatura", entidade_id=fatura.pk,
-                  descricao=f"Baixa manual da fatura {fatura.numero}", request=request)
+        registrar(
+            "receber",
+            "fatura",
+            entidade_id=fatura.pk,
+            descricao=f"Baixa manual da fatura {fatura.numero}",
+            request=request,
+        )
         if mudou:
             reativar_rede(fatura.rede)
             messages.success(request, f"Fatura {fatura.numero} baixada e cliente reativado.")
@@ -394,8 +513,13 @@ class FaturaCancelarView(PlataformaMixin, View):
     def post(self, request, pk):
         fatura = get_object_or_404(Fatura, pk=pk)
         fatura.cancelar(motivo=request.POST.get("motivo", "cancelada pela plataforma"))
-        registrar("cancelar", "fatura", entidade_id=fatura.pk,
-                  descricao=f"Fatura {fatura.numero} cancelada", request=request)
+        registrar(
+            "cancelar",
+            "fatura",
+            entidade_id=fatura.pk,
+            descricao=f"Fatura {fatura.numero} cancelada",
+            request=request,
+        )
         messages.success(request, f"Fatura {fatura.numero} cancelada.")
         return redirect("plataforma:faturas")
 
@@ -431,7 +555,8 @@ class FaturaSimularPagamentoView(PlataformaMixin, View):
         messages.success(
             request,
             f"Pagamento simulado processado: {evento.resultado}"
-            if processado else "Evento repetido: nada foi refeito.",
+            if processado
+            else "Evento repetido: nada foi refeito.",
         )
         return redirect("plataforma:faturas")
 
@@ -457,7 +582,9 @@ class ReguaView(PlataformaMixin, TemplateView):
         from plataforma.servicos import aplicar_regua
 
         resumo = aplicar_regua()
-        registrar("cobrar", "regua", descricao=f"Regua executada manualmente: {resumo}", request=request)
+        registrar(
+            "cobrar", "regua", descricao=f"Regua executada manualmente: {resumo}", request=request
+        )
         messages.success(
             request,
             f"Regua executada: {resumo['disparos']} disparos, {resumo['bloqueios']} bloqueios, "
@@ -485,8 +612,9 @@ class WebhookAsaasView(View):
     gateway = "asaas"
 
     def post(self, request):
-        from django.http import JsonResponse
         import json
+
+        from django.http import JsonResponse
 
         configuracao = ConfiguracaoPlataforma.obter()
         if configuracao.token_webhook:
@@ -502,8 +630,12 @@ class WebhookAsaasView(View):
         except ValueError as erro:
             return JsonResponse({"erro": str(erro)}, status=400)
         return JsonResponse(
-            {"recebido": True, "evento": evento.evento_id, "processado": processado,
-             "resultado": evento.resultado},
+            {
+                "recebido": True,
+                "evento": evento.evento_id,
+                "processado": processado,
+                "resultado": evento.resultado,
+            },
             status=200,
         )
 
@@ -521,9 +653,9 @@ class RelatorioFinanceiroView(PlataformaMixin, TemplateView):
         contexto.update(
             dados=metricas(),
             recebido_mes=Fatura.objects.filter(status=StatusFatura.PAGA, pago_em__gte=inicio_mes),
-            abertas=Fatura.objects.filter(
-                status__in=[StatusFatura.ABERTA, StatusFatura.VENCIDA]
-            ).select_related("rede").order_by("vencimento"),
+            abertas=Fatura.objects.filter(status__in=[StatusFatura.ABERTA, StatusFatura.VENCIDA])
+            .select_related("rede")
+            .order_by("vencimento"),
         )
         return contexto
 
@@ -534,16 +666,28 @@ class RelatorioFinanceiroCsvView(PlataformaMixin, View):
         resposta["Content-Disposition"] = 'attachment; filename="plataforma_faturas.csv"'
         resposta.write("\ufeff")
         escritor = csv.writer(resposta, delimiter=";")
-        escritor.writerow(["Numero", "Cliente", "Periodo", "Vencimento", "Valor", "Status",
-                           "Pago em", "Forma"])
+        escritor.writerow(
+            ["Numero", "Cliente", "Periodo", "Vencimento", "Valor", "Status", "Pago em", "Forma"]
+        )
         for fatura in Fatura.objects.select_related("rede").order_by("-vencimento"):
-            escritor.writerow([
-                fatura.numero, fatura.rede.nome, f"{fatura.periodo_inicio} a {fatura.periodo_fim}",
-                fatura.vencimento, fatura.valor_final, fatura.get_status_display(),
-                fatura.pago_em or "", fatura.forma_pagamento,
-            ])
-        registrar("exportar", "fatura", descricao="Exportacao CSV de faturas da plataforma",
-                  request=request)
+            escritor.writerow(
+                [
+                    fatura.numero,
+                    fatura.rede.nome,
+                    f"{fatura.periodo_inicio} a {fatura.periodo_fim}",
+                    fatura.vencimento,
+                    fatura.valor_final,
+                    fatura.get_status_display(),
+                    fatura.pago_em or "",
+                    fatura.forma_pagamento,
+                ]
+            )
+        registrar(
+            "exportar",
+            "fatura",
+            descricao="Exportacao CSV de faturas da plataforma",
+            request=request,
+        )
         return resposta
 
 
@@ -556,7 +700,10 @@ class ImpersonarView(PlataformaMixin, View):
             messages.error(request, "Informe o motivo do acesso de suporte.")
             return redirect("plataforma:tenant_ficha", pk=rede.pk)
         registro = impersonar(
-            request.user, rede, form.cleaned_data["motivo"], request=request,
+            request.user,
+            rede,
+            form.cleaned_data["motivo"],
+            request=request,
             usuario_alvo=form.cleaned_data.get("usuario_alvo", ""),
         )
         messages.info(request, f"Acesso de suporte iniciado ({registro.motivo[:80]}).")
@@ -580,22 +727,40 @@ class ConfiguracaoView(PlataformaMixin, View):
     titulo = "Configuracao da plataforma"
 
     def get(self, request):
-        return render(request, "plataforma/config.html", {
-            "plataforma": True, "titulo": self.titulo,
-            "form": ConfiguracaoPlataformaForm(instance=ConfiguracaoPlataforma.obter()),
-            "impersonacao": None, "configuracao": ConfiguracaoPlataforma.obter(),
-        })
+        return render(
+            request,
+            "plataforma/config.html",
+            {
+                "plataforma": True,
+                "titulo": self.titulo,
+                "form": ConfiguracaoPlataformaForm(instance=ConfiguracaoPlataforma.obter()),
+                "impersonacao": None,
+                "configuracao": ConfiguracaoPlataforma.obter(),
+            },
+        )
 
     def post(self, request):
         configuracao = ConfiguracaoPlataforma.obter()
         form = ConfiguracaoPlataformaForm(request.POST, instance=configuracao)
         if not form.is_valid():
-            return render(request, "plataforma/config.html", {
-                "plataforma": True, "titulo": self.titulo, "form": form, "impersonacao": None,
-                "configuracao": configuracao,
-            })
+            return render(
+                request,
+                "plataforma/config.html",
+                {
+                    "plataforma": True,
+                    "titulo": self.titulo,
+                    "form": form,
+                    "impersonacao": None,
+                    "configuracao": configuracao,
+                },
+            )
         form.save()
-        registrar("alterar", "configuracao_plataforma", entidade_id=configuracao.pk,
-                  descricao="Configuracao da plataforma atualizada", request=request)
+        registrar(
+            "alterar",
+            "configuracao_plataforma",
+            entidade_id=configuracao.pk,
+            descricao="Configuracao da plataforma atualizada",
+            request=request,
+        )
         messages.success(request, "Configuracao salva.")
         return redirect("plataforma:config")

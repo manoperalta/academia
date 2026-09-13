@@ -48,6 +48,7 @@ TERCEIROS = [
 
 LOCAIS = [
     "core",
+    "vitrine",
     "plataforma",
     "gestao",
     "api",

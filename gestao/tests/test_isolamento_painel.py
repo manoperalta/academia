@@ -1,7 +1,7 @@
 """Isolamento entre redes e entre unidades nas telas do painel."""
+
 from __future__ import annotations
 
-import pytest
 from django.urls import reverse
 
 from core.models import ConviteEquipe, Unidade
@@ -10,8 +10,13 @@ from usuarios.models import Usuario
 
 
 def _aluno(rede, nome, **extra):
-    dados = {"rede": rede, "nome": nome, "email_user": f"{nome.split()[0].lower()}@exemplo.com",
-             "telefone_user": "51000000000", "status_user": "Ativo"}
+    dados = {
+        "rede": rede,
+        "nome": nome,
+        "email_user": f"{nome.split()[0].lower()}@exemplo.com",
+        "telefone_user": "51000000000",
+        "status_user": "Ativo",
+    }
     dados.update(extra)
     return Usuario.todos.create(**dados)
 
@@ -52,8 +57,12 @@ def test_kpis_nao_contam_outra_rede(cliente_logado, rede, outra_rede, aluno_da_r
 
 def test_pagamento_de_outra_rede_nao_aparece(cliente_logado, outra_rede, aluno_user):
     Pagamento.todos.create(
-        rede=outra_rede, usuario=aluno_user, valor_pago="99.00",
-        data_inicio="2026-09-01", data_fim="2026-09-30", status="pago",
+        rede=outra_rede,
+        usuario=aluno_user,
+        valor_pago="99.00",
+        data_inicio="2026-09-01",
+        data_fim="2026-09-30",
+        status="pago",
     )
     resposta = cliente_logado.get(reverse("gestao:pagamentos"))
     assert list(resposta.context["object_list"]) == []
@@ -61,8 +70,11 @@ def test_pagamento_de_outra_rede_nao_aparece(cliente_logado, outra_rede, aluno_u
 
 def test_convite_de_outra_rede_nao_aparece(cliente_logado, outra_rede):
     ConviteEquipe.objects.create(
-        rede=outra_rede, email="estranho@exemplo.com", papel="recepcao",
-        token=ConviteEquipe.gerar_token(), expira_em="2030-01-01T00:00:00Z",
+        rede=outra_rede,
+        email="estranho@exemplo.com",
+        papel="recepcao",
+        token=ConviteEquipe.gerar_token(),
+        expira_em="2030-01-01T00:00:00Z",
     )
     resposta = cliente_logado.get(reverse("gestao:equipe"))
     assert [c.email for c in resposta.context["convites"]] == []
@@ -71,8 +83,9 @@ def test_convite_de_outra_rede_nao_aparece(cliente_logado, outra_rede):
 def test_auditoria_de_outra_rede_nao_aparece(cliente_logado, outra_rede):
     from api.models import RegistroAuditoria
 
-    RegistroAuditoria.objects.create(rede=outra_rede, acao="criar", entidade="plano",
-                                     descricao="evento de outra rede")
+    RegistroAuditoria.objects.create(
+        rede=outra_rede, acao="criar", entidade="plano", descricao="evento de outra rede"
+    )
     resposta = cliente_logado.get(reverse("gestao:auditoria"))
     assert [r.descricao for r in resposta.context["object_list"]] == []
 

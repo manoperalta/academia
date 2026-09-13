@@ -1,0 +1,87 @@
+{% extends "vitrine/base.html" %}
+{% load gestao_extras %}
+{% block titulo %}Criar conta{% endblock %}
+{% block conteudo %}
+<section class="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-5">
+  <div class="md:col-span-3">
+    <h1 class="text-3xl font-bold text-slate-900">Crie a conta da sua academia</h1>
+    <p class="mt-2 text-slate-600">
+      Leva menos de 10 minutos. Ao terminar, você recebe um e-mail para definir sua senha e já entra no painel.
+    </p>
+
+    <form method="post" class="mt-8 space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {% for erro in form.non_field_errors %}<p>{{ erro }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Pacote escolhido</label>
+        <select name="pacote" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          {% for pacote in pacotes %}
+            <option value="{{ pacote.codigo }}" {% if pacote_escolhido and pacote.pk == pacote_escolhido.pk %}selected{% endif %}>
+              {{ pacote.nome }} — {{ pacote.preco_mensal|moeda }}/mês ({{ pacote.limite_alunos|default:"ilimitado" }} alunos)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        {% for campo in form %}
+          <div class="{% if campo.name in 'modalidade,aceite' %}md:col-span-2{% endif %}">
+            <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>
+            {{ campo }}
+            {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
+            {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div id="resultado-slug" class="text-xs text-slate-500"></div>
+      <button class="w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white shadow-sm hover:bg-emerald-700">
+        Criar minha academia
+      </button>
+      <p class="text-center text-xs text-slate-500">
+        Ao criar a conta você concorda em receber e-mails de cobrança e avisos do serviço.
+      </p>
+    </form>
+  </div>
+
+  <aside class="md:col-span-2 space-y-4">
+    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+      <h2 class="font-semibold text-slate-900">O que acontece agora</h2>
+      <ol class="mt-3 space-y-3 text-sm text-slate-600">
+        <li><strong>1.</strong> Criamos a sua academia isolada (só você vê seus dados).</li>
+        <li><strong>2.</strong> Você recebe um e-mail para definir a própria senha.</li>
+        <li><strong>3.</strong> O assistente de configuração guia a marca, professores, planos e a importação dos alunos.</li>
+      </ol>
+    </div>
+    <div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6">
+      <h2 class="font-semibold text-slate-900">Teste grátis de 14 dias</h2>
+      <p class="mt-2 text-sm text-slate-600">
+        Sem cobrança no período de teste. Avisamos em T-7, T-3 e T-1 antes de começar a cobrar.
+        Se preferir, você já assina agora com Pix.
+      </p>
+    </div>
+  </aside>
+</section>
+<script>
+  const campoSlug = document.querySelector("[name=slug]");
+  const saida = document.getElementById("resultado-slug");
+  let temporizador = null;
+  function checarSlug() {
+    if (!campoSlug || !campoSlug.value) return;
+    fetch("{% url 'vitrine:verificar_slug' %}?slug=" + encodeURIComponent(campoSlug.value))
+      .then((r) => r.json())
+      .then((dados) => {
+        saida.textContent = dados.disponivel ? "✔ " + campoSlug.value + " está disponível" : "✖ " + (dados.mensagem || "indisponível");
+        saida.className = "text-xs " + (dados.disponivel ? "text-emerald-600" : "text-red-600");
+      });
+  }
+  if (campoSlug) {
+    campoSlug.addEventListener("input", () => { clearTimeout(temporizador); temporizador = setTimeout(checarSlug, 500); });
+  }
+</script>
+{% endblock %}

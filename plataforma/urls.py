@@ -1,4 +1,5 @@
 """Rotas do painel da plataforma (/plataforma/) e do webhook do gateway."""
+
 from django.urls import path
 
 from plataforma import views
@@ -25,9 +26,14 @@ urlpatterns = [
     path("faturas/", views.FaturasView.as_view(), name="faturas"),
     path("faturas/<int:pk>/baixar/", views.FaturaBaixarView.as_view(), name="fatura_baixar"),
     path("faturas/<int:pk>/cancelar/", views.FaturaCancelarView.as_view(), name="fatura_cancelar"),
-    path("faturas/<int:pk>/cobrar/", views.FaturaEmitirCobrancaView.as_view(), name="fatura_cobrar"),
-    path("faturas/<int:pk>/simular-pagamento/", views.FaturaSimularPagamentoView.as_view(),
-         name="fatura_simular_pagamento"),
+    path(
+        "faturas/<int:pk>/cobrar/", views.FaturaEmitirCobrancaView.as_view(), name="fatura_cobrar"
+    ),
+    path(
+        "faturas/<int:pk>/simular-pagamento/",
+        views.FaturaSimularPagamentoView.as_view(),
+        name="fatura_simular_pagamento",
+    ),
     path("regua/", views.ReguaView.as_view(), name="regua"),
     path("webhooks/", views.WebhooksView.as_view(), name="webhooks"),
     path("relatorio/", views.RelatorioFinanceiroView.as_view(), name="relatorio"),

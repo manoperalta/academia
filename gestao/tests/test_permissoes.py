@@ -1,10 +1,11 @@
 """Matriz de permissoes do painel (RBAC)."""
+
 from __future__ import annotations
 
 import pytest
 
 from core.papeis import Papel
-from gestao.permissoes import MATRIZ, Modulo, NIVEIS, nivel, nivel_do_papel, pode, modulos_visiveis
+from gestao.permissoes import MATRIZ, NIVEIS, Modulo, modulos_visiveis, nivel, nivel_do_papel, pode
 
 TODOS = [m.value for m in Modulo]
 
@@ -50,9 +51,7 @@ def test_matriz_por_papel(papel, modulo, esperado):
 
 def test_auditor_nao_edita_nada():
     """O papel de auditor e somente leitura em todos os modulos."""
-    assert all(
-        nivel_do_papel(Papel.AUDITOR_REDE, modulo) <= NIVEIS["ver"] for modulo in TODOS
-    )
+    assert all(nivel_do_papel(Papel.AUDITOR_REDE, modulo) <= NIVEIS["ver"] for modulo in TODOS)
 
 
 def test_papel_desconhecido_nao_tem_acesso():

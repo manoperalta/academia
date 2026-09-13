@@ -1,8 +1,9 @@
 """Menu do painel disponivel em qualquer template."""
+
 from __future__ import annotations
 
 from gestao.menu import ROTAS
-from gestao.permissoes import Modulo, nivel, modulos_visiveis
+from gestao.permissoes import Modulo, modulos_visiveis, nivel
 
 
 def menu_do_painel(request):

@@ -1,10 +1,11 @@
 """Formularios do painel, ligados aos modelos reais do sistema."""
+
 from __future__ import annotations
+
+from datetime import timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
-from datetime import timedelta
-
 from django.db import models as dj_models
 from django.utils.crypto import get_random_string
 
@@ -49,9 +50,10 @@ def criar_ou_vincular_usuario(email, senha, flags: dict) -> tuple[object | None,
         return None, ""
     modelo = get_user_model()
     email = email.strip().lower()
-    usuario = modelo.objects.filter(username__iexact=email).first() or modelo.objects.filter(
-        email__iexact=email
-    ).first()
+    usuario = (
+        modelo.objects.filter(username__iexact=email).first()
+        or modelo.objects.filter(email__iexact=email).first()
+    )
     if usuario is not None:
         atualizados = []
         for campo, valor in flags.items():
@@ -73,9 +75,7 @@ def criar_ou_vincular_usuario(email, senha, flags: dict) -> tuple[object | None,
 class PessoaForm(EstiloMixin, forms.ModelForm):
     """Base para aluno e professor: cria o acesso (login) junto com o cadastro."""
 
-    criar_login = forms.BooleanField(
-        required=False, initial=True, label="Criar acesso ao sistema"
-    )
+    criar_login = forms.BooleanField(required=False, initial=True, label="Criar acesso ao sistema")
     senha = forms.CharField(
         required=False,
         label="Senha inicial",
@@ -94,9 +94,7 @@ class PessoaForm(EstiloMixin, forms.ModelForm):
             self.fields["criar_login"].help_text = "O acesso deste cadastro ja existe."
         for nome in ("criar_login", "senha"):
             campo = self.fields[nome]
-            campo.widget.attrs["class"] = (
-                MARCADOR if nome == "criar_login" else CAMPO
-            )
+            campo.widget.attrs["class"] = MARCADOR if nome == "criar_login" else CAMPO
 
     def save(self, commit=True):
         instancia = super().save(commit=False)
@@ -119,9 +117,17 @@ class AlunoForm(PessoaForm):
     class Meta:
         model = Usuario
         fields = [
-            "nome", "data_nasc", "cpf_cnpj_user", "email_user", "telefone_user",
-            "endereco_user", "numero_end_user", "bairro_user", "cep_user",
-            "status_user", "foto_user",
+            "nome",
+            "data_nasc",
+            "cpf_cnpj_user",
+            "email_user",
+            "telefone_user",
+            "endereco_user",
+            "numero_end_user",
+            "bairro_user",
+            "cep_user",
+            "status_user",
+            "foto_user",
         ]
         widgets = {"data_nasc": forms.DateInput(attrs={"type": "date"})}
 
@@ -133,9 +139,17 @@ class ProfessorForm(PessoaForm):
     class Meta:
         model = Professor
         fields = [
-            "nome", "data_nasc", "cpf_cnpj_prof", "email_prof", "telefone_prof",
-            "endereco_prof", "numero_end_prof", "bairro_prof", "cep_prof",
-            "status_prof", "foto_prof",
+            "nome",
+            "data_nasc",
+            "cpf_cnpj_prof",
+            "email_prof",
+            "telefone_prof",
+            "endereco_prof",
+            "numero_end_prof",
+            "bairro_prof",
+            "cep_prof",
+            "status_prof",
+            "foto_prof",
         ]
         widgets = {"data_nasc": forms.DateInput(attrs={"type": "date"})}
 
@@ -146,15 +160,28 @@ class ProfessorForm(PessoaForm):
 class FichaSaudeForm(EstiloMixin, forms.ModelForm):
     class Meta:
         model = FichaSaude
-        fields = ["altura", "peso", "restricoes", "prescricoes", "obs", "usa_medicamento",
-                  "qual_medicamento"]
+        fields = [
+            "altura",
+            "peso",
+            "restricoes",
+            "prescricoes",
+            "obs",
+            "usa_medicamento",
+            "qual_medicamento",
+        ]
 
 
 class AulaForm(EstiloMixin, forms.ModelForm):
     class Meta:
         model = Aulas
-        fields = ["nome", "descricao", "professor", "categorias_exercicios", "restricao",
-                  "file_de_video"]
+        fields = [
+            "nome",
+            "descricao",
+            "professor",
+            "categorias_exercicios",
+            "restricao",
+            "file_de_video",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -163,8 +190,8 @@ class AulaForm(EstiloMixin, forms.ModelForm):
         self.fields["professor"].queryset = modelo.objects.filter(
             dj_models.Q(pk__in=list(ids)) | dj_models.Q(is_superuser=True)
         ).distinct()
-        self.fields["professor"].label_from_instance = (
-            lambda u: u.get_full_name() or u.get_username()
+        self.fields["professor"].label_from_instance = lambda u: (
+            u.get_full_name() or u.get_username()
         )
         self.fields["file_de_video"].required = False
 
@@ -184,8 +211,8 @@ class PainelForm(EstiloMixin, forms.ModelForm):
         self.fields["responsavel"].queryset = (
             self.fields["responsavel"].queryset.filter(is_active=True).order_by("first_name")
         )
-        self.fields["responsavel"].label_from_instance = (
-            lambda u: u.get_full_name() or u.get_username()
+        self.fields["responsavel"].label_from_instance = lambda u: (
+            u.get_full_name() or u.get_username()
         )
 
 
@@ -213,15 +240,9 @@ class PagamentoForm(EstiloMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["data_fim"].required = False
-        self.fields["data_fim"].help_text = (
-            "Em branco = calculado pela periodicidade do plano."
-        )
-        self.fields["usuario"].queryset = self.fields["usuario"].queryset.filter(
-            is_student=True
-        )
-        self.fields["usuario"].label_from_instance = (
-            lambda u: u.get_full_name() or u.get_username()
-        )
+        self.fields["data_fim"].help_text = "Em branco = calculado pela periodicidade do plano."
+        self.fields["usuario"].queryset = self.fields["usuario"].queryset.filter(is_student=True)
+        self.fields["usuario"].label_from_instance = lambda u: u.get_full_name() or u.get_username()
 
     def save(self, commit=True):
         pagamento = super().save(commit=False)
@@ -247,8 +268,16 @@ class ConfiguracaoForm(EstiloMixin, forms.ModelForm):
     class Meta:
         model = Configuracao
         fields = [
-            "titulo", "cnpj", "ie", "endereco", "numero", "cep", "theme_mode",
-            "dias_alerta_vencimento", "mensagem_pagamento_atrasado", "mensagem_aniversario",
+            "titulo",
+            "cnpj",
+            "ie",
+            "endereco",
+            "numero",
+            "cep",
+            "theme_mode",
+            "dias_alerta_vencimento",
+            "mensagem_pagamento_atrasado",
+            "mensagem_aniversario",
         ]
 
 
@@ -266,8 +295,17 @@ class IdentidadeForm(EstiloMixin, forms.ModelForm):
 class EmailConfigForm(EstiloMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoEmail
-        fields = ["host", "port", "username", "password", "use_tls", "use_ssl",
-                  "remetente_nome", "remetente_email", "ativo"]
+        fields = [
+            "host",
+            "port",
+            "username",
+            "password",
+            "use_tls",
+            "use_ssl",
+            "remetente_nome",
+            "remetente_email",
+            "ativo",
+        ]
         widgets = {"password": forms.PasswordInput(render_value=True)}
 
 
@@ -286,9 +324,7 @@ class ConviteForm(EstiloMixin, forms.ModelForm):
 
     def __init__(self, *args, usuario=None, unidades=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["papel"].choices = [
-            (p.value, p.label) for p in Papel if p != Papel.ALUNO
-        ]
+        self.fields["papel"].choices = [(p.value, p.label) for p in Papel if p != Papel.ALUNO]
         if unidades is not None:
             self.fields["unidade"].queryset = unidades
         self.fields["unidade"].required = False
@@ -299,9 +335,7 @@ class NovaContaForm(EstiloMixin, forms.Form):
     """Usado no aceite do convite por quem ainda nao tem login."""
 
     nome = forms.CharField(max_length=150, label="Seu nome")
-    senha = forms.CharField(
-        label="Crie uma senha", widget=forms.PasswordInput, min_length=8
-    )
+    senha = forms.CharField(label="Crie uma senha", widget=forms.PasswordInput, min_length=8)
     senha2 = forms.CharField(label="Repita a senha", widget=forms.PasswordInput)
 
     def clean(self):

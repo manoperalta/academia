@@ -1,0 +1,66 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Academia SaaS{% endblock %} · SafeStack</title>
+  <meta name="description" content="Sistema de gestão para academias: alunos, aulas, agenda, financeiro e cobrança. Comece com teste grátis.">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-slate-800" x-data="{ menu: false }">
+<header class="border-b border-slate-100 bg-white/95 backdrop-blur sticky top-0 z-20">
+  <div class="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+    <a href="{% url 'vitrine:home' %}" class="flex items-center gap-2">
+      <span class="inline-block h-8 w-8 rounded-lg bg-emerald-500"></span>
+      <span class="font-semibold text-slate-900">Academia<span class="text-emerald-600">SaaS</span></span>
+    </a>
+    <nav class="ml-auto hidden items-center gap-6 text-sm text-slate-600 md:flex">
+      <a href="{% url 'vitrine:planos' %}" class="hover:text-emerald-700">Planos</a>
+      <a href="{% url 'vitrine:ajuda' %}" class="hover:text-emerald-700">Ajuda</a>
+      <a href="{% url 'vitrine:contato' %}" class="hover:text-emerald-700">Falar com vendas</a>
+      <a href="{% url 'login' %}" class="hover:text-emerald-700">Entrar</a>
+      <a href="{% url 'vitrine:cadastro' %}" class="rounded-lg bg-emerald-600 px-4 py-2 text-white shadow-sm hover:bg-emerald-700">Teste grátis</a>
+    </nav>
+    <button class="ml-auto md:hidden" @click="menu = !menu">☰</button>
+  </div>
+  <div x-show="menu" class="border-t border-slate-100 px-4 py-3 md:hidden">
+    <a class="block py-2" href="{% url 'vitrine:planos' %}">Planos</a>
+    <a class="block py-2" href="{% url 'vitrine:ajuda' %}">Ajuda</a>
+    <a class="block py-2" href="{% url 'vitrine:contato' %}">Falar com vendas</a>
+    <a class="block py-2" href="{% url 'login' %}">Entrar</a>
+    <a class="mt-2 block rounded-lg bg-emerald-600 px-4 py-2 text-center text-white" href="{% url 'vitrine:cadastro' %}">Teste grátis</a>
+  </div>
+</header>
+{% if messages %}
+  <div class="mx-auto max-w-6xl px-4 pt-4">
+    {% for mensagem in messages %}
+      <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">{{ mensagem }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% block conteudo %}{% endblock %}
+<footer class="mt-16 border-t border-slate-100 bg-slate-50">
+  <div class="mx-auto grid max-w-6xl gap-6 px-4 py-10 text-sm text-slate-600 md:grid-cols-3">
+    <div>
+      <p class="font-semibold text-slate-900">Academia SaaS</p>
+      <p class="mt-2">Gestão completa para academias, estúdios e redes de unidades.</p>
+    </div>
+    <div>
+      <p class="font-semibold text-slate-900">Produto</p>
+      <ul class="mt-2 space-y-1">
+        <li><a class="hover:text-emerald-700" href="{% url 'vitrine:planos' %}">Planos e preços</a></li>
+        <li><a class="hover:text-emerald-700" href="{% url 'vitrine:ajuda' %}">Central de ajuda</a></li>
+        <li><a class="hover:text-emerald-700" href="{% url 'vitrine:cadastro' %}">Criar conta</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-semibold text-slate-900">SafeStack</p>
+      <p class="mt-2">Montenegro / RS</p>
+      <p><a class="hover:text-emerald-700" href="{% url 'vitrine:contato' %}">Contato e demonstração</a></p>
+      {% if configuracao.email_financeiro %}<p class="mt-1">{{ configuracao.email_financeiro }}</p>{% endif %}
+    </div>
+  </div>
+  <p class="pb-6 text-center text-xs text-slate-400">© {% now "Y" %} SafeStack · {{ configuracao.nome_emitente|default:"SafeStack" }}</p>
+</footer>
+</body>
+</html>

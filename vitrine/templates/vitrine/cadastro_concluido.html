@@ -1,0 +1,60 @@
+{% extends "vitrine/base.html" %}
+{% load gestao_extras %}
+{% block titulo %}Conta criada{% endblock %}
+{% block conteudo %}
+<section class="mx-auto max-w-3xl px-4 py-14">
+  <div class="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-8 text-center">
+    <p class="text-4xl">🎉</p>
+    <h1 class="mt-3 text-2xl font-bold text-slate-900">Sua academia está pronta{% if rede %}: {{ rede.nome }}{% endif %}</h1>
+    <p class="mt-2 text-slate-600">
+      {% if email_enviado %}
+        Enviamos um e-mail com o link para você definir sua senha e entrar no painel.
+      {% else %}
+        Não conseguimos enviar o e-mail de boas-vindas agora — use o link abaixo para definir sua senha.
+      {% endif %}
+    </p>
+    {% if link %}
+      <p class="mt-4 break-all rounded-lg bg-white px-4 py-3 text-sm">
+        <span class="text-slate-500">Link de primeiro acesso:</span><br>
+        <a class="text-emerald-700 underline" href="{{ link }}">{{ link }}</a>
+      </p>
+    {% endif %}
+  </div>
+
+  {% if fatura %}
+    <div class="mt-6 rounded-2xl border border-slate-200 p-6">
+      <h2 class="font-semibold text-slate-900">Primeira fatura — {{ fatura.numero }}</h2>
+      <p class="mt-1 text-sm text-slate-600">
+        Valor {{ fatura.valor_final|moeda }}, vencimento {{ fatura.vencimento|date:"d/m/Y" }}.
+        Assim que o pagamento for confirmado, sua assinatura é ativada automaticamente.
+      </p>
+      {% if fatura.pix_copia_cola %}
+        <p class="mt-3 text-xs text-slate-500">Pix copia e cola</p>
+        <p class="break-all rounded-lg bg-slate-50 px-3 py-2 text-xs">{{ fatura.pix_copia_cola }}</p>
+      {% endif %}
+      {% if fatura.link_pagamento %}
+        <a class="mt-3 inline-block text-sm text-emerald-700 underline" href="{{ fatura.link_pagamento }}">Abrir link de pagamento</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-4 md:grid-cols-2">
+    <div class="rounded-2xl border border-slate-200 p-6">
+      <h2 class="font-semibold text-slate-900">Próximos passos</h2>
+      <ol class="mt-3 space-y-2 text-sm text-slate-600">
+        <li>1. Defina sua senha pelo link recebido.</li>
+        <li>2. Preencha os dados da academia e envie o logo.</li>
+        <li>3. Cadastre professores e planos.</li>
+        <li>4. Importe seus alunos por planilha CSV.</li>
+      </ol>
+    </div>
+    <div class="rounded-2xl border border-slate-200 p-6">
+      <h2 class="font-semibold text-slate-900">Precisa de ajuda?</h2>
+      <p class="mt-3 text-sm text-slate-600">
+        A <a class="text-emerald-700 underline" href="{% url 'vitrine:ajuda' %}">central de ajuda</a> explica cada módulo.
+        Para falar com uma pessoa, use o <a class="text-emerald-700 underline" href="{% url 'vitrine:contato' %}">contato</a>.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,14 +1,12 @@
 """Telas do painel do tenant: acesso, CRUD e auditoria."""
+
 from __future__ import annotations
 
 import pytest
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.core import mail
 from django.urls import reverse
 
 from api.models import RegistroAuditoria
-from core.models import VinculoUsuario
 from financeiro.models import Pagamento
 from gestao.permissoes import Modulo
 from usuarios.models import Usuario
@@ -128,8 +126,9 @@ def test_aluno_sem_nome_nao_e_criado(cliente_logado):
 def test_editar_aluno(cliente_logado, aluno_da_rede):
     resposta = cliente_logado.post(
         reverse("gestao:aluno_editar", args=[aluno_da_rede.pk]),
-        _dados_aluno(nome="Aluno Renomeado", email_user=aluno_da_rede.email_user,
-                     senha="SenhaForte123"),
+        _dados_aluno(
+            nome="Aluno Renomeado", email_user=aluno_da_rede.email_user, senha="SenhaForte123"
+        ),
     )
     assert resposta.status_code == 302
     aluno_da_rede.refresh_from_db()
@@ -157,8 +156,13 @@ def test_restaurar_aluno(cliente_logado, aluno_da_rede):
 
 
 def test_busca_por_nome(cliente_logado, aluno_da_rede, rede):
-    Usuario.todos.create(rede=rede, nome="Outro Aluno", email_user="outro@exemplo.com",
-                         telefone_user="51000000000", status_user="Ativo")
+    Usuario.todos.create(
+        rede=rede,
+        nome="Outro Aluno",
+        email_user="outro@exemplo.com",
+        telefone_user="51000000000",
+        status_user="Ativo",
+    )
     resposta = cliente_logado.get(reverse("gestao:alunos"), {"q": "Outro"})
     nomes = [a.nome for a in resposta.context["object_list"]]
     assert nomes == ["Outro Aluno"]
@@ -173,8 +177,13 @@ def test_htmx_devolve_apenas_a_tabela(cliente_logado, aluno_da_rede):
 
 # ------------------------------------------------------------------ DASHBOARD
 def test_visao_geral_conta_apenas_ativos(cliente_logado, aluno_da_rede, rede):
-    Usuario.todos.create(rede=rede, nome="Inativo", email_user="i@exemplo.com",
-                         telefone_user="51", status_user="Inativo")
+    Usuario.todos.create(
+        rede=rede,
+        nome="Inativo",
+        email_user="i@exemplo.com",
+        telefone_user="51",
+        status_user="Inativo",
+    )
     resposta = cliente_logado.get(reverse("gestao:visao_geral"))
     assert resposta.context["alunos_ativos"] == 1
     assert resposta.context["alunos_total"] == 2
@@ -190,8 +199,12 @@ def test_assistente_mostra_percentual(cliente_logado):
 # ------------------------------------------------------------------ FINANCEIRO
 def test_dar_baixa_em_pagamento(cliente_logado, aluno_user, rede):
     pagamento = Pagamento.todos.create(
-        rede=rede, usuario=aluno_user, valor_pago="150.00",
-        data_inicio="2026-09-01", data_fim="2026-09-30", status="pendente",
+        rede=rede,
+        usuario=aluno_user,
+        valor_pago="150.00",
+        data_inicio="2026-09-01",
+        data_fim="2026-09-30",
+        status="pendente",
     )
     resposta = cliente_logado.post(reverse("gestao:pagamento_baixar", args=[pagamento.pk]))
     assert resposta.status_code == 302
@@ -210,8 +223,9 @@ def test_exportacao_csv_tem_bom_e_auditoria(cliente_logado, aluno_da_rede):
 
 
 def test_auditoria_lista_so_da_propria_rede(cliente_logado, rede, outra_rede):
-    RegistroAuditoria.objects.create(rede=outra_rede, acao="criar", entidade="aluno",
-                                     descricao="de outra rede")
+    RegistroAuditoria.objects.create(
+        rede=outra_rede, acao="criar", entidade="aluno", descricao="de outra rede"
+    )
     resposta = cliente_logado.get(reverse("gestao:auditoria"))
     descricoes = [r.descricao for r in resposta.context["object_list"]]
     assert "de outra rede" not in descricoes

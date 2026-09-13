@@ -1,0 +1,50 @@
+{% extends "vitrine/base.html" %}
+{% load gestao_extras %}
+{% block titulo %}Planos e preços{% endblock %}
+{% block conteudo %}
+<section class="mx-auto max-w-6xl px-4 pt-12">
+  <h1 class="text-3xl font-bold text-slate-900">Planos e comparação de recursos</h1>
+  <p class="mt-2 text-slate-600">Todos os planos incluem o painel completo, importação de alunos e suporte por e-mail. Sem taxa de adesão.</p>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-8">
+  <div class="overflow-x-auto rounded-2xl border border-slate-200">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-50 text-left">
+        <tr>
+          <th class="px-4 py-3 font-medium text-slate-500">Recurso</th>
+          {% for pacote in pacotes %}<th class="px-4 py-3 text-center font-semibold text-slate-900">{{ pacote.nome }}<br><span class="text-xs font-normal text-slate-500">{{ pacote.preco_mensal|moeda }}/mês</span></th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <tr><td class="px-4 py-3">Alunos ativos</td>{% for pacote in pacotes %}<td class="px-4 py-3 text-center">{{ pacote.limite_alunos|default:"sem limite" }}</td>{% endfor %}</tr>
+        <tr><td class="px-4 py-3">Professores</td>{% for pacote in pacotes %}<td class="px-4 py-3 text-center">{{ pacote.limite_professores|default:"sem limite" }}</td>{% endfor %}</tr>
+        <tr><td class="px-4 py-3">Unidades</td>{% for pacote in pacotes %}<td class="px-4 py-3 text-center">{{ pacote.limite_unidades|default:"sem limite" }}</td>{% endfor %}</tr>
+        <tr><td class="px-4 py-3">Plano anual (15% de desconto)</td>{% for pacote in pacotes %}<td class="px-4 py-3 text-center">{{ pacote.preco_anual|moeda }}</td>{% endfor %}</tr>
+        {% for codigo, rotulo in modulos_pacote %}
+          <tr>
+            <td class="px-4 py-3">{{ rotulo }}</td>
+            {% for pacote in pacotes %}
+              <td class="px-4 py-3 text-center">
+                {% if codigo in pacote.modulos %}<span class="text-emerald-600">✔</span>{% else %}<span class="text-slate-300">—</span>{% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        <tr>
+          <td class="px-4 py-3"></td>
+          {% for pacote in pacotes %}
+            <td class="px-4 py-3 text-center">
+              <a href="{% url 'vitrine:cadastro' %}?plano={{ pacote.codigo }}" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700">Começar</a>
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-3 text-xs text-slate-500">
+    Contam para o limite apenas cadastros <strong>ativos</strong>. Ao reduzir de pacote, o cadastro novo fica bloqueado
+    até regularizar — <strong>nenhum dado é apagado</strong>.
+  </p>
+</section>
+{% endblock %}

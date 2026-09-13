@@ -1,0 +1,34 @@
+{% extends "vitrine/base.html" %}
+{% block titulo %}Falar com vendas{% endblock %}
+{% block conteudo %}
+<section class="mx-auto grid max-w-5xl gap-8 px-4 py-12 md:grid-cols-2">
+  <div>
+    <h1 class="text-3xl font-bold text-slate-900">Falar com o time</h1>
+    <p class="mt-2 text-slate-600">Quer uma demonstração, migração assistida da sua planilha ou condições para várias unidades? Escreva pra gente.</p>
+    <ul class="mt-6 space-y-2 text-sm text-slate-600">
+      <li>• Resposta em horário comercial</li>
+      <li>• Ajudamos a importar seus alunos atuais</li>
+      <li>• Condições para redes e franquias</li>
+    </ul>
+  </div>
+  <div class="rounded-2xl border border-slate-200 p-6">
+    {% if enviado %}
+      <p class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        Recebemos sua mensagem. Obrigado! Vamos responder no e-mail informado.
+      </p>
+    {% else %}
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% for campo in form %}
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>
+            {{ campo }}
+            {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-700">Enviar mensagem</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">1. Envie a planilha</h2>
+      <p class="mt-1 text-xs text-slate-500">
+        Aceita CSV separado por ponto e vírgula ou vírgula. A primeira linha precisa ter os títulos:
+        <code>nome;email;telefone;cpf;nascimento;status</code>. Só <strong>nome</strong> é obrigatório.
+        <a class="text-emerald-700 underline" href="{% url 'gestao:importar_modelo' %}?tipo={{ tipo }}">Baixar modelo</a>
+      </p>
+      <form method="post" enctype="multipart/form-data" class="mt-4 space-y-3">
+        {% csrf_token %}
+        <input type="hidden" name="acao" value="analisar">
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-600">O que estou importando</label>
+            <select name="tipo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+              {% for valor, rotulo in tipos.items %}
+                <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="mb-1 block text-xs font-medium text-slate-600">Arquivo CSV</label>
+            <input type="file" name="arquivo" accept=".csv,text/csv" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          </div>
+        </div>
+        <label class="flex items-center gap-2 text-xs text-slate-600">
+          <input type="checkbox" name="atualizar_existentes" {% if atualizar_existentes %}checked{% endif %} class="h-4 w-4 rounded border-slate-300">
+          Atualizar quem já existe (pelo e-mail ou CPF)
+        </label>
+        <button class="rounded-lg bg-slate-800 px-4 py-2 text-sm text-white">Conferir planilha</button>
+      </form>
+    </div>
+
+    {% if resultado %}
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-900">2. Confira antes de gravar</h2>
+        {% if resultado.erro_geral %}
+          <p class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ resultado.erro_geral }}</p>
+        {% else %}
+          <div class="mt-3 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+            <div class="rounded-lg border border-slate-100 p-3"><p class="text-xs text-slate-500">Linhas</p><p class="text-lg font-semibold">{{ resultado.total }}</p></div>
+            <div class="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3"><p class="text-xs text-slate-500">A criar</p><p class="text-lg font-semibold text-emerald-700">{{ resultado.a_criar|length }}</p></div>
+            <div class="rounded-lg border border-slate-100 p-3"><p class="text-xs text-slate-500">A atualizar</p><p class="text-lg font-semibold">{{ resultado.a_atualizar|length }}</p></div>
+            <div class="rounded-lg border border-red-100 bg-red-50/50 p-3"><p class="text-xs text-slate-500">Problemas</p><p class="text-lg font-semibold text-red-700">{{ resultado.com_erro|length }}</p></div>
+          </div>
+          <p class="mt-3 text-xs text-slate-500">
+            {% if resultado.limite %}
+              Seu pacote permite {{ resultado.limite }} {{ tipo }} e você já tem {{ resultado.uso }} ativos.
+              {% if resultado.excede %}<strong class="text-red-700">A planilha excede o limite: as linhas excedentes serão recusadas.</strong>{% endif %}
+            {% else %}Seu pacote não tem limite de {{ tipo }}.{% endif %}
+            Linhas ignoradas (já existem): {{ resultado.ignoradas|length }}.
+          </p>
+          {% if resultado.com_erro %}
+            <div class="mt-4 max-h-72 overflow-y-auto">
+              <table class="min-w-full text-xs">
+                <thead class="bg-slate-50 text-left uppercase text-slate-500"><tr><th class="px-3 py-2">Linha</th><th>Nome</th><th>Motivo</th></tr></thead>
+                <tbody class="divide-y divide-slate-100">
+                  {% for linha in resultado.com_erro %}
+                    <tr><td class="px-3 py-2">{{ linha.numero }}</td><td>{{ linha.dados.nome|default:"—" }}</td><td class="text-red-700">{{ linha.motivos|join:"; " }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% endif %}
+          {% if resultado.a_criar or resultado.a_atualizar %}
+            <form method="post" class="mt-4">
+              {% csrf_token %}
+              <input type="hidden" name="acao" value="confirmar">
+              <input type="hidden" name="tipo" value="{{ tipo }}">
+              <input type="hidden" name="atualizar_existentes" value="{{ atualizar_existentes|yesno:"on," }}">
+              <button class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                Confirmar importação
+              </button>
+            </form>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <aside class="space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">Como funciona</h2>
+      <ul class="mt-3 space-y-2 text-xs text-slate-600">
+        <li>• Nada é gravado na primeira etapa — é só conferência.</li>
+        <li>• Alunos inativos/arquivados não contam para o limite do pacote.</li>
+        <li>• E-mails repetidos na mesma planilha são apontados como erro.</li>
+        <li>• A importação fica registrada na auditoria.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+{% endblock %}

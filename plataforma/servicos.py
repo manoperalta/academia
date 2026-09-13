@@ -1,30 +1,44 @@
 """Regras da plataforma: limites, faturas, regua de cobranca, metricas e suporte."""
+
 from __future__ import annotations
 
 import logging
 from datetime import timedelta
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
 from api.auditoria import registrar
-from core.models import Rede, Unidade, VinculoUsuario
+from core.models import ConviteEquipe, Rede, Unidade, VinculoUsuario
 from core.papeis import Papel, StatusRede
-from professores.models import Professor
-from usuarios.models import Usuario
-
 from plataforma.gateways import GatewayError, gateway_atual
 from plataforma.models import (
-    Assinatura, CanalCobranca, ConfiguracaoPlataforma, EventoCobranca, EventoGateway, Fatura,
-    FormaPagamento, Impersonacao, MarcoRegua, ModuloPacote, Pacote, ResultadoDisparo, StatusFatura,
+    Assinatura,
+    CanalCobranca,
+    ConfiguracaoPlataforma,
+    EventoCobranca,
+    EventoGateway,
+    Fatura,
+    FormaPagamento,
+    Impersonacao,
+    MarcoRegua,
+    ResultadoDisparo,
+    StatusFatura,
 )
+from professores.models import Professor
+from usuarios.models import Usuario
 
 logger = logging.getLogger("plataforma")
 
 RECURSOS = ("alunos", "professores", "unidades")
 CHAVE_IMPERSONACAO = "impersonacao_id"
+
+
+class CadastroError(Exception):
+    """Cadastro publico recusado; a mensagem ja esta pronta para o cliente ver."""
 
 
 # ------------------------------------------------------------------ LIMITES
@@ -132,9 +146,13 @@ def situacao_do_tenant(rede) -> dict:
         "alertas": alertas_de_limite(rede),
         "em_trial": bool(assinatura and assinatura.em_trial),
         "trial_termina_em": getattr(assinatura, "trial_termina_em", None),
-        "faturas_em_aberto": Fatura.objects.filter(rede=rede, status__in=[
-            StatusFatura.ABERTA, StatusFatura.VENCIDA,
-        ]).order_by("vencimento"),
+        "faturas_em_aberto": Fatura.objects.filter(
+            rede=rede,
+            status__in=[
+                StatusFatura.ABERTA,
+                StatusFatura.VENCIDA,
+            ],
+        ).order_by("vencimento"),
         "modulos": list(getattr(getattr(assinatura, "pacote", None), "modulos", []) or []),
     }
 
@@ -148,9 +166,13 @@ def gerar_fatura(assinatura: Assinatura, hoje=None, vencimento=None) -> Fatura |
     periodo_inicio = assinatura.renovacao_em or hoje
     periodo_fim = Fatura.proximo_vencimento(periodo_inicio, assinatura.ciclo)
     existe = Fatura.objects.filter(
-        assinatura=assinatura, periodo_inicio=periodo_inicio, status__in=[
-            StatusFatura.ABERTA, StatusFatura.VENCIDA, StatusFatura.PAGA,
-        ]
+        assinatura=assinatura,
+        periodo_inicio=periodo_inicio,
+        status__in=[
+            StatusFatura.ABERTA,
+            StatusFatura.VENCIDA,
+            StatusFatura.PAGA,
+        ],
     ).first()
     if existe:
         return None
@@ -173,7 +195,8 @@ def gerar_faturas_do_dia(hoje=None, emitir_cobranca: bool = True) -> list[Fatura
     hoje = hoje or timezone.localdate()
     geradas = []
     assinaturas = Assinatura.objects.select_related("rede", "pacote").filter(
-        cancelada_em__isnull=True, renovacao_em__lte=hoje,
+        cancelada_em__isnull=True,
+        renovacao_em__lte=hoje,
     )
     for assinatura in assinaturas:
         if assinatura.em_trial:
@@ -181,7 +204,9 @@ def gerar_faturas_do_dia(hoje=None, emitir_cobranca: bool = True) -> list[Fatura
         fatura = gerar_fatura(assinatura, hoje=hoje)
         if fatura is None:
             continue
-        assinatura.renovacao_em = Fatura.proximo_vencimento(assinatura.renovacao_em, assinatura.ciclo)
+        assinatura.renovacao_em = Fatura.proximo_vencimento(
+            assinatura.renovacao_em, assinatura.ciclo
+        )
         assinatura.save(update_fields=["renovacao_em", "atualizado_em"])
         if emitir_cobranca:
             fatura = emitir_cobranca_da_fatura(fatura)
@@ -196,8 +221,9 @@ def emitir_cobranca_da_fatura(fatura: Fatura) -> Fatura:
         dados = gateway.criar_cobranca(fatura)
     except GatewayError as erro:
         logger.warning("Gateway indisponivel para a fatura %s: %s", fatura.numero, erro)
-        registrar("cobrar", "fatura", entidade_id=fatura.pk,
-                  descricao=f"Falha ao emitir cobranca: {erro}")
+        registrar(
+            "cobrar", "fatura", entidade_id=fatura.pk, descricao=f"Falha ao emitir cobranca: {erro}"
+        )
         return fatura
     fatura.gateway = gateway.nome
     fatura.gateway_id = dados.get("id", "")
@@ -205,8 +231,12 @@ def emitir_cobranca_da_fatura(fatura: Fatura) -> Fatura:
     fatura.pix_copia_cola = dados.get("pix_copia_cola", "")
     fatura.pix_qr_code = dados.get("pix_qr_code", "")
     fatura.save()
-    registrar("cobrar", "fatura", entidade_id=fatura.pk,
-              descricao=f"Cobranca emitida via {gateway.nome} ({fatura.valor_final})")
+    registrar(
+        "cobrar",
+        "fatura",
+        entidade_id=fatura.pk,
+        descricao=f"Cobranca emitida via {gateway.nome} ({fatura.valor_final})",
+    )
     return fatura
 
 
@@ -219,15 +249,13 @@ def _disparar_email(rede, assunto: str, corpo: str) -> tuple[bool, str]:
     try:
         enviar_email(rede, assunto, corpo, destino)
         return True, ""
-    except Exception as erro:  # noqa: BLE001
+    except Exception as erro:
         return False, str(erro)[:200]
 
 
 def _registrar_marco(fatura, rede, marco: str, assunto: str, corpo: str, canal=CanalCobranca.EMAIL):
     """Registra o disparo da regua (unico por fatura+marco+canal)."""
-    ja_existe = EventoCobranca.objects.filter(
-        fatura=fatura, marco=marco, canal=canal
-    ).exists()
+    ja_existe = EventoCobranca.objects.filter(fatura=fatura, marco=marco, canal=canal).exists()
     if ja_existe:
         return None
     enviado, erro = (False, "canal painel nao envia e-mail")
@@ -248,7 +276,13 @@ def aplicar_regua(hoje=None, enviar: bool = True) -> dict:
     """RF-PLT-023: D-3, D0, D+1, D+5, D+10 (bloqueio) e D+30 (suspensao), sem repetir."""
     hoje = hoje or timezone.localdate()
     configuracao = ConfiguracaoPlataforma.obter()
-    resumo = {"disparos": 0, "bloqueios": 0, "suspensoes": 0, "reativacoes": 0, "faturas_vencidas": 0}
+    resumo = {
+        "disparos": 0,
+        "bloqueios": 0,
+        "suspensoes": 0,
+        "reativacoes": 0,
+        "faturas_vencidas": 0,
+    }
     if not configuracao.regua_ativa:
         return resumo
 
@@ -256,10 +290,16 @@ def aplicar_regua(hoje=None, enviar: bool = True) -> dict:
         rede = assinatura.rede
         if assinatura.trial_termina_em:
             faltam = (assinatura.trial_termina_em - hoje).days
-            for marco, dias in ((MarcoRegua.TRIAL_7, 7), (MarcoRegua.TRIAL_3, 3), (MarcoRegua.TRIAL_1, 1)):
+            for marco, dias in (
+                (MarcoRegua.TRIAL_7, 7),
+                (MarcoRegua.TRIAL_3, 3),
+                (MarcoRegua.TRIAL_1, 1),
+            ):
                 if faltam == dias:
                     enviado = _registrar_marco(
-                        None, rede, marco,
+                        None,
+                        rede,
+                        marco,
                         f"Seu teste do pacote {assinatura.pacote.nome} termina em {dias} dia(s)",
                         f"Faltam {dias} dia(s) para o fim do periodo de teste da {rede.nome}.",
                     )
@@ -291,15 +331,20 @@ def aplicar_regua(hoje=None, enviar: bool = True) -> dict:
             elif atraso < dias:
                 continue
             disparo = _registrar_marco(
-                fatura, rede, marco, f"{assunto} - {fatura.numero}",
+                fatura,
+                rede,
+                marco,
+                f"{assunto} - {fatura.numero}",
                 f"{assunto}. Fatura {fatura.numero}, vencimento {fatura.vencimento:%d/%m/%Y}, "
                 f"valor {fatura.valor_final}. Ao pagar, o acesso e restabelecido automaticamente.",
             )
             if disparo:
                 resumo["disparos"] += 1
-            if marco == MarcoRegua.D10 and dias > 0 and rede.status not in {
-                StatusRede.SUSPENSO, StatusRede.CANCELADO
-            }:
+            if (
+                marco == MarcoRegua.D10
+                and dias > 0
+                and rede.status not in {StatusRede.SUSPENSO, StatusRede.CANCELADO}
+            ):
                 rede.status = StatusRede.SOMENTE_LEITURA
                 rede.save(update_fields=["status"])
                 resumo["bloqueios"] += 1
@@ -340,7 +385,8 @@ def processar_evento_gateway(payload: dict, gateway: str = "asaas") -> tuple[Eve
             status_gateway = str(pagamento.get("status", "")).upper()
             if status_gateway in {"RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH"}:
                 pago_agora = fatura.marcar_paga(
-                    valor_pago=pagamento.get("value"), forma=FormaPagamento.PIX,
+                    valor_pago=pagamento.get("value"),
+                    forma=FormaPagamento.PIX,
                     gateway_id=identificador,
                 )
                 resultado = "fatura paga" if pago_agora else "fatura ja estava paga"
@@ -355,8 +401,12 @@ def processar_evento_gateway(payload: dict, gateway: str = "asaas") -> tuple[Eve
     evento.processado_em = timezone.now()
     evento.resultado = resultado
     evento.save(update_fields=["processado_em", "resultado"])
-    registrar("cobrar", "evento_gateway", entidade_id=evento.pk,
-              descricao=f"{gateway}:{evento_id} -> {resultado}")
+    registrar(
+        "cobrar",
+        "evento_gateway",
+        entidade_id=evento.pk,
+        descricao=f"{gateway}:{evento_id} -> {resultado}",
+    )
     return evento, True
 
 
@@ -364,10 +414,296 @@ def _reativar_rede(rede) -> bool:
     if rede.status in {StatusRede.SOMENTE_LEITURA, StatusRede.INADIMPLENTE, StatusRede.SUSPENSO}:
         rede.status = StatusRede.ATIVO
         rede.save(update_fields=["status"])
-        registrar("reativar", "rede", entidade_id=rede.pk,
-                  descricao="Tenant reativado automaticamente apos pagamento")
+        registrar(
+            "reativar",
+            "rede",
+            entidade_id=rede.pk,
+            descricao="Tenant reativado automaticamente apos pagamento",
+        )
         return True
     return False
+
+
+# ------------------------------------------------------------------ CADASTRO PUBLICO
+def slug_disponivel(slug: str) -> tuple[bool, str]:
+    from plataforma.validadores import validar_slug
+
+    valido, mensagem = validar_slug(slug)
+    if not valido:
+        return False, mensagem
+    if Rede.todos.filter(slug=slug.strip().lower()).exists():
+        return False, "Esse identificador ja esta em uso. Escolha outro."
+    return True, ""
+
+
+def cnpj_em_uso(cnpj: str) -> bool:
+    from plataforma.validadores import normalizar_cnpj
+
+    limpo = normalizar_cnpj(cnpj)
+    if not limpo:
+        return False
+    return any(normalizar_cnpj(rede.cnpj) == limpo for rede in Rede.todos.exclude(cnpj=""))
+
+
+def _criar_configuracoes_padrao(rede, nome: str) -> None:
+    """Configuracao e identidade visual padrao (RF-PLT-031)."""
+    from academia.models import Configuracao, IdentidadeVisual
+
+    Configuracao.todos.get_or_create(
+        rede=rede,
+        defaults={"titulo": nome, "theme_mode": "light"},
+    )
+    # Identidade visual padrao: o tenant nasce apontando para os assets estaticos do
+    # projeto (o painel cai no logo padrao quando o campo esta vazio).
+    IdentidadeVisual.todos.get_or_create(rede=rede, defaults={})
+
+
+def criar_convite_do_dono(rede, email: str, papel=Papel.ADMIN_REDE, dias: int = 7):
+    """Convite de primeiro acesso: a pessoa define a propria senha (nunca senha por e-mail)."""
+    from datetime import timedelta
+
+    return ConviteEquipe.objects.create(
+        rede=rede,
+        unidade=None,
+        email=email.strip().lower(),
+        papel=papel,
+        token=ConviteEquipe.gerar_token(),
+        expira_em=timezone.now() + timedelta(days=dias),
+    )
+
+
+def link_do_convite(request, convite) -> str:
+    from django.urls import reverse
+
+    caminho = reverse("gestao:convite_aceitar", args=[convite.token])
+    if request is not None:
+        return request.build_absolute_uri(caminho)
+    return caminho
+
+
+def enviar_boas_vindas(request, rede, convite, fatura=None, trial_dias=None) -> bool:
+    """E-mail de boas-vindas do cadastro (RF-PLT-032)."""
+    from plataforma.emails import enviar_email_plataforma
+
+    link = link_do_convite(request, convite)
+    linhas = [
+        f"Bem-vindo(a) ao Academia SaaS, {rede.nome}!",
+        "",
+        "Sua conta foi criada e ja esta pronta para uso. Para entrar:",
+        "",
+        f"1. Defina sua senha de acesso: {link}",
+        "2. Complete a configuracao pelo assistente (marca, unidade, professores e planos).",
+        "",
+    ]
+    if trial_dias:
+        linhas.append(
+            f"Voce esta no periodo de teste do pacote {convite.rede.assinatura.pacote.nome} "
+            f"por {trial_dias} dias -- sem cobranca nesse periodo."
+        )
+    if fatura is not None:
+        linhas.append(
+            f"Fatura {fatura.numero}: R$ {fatura.valor_final} com vencimento em "
+            f"{fatura.vencimento:%d/%m/%Y}."
+        )
+        if fatura.pix_copia_cola:
+            linhas.append(f"Pix copia e cola: {fatura.pix_copia_cola}")
+        if fatura.link_pagamento:
+            linhas.append(f"Link de pagamento: {fatura.link_pagamento}")
+    linhas += ["", "Qualquer duvida, responda este e-mail.", "", "Equipe SafeStack"]
+    return enviar_email_plataforma(
+        f"Bem-vindo(a) ao Academia SaaS - {rede.nome}",
+        "\n".join(linhas),
+        [rede.email_responsavel or convite.email],
+    )
+
+
+@transaction.atomic
+def cadastrar_tenant_publico(
+    *,
+    nome,
+    slug,
+    cnpj,
+    responsavel,
+    email,
+    telefone,
+    pacote,
+    modalidade="trial",
+    dominio="",
+    request=None,
+) -> dict:
+    """Cadastro self-service (RF-PLT-030/031): tudo ou nada.
+
+    ``modalidade``: ``trial`` (teste de 14 dias no pacote escolhido) ou
+    ``pagamento`` (assina agora, com a primeira fatura em Pix).
+    """
+    from plataforma.validadores import normalizar_cnpj, sugerir_slug, validar_cnpj
+
+    nome = (nome or "").strip()
+    email = (email or "").strip().lower()
+    if not nome:
+        raise CadastroError("Informe o nome da academia.")
+    if not email or "@" not in email:
+        raise CadastroError("Informe um e-mail valido do responsavel.")
+    cnpj_limpo = normalizar_cnpj(cnpj)
+    if cnpj_limpo and not validar_cnpj(cnpj_limpo):
+        raise CadastroError("O CNPJ informado nao e valido. Confira os numeros e tente novamente.")
+    if cnpj_limpo and cnpj_em_uso(cnpj_limpo):
+        raise CadastroError(
+            "Ja existe uma academia cadastrada com este CNPJ. "
+            "Fale com o suporte para recuperar o acesso."
+        )
+    slug = (slug or "").strip().lower() or sugerir_slug(nome)
+    liberado, mensagem = slug_disponivel(slug)
+    if not liberado:
+        raise CadastroError(mensagem)
+    if not pacote.ativo:
+        raise CadastroError("Este pacote nao esta disponivel no momento.")
+
+    configuracao = ConfiguracaoPlataforma.obter()
+    hoje = timezone.localdate()
+    usar_trial = modalidade == "trial"
+    termina_em = timezone.now() + timedelta(days=configuracao.trial_dias) if usar_trial else None
+
+    rede = Rede.todos.create(
+        nome=nome,
+        slug=slug,
+        cnpj=cnpj_limpo,
+        email_responsavel=email,
+        telefone=telefone,
+        dominio=dominio,
+        status=StatusRede.TRIAL if usar_trial else StatusRede.ATIVO,
+        trial_termina_em=termina_em,
+        observacoes_internas=f"Cadastro self-service ({modalidade}) por {responsavel or 'nao informado'}",
+    )
+    assinatura = Assinatura.objects.create(
+        rede=rede,
+        pacote=pacote,
+        ciclo="mensal",
+        inicio=hoje,
+        renovacao_em=(
+            hoje + timedelta(days=configuracao.trial_dias)
+            if usar_trial
+            else Fatura.proximo_vencimento(hoje, "mensal")
+        ),
+        trial_termina_em=termina_em.date() if usar_trial else None,
+    )
+    _criar_configuracoes_padrao(rede, nome)
+
+    usuario = get_user_model().objects.create(
+        username=f"dono.{slug}"[:150],
+        email=email,
+        first_name=(responsavel or nome)[:150],
+        is_staff=False,
+    )
+    usuario.set_unusable_password()
+    usuario.save(update_fields=["password"])
+    VinculoUsuario.todos.create(
+        usuario=usuario, rede=rede, unidade=None, papel=Papel.ADMIN_REDE, ativo=True
+    )
+
+    convite = criar_convite_do_dono(rede, email)
+    fatura = None
+    if not usar_trial:
+        fatura = gerar_fatura(assinatura, hoje=hoje, vencimento=hoje)
+        if fatura is not None:
+            fatura = emitir_cobranca_da_fatura(fatura)
+    registrar(
+        "criar",
+        "rede",
+        entidade_id=rede.pk,
+        descricao=f"Cadastro self-service {rede.nome} ({pacote.nome}, {modalidade})",
+        request=request,
+    )
+    enviado = enviar_boas_vindas(
+        request,
+        rede,
+        convite,
+        fatura=fatura,
+        trial_dias=configuracao.trial_dias if usar_trial else None,
+    )
+    return {
+        "rede": rede,
+        "assinatura": assinatura,
+        "usuario": usuario,
+        "convite": convite,
+        "fatura": fatura,
+        "email_enviado": enviado,
+        "link_primeiro_acesso": link_do_convite(request, convite),
+    }
+
+
+def aplicar_trocas_agendadas(hoje=None) -> int:
+    """Aplica pacotes agendados no dia da renovacao (downgrade, PRD 11.3)."""
+    hoje = hoje or timezone.localdate()
+    aplicadas = 0
+    for assinatura in Assinatura.objects.filter(pacote_agendado__isnull=False).select_related(
+        "pacote"
+    ):
+        if assinatura.renovacao_em <= hoje:
+            assinatura.aplicar_troca_agendada()
+            aplicadas += 1
+    return aplicadas
+
+
+def trocar_pacote_do_tenant(rede, pacote, request=None, usuario=None) -> dict:
+    """Upgrade imediato (fatura proporcional) ou downgrade no proximo ciclo (RF-TEN-040..043)."""
+    assinatura = assinatura_da(rede)
+    if assinatura is None:
+        raise CadastroError("Esta academia ainda nao tem assinatura ativa.")
+    if assinatura.pacote_id == pacote.pk:
+        return {"tipo": "nenhuma", "aviso": "Voce ja esta neste pacote."}
+    atual = assinatura.pacote
+    subindo = (pacote.limite_alunos or 10**9) > (atual.limite_alunos or 10**9) or (
+        pacote.limite_alunos is None and atual.limite_alunos is not None
+    )
+    if subindo:
+        fatura = assinatura.trocar_pacote(pacote)
+        if fatura is not None:
+            fatura = emitir_cobranca_da_fatura(fatura)
+        registrar(
+            "alterar",
+            "assinatura",
+            entidade_id=assinatura.pk,
+            descricao=f"Upgrade para {pacote.nome} via painel do cliente",
+            request=request,
+        )
+        return {
+            "tipo": "upgrade",
+            "fatura": fatura,
+            "aviso": (
+                f"Upgrade para {pacote.nome} aplicado. "
+                + (
+                    f"Fatura proporcional {fatura.numero} emitida."
+                    if fatura
+                    else "Nenhum valor proporcional a cobrar neste ciclo."
+                )
+            ),
+        }
+    assinatura.agendar_troca(pacote)
+    uso = uso_do_tenant(rede)
+    excedente = []
+    for recurso in RECURSOS:
+        limite = pacote.limite_de(recurso)
+        if limite is not None and uso[recurso] > limite:
+            excedente.append(f"{uso[recurso]} {recurso} (limite {limite})")
+    aviso = (
+        f"Downgrade para {pacote.nome} agendado para {assinatura.renovacao_em:%d/%m/%Y}. "
+        "Nada e apagado."
+    )
+    if excedente:
+        aviso += (
+            " Atencao: voce ja usa acima do novo limite ("
+            + "; ".join(excedente)
+            + ") -- cadastros novos ficarao bloqueados ate regularizar."
+        )
+    registrar(
+        "alterar",
+        "assinatura",
+        entidade_id=assinatura.pk,
+        descricao=f"Downgrade agendado para {pacote.nome} via painel do cliente",
+        request=request,
+    )
+    return {"tipo": "downgrade", "fatura": None, "aviso": aviso}
 
 
 # ------------------------------------------------------------------ METRICAS
@@ -401,21 +737,37 @@ def metricas(hoje=None) -> dict:
         "tenants_inadimplentes": inadimplentes,
         "tenants_suspensos": Rede.objects.filter(status=StatusRede.SUSPENSO).count(),
         "churn_mes": canceladas_mes,
-        "churn_percentual": round(100 * canceladas_mes / ativas_no_inicio, 1) if ativas_no_inicio else 0,
-        "ticket_medio": (mrr / len(assinaturas)).quantize(Decimal("0.01")) if assinaturas else Decimal("0"),
+        "churn_percentual": round(100 * canceladas_mes / ativas_no_inicio, 1)
+        if ativas_no_inicio
+        else 0,
+        "ticket_medio": (mrr / len(assinaturas)).quantize(Decimal("0.01"))
+        if assinaturas
+        else Decimal("0"),
         "novos_tenants_mes": Rede.objects.filter(criado_em__date__gte=inicio_mes).count(),
         "por_pacote": sorted(por_pacote.values(), key=lambda item: item["mrr"], reverse=True),
         "em_aberto": faturas_abertas.aggregate(total=Sum("valor_final"))["total"] or Decimal("0"),
         "recebido_mes": Fatura.objects.filter(
             status=StatusFatura.PAGA, pago_em__gte=inicio_mes
-        ).aggregate(total=Sum("valor_final"))["total"] or Decimal("0"),
+        ).aggregate(total=Sum("valor_final"))["total"]
+        or Decimal("0"),
     }
 
 
 # ------------------------------------------------------------------ PROVISIONAMENTO
 @transaction.atomic
-def provisionar_tenant(*, nome, slug, pacote, ciclo="mensal", cnpj="", email="", telefone="",
-                       trial=True, usuario_dono=None, dominio="") -> tuple[Rede, Assinatura]:
+def provisionar_tenant(
+    *,
+    nome,
+    slug,
+    pacote,
+    ciclo="mensal",
+    cnpj="",
+    email="",
+    telefone="",
+    trial=True,
+    usuario_dono=None,
+    dominio="",
+) -> tuple[Rede, Assinatura]:
     """RF-PLT-002/031: cria o tenant completo (tudo ou nada)."""
     configuracao = ConfiguracaoPlataforma.obter()
     hoje = timezone.localdate()
@@ -444,11 +796,17 @@ def provisionar_tenant(*, nome, slug, pacote, ciclo="mensal", cnpj="", email="",
     )
     if usuario_dono is not None:
         VinculoUsuario.todos.get_or_create(
-            usuario=usuario_dono, rede=rede, unidade=None,
+            usuario=usuario_dono,
+            rede=rede,
+            unidade=None,
             defaults={"papel": Papel.ADMIN_REDE, "ativo": True},
         )
-    registrar("criar", "rede", entidade_id=rede.pk,
-              descricao=f"Tenant provisionado ({pacote.nome}, {'trial' if trial else 'ativo'})")
+    registrar(
+        "criar",
+        "rede",
+        entidade_id=rede.pk,
+        descricao=f"Tenant provisionado ({pacote.nome}, {'trial' if trial else 'ativo'})",
+    )
     return rede, assinatura
 
 
@@ -463,24 +821,36 @@ def e_equipe_plataforma(usuario) -> bool:
     ).exists()
 
 
-def impersonar(usuario_plataforma, rede, motivo: str, request=None, usuario_alvo: str = "") -> Impersonacao:
+def impersonar(
+    usuario_plataforma, rede, motivo: str, request=None, usuario_alvo: str = ""
+) -> Impersonacao:
     """RF-PLT-007: motivo obrigatorio e registro imutavel."""
     if not (motivo or "").strip():
         raise ValueError("informe o motivo do acesso de suporte")
     ip = None
     user_agent = ""
     if request is not None:
-        ip = (request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
-              or request.META.get("REMOTE_ADDR"))
+        ip = request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip() or request.META.get(
+            "REMOTE_ADDR"
+        )
         user_agent = request.META.get("HTTP_USER_AGENT", "")[:200]
     registro = Impersonacao.objects.create(
-        rede=rede, usuario_plataforma=usuario_plataforma, usuario_alvo=usuario_alvo[:150],
-        motivo=motivo.strip(), ip=ip, user_agent=user_agent,
+        rede=rede,
+        usuario_plataforma=usuario_plataforma,
+        usuario_alvo=usuario_alvo[:150],
+        motivo=motivo.strip(),
+        ip=ip,
+        user_agent=user_agent,
     )
     if request is not None:
         request.session[CHAVE_IMPERSONACAO] = registro.pk
-    registrar("impersonar", "rede", entidade_id=rede.pk,
-              descricao=f"Suporte acessou como {rede.nome}: {motivo.strip()[:120]}", request=request)
+    registrar(
+        "impersonar",
+        "rede",
+        entidade_id=rede.pk,
+        descricao=f"Suporte acessou como {rede.nome}: {motivo.strip()[:120]}",
+        request=request,
+    )
     return registro
 
 
@@ -503,8 +873,13 @@ def encerrar_impersonacao(request):
         return None
     registro.encerrar()
     request.session.pop(CHAVE_IMPERSONACAO, None)
-    registrar("impersonar", "rede", entidade_id=registro.rede_id,
-              descricao=f"Acesso de suporte encerrado ({registro.rede.nome})", request=request)
+    registrar(
+        "impersonar",
+        "rede",
+        entidade_id=registro.rede_id,
+        descricao=f"Acesso de suporte encerrado ({registro.rede.nome})",
+        request=request,
+    )
     return registro
 
 
@@ -515,5 +890,10 @@ def registrar_acao_impersonada(request, descricao: str) -> None:
         return
     registro.acoes = registro.acoes + 1
     registro.save(update_fields=["acoes"])
-    registrar("impersonar", "acao_suporte", entidade_id=registro.rede_id,
-              descricao=f"[suporte:{registro.usuario_plataforma}] {descricao[:180]}", request=request)
+    registrar(
+        "impersonar",
+        "acao_suporte",
+        entidade_id=registro.rede_id,
+        descricao=f"[suporte:{registro.usuario_plataforma}] {descricao[:180]}",
+        request=request,
+    )

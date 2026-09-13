@@ -1,0 +1,25 @@
+{% extends "vitrine/base.html" %}
+{% block titulo %}Central de ajuda{% endblock %}
+{% block conteudo %}
+<section class="mx-auto max-w-5xl px-4 py-12">
+  <h1 class="text-3xl font-bold text-slate-900">Central de ajuda</h1>
+  <p class="mt-2 text-slate-600">Guias curtos por módulo. Dentro do painel, o assistente de configuração mostra o que falta para sua academia estar 100%.</p>
+  <div class="mt-8 grid gap-6 md:grid-cols-2">
+    {% for topico in topicos %}
+      <div class="rounded-2xl border border-slate-200 p-6">
+        <h2 class="font-semibold text-slate-900">{{ topico.titulo }}</h2>
+        <ul class="mt-3 space-y-2 text-sm text-slate-600">
+          {% for item in topico.itens %}<li>• {{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6">
+    <h2 class="font-semibold text-slate-900">Não encontrou?</h2>
+    <p class="mt-2 text-sm text-slate-600">
+      Fale com o time pelo <a class="text-emerald-700 underline" href="{% url 'vitrine:contato' %}">contato</a> —
+      respondemos em horário comercial. No painel, o botão de suporte também abre o histórico da sua conta.
+    </p>
+  </div>
+</section>
+{% endblock %}
