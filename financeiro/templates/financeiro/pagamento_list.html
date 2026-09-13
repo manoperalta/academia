@@ -20,7 +20,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover align-middle">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Usuário</th>
                         <th>Plano</th>
@@ -34,9 +34,9 @@
                 <tbody>
                     {% for pagamento in pagamentos %}
                     <tr>
-                        <td>{{ pagamento.usuario.username }}</td>
-                        <td>{{ pagamento.plano.nome }}</td>
-                        <td>R$ {{ pagamento.valor_pago }}</td>
+                        <td class="text-dark">{{ pagamento.usuario.username }}</td>
+                        <td class="text-dark">{{ pagamento.plano.nome }}</td>
+                        <td class="text-dark">R$ {{ pagamento.valor_pago }}</td>
                         <td>
                             {% if pagamento.status == 'pago' %}
                             <span class="badge bg-success">Pago</span>
@@ -48,7 +48,7 @@
                             <span class="badge bg-secondary">{{ pagamento.get_status_display }}</span>
                             {% endif %}
                         </td>
-                        <td>{{ pagamento.data_inicio|date:"d/m/Y" }} - {{ pagamento.data_fim|date:"d/m/Y" }}</td>
+                        <td class="text-dark">{{ pagamento.data_inicio|date:"d/m/Y" }} - {{ pagamento.data_fim|date:"d/m/Y" }}</td>
                         <td>
                             {% now "Y-m-d" as today %}
                             {% if pagamento.status == 'pago' %}
@@ -87,9 +87,9 @@
                     {% empty %}
                     <tr>
                         <td colspan="7" class="text-center py-4">
-                            <div class="text-secondary-dark">
-                                <i class="fas fa-money-bill-wave fa-3x mb-3" style="color: #000000;"></i>
-                                <p style="color: #000000;">Nenhum pagamento registrado.</p>
+                            <div class="text-dark opacity-50">
+                                <i class="fas fa-money-bill-wave fa-3x mb-3"></i>
+                                <p>Nenhum pagamento registrado.</p>
                             </div>
                         </td>
                     </tr>

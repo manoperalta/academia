@@ -126,8 +126,7 @@
                                 </div>
 
                                 <p class="text-dark small mb-3">
-                                    <i class="far fa-clock me-1"></i> Duração: {{ item.hora_inicio|time:"H:i" }} às {{
-                                    item.hora_fim|time:"H:i" }}
+                                    <i class="far fa-clock me-1"></i> Duração: {{ item.hora_inicio|time:"H:i" }} às {{ item.hora_fim|time:"H:i" }}
                                 </p>
 
                                 <div class="bg-light p-3 rounded-3">
@@ -135,10 +134,9 @@
                                     <div class="d-flex flex-wrap gap-2">
                                         {% for aula in item.aulas %}
                                         <span class="badge bg-white text-dark border shadow-sm py-2 px-3">
-                                            <i class="fas fa-running me-1 text-primary"></i> {{ aula.nome }}
-                                            <span class="text-secondary ms-1 small">({{
-                                                aula.get_categorias_exercicios_display }})</span>
-                                        </span>
+                                            <i class="fas fa-running me-1 text-primary"></i> {{ aula.nome }} <span
+                                        <span class="badge bg-white text-dark border shadow-sm py-2 px-3">
+                                            <i class="fas fa-running me-1 text-primary"></i> {{ aula.nome }} <span class="text-secondary ms-1 small">({{ aula.get_categorias_exercicios_display }})</span>
                                         {% endfor %}
                                     </div>
                                 </div>

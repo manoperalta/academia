@@ -122,8 +122,7 @@
                                 {% elif usuario.ultimo_pagamento.status == 'pendente' %}
                                 <span class="badge bg-warning text-dark me-2">Pendente</span>
                                 {% else %}
-                                <span class="badge bg-danger me-2">{{ usuario.ultimo_pagamento.get_status_display
-                                    }}</span>
+                                <span class='badge bg-danger me-2'>{{ usuario.ultimo_pagamento.get_status_display }}</span>
                                 {% endif %}
 
                                 {% if user.is_superuser or user.is_staff %}
@@ -149,24 +148,16 @@
                                                 <div class="modal-body">
                                                     <select name="status" class="form-select">
                                                         <option value="pendente" {% if
-                                                            usuario.ultimo_pagamento.status=='pendente' %}selected{%
-                                                            endif %}>Pendente</option>
-                                                        <option value="pago" {% if
+                                                        <option value='pendente' {% if usuario.ultimo_pagamento.status == 'pendente' %}selected{% endif %}>Pendente</option>
                                                             usuario.ultimo_pagamento.status=='pago' %}selected{% endif
                                                             %}>Pago</option>
-                                                        <option value="cancelado" {% if
-                                                            usuario.ultimo_pagamento.status=='cancelado' %}selected{%
-                                                            endif %}>Cancelado</option>
+                                                        <option value='pago' {% if usuario.ultimo_pagamento.status == 'pago' %}selected{% endif %}>Pago</option>
                                                         <option value="em_analise" {% if
                                                             usuario.ultimo_pagamento.status=='em_analise' %}selected{%
-                                                            endif %}>Em Análise</option>
-                                                    </select>
-                                                </div>
+                                                        <option value='cancelado' {% if usuario.ultimo_pagamento.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
                                                 <div class="modal-footer">
                                                     <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                                                        <option value='em_analise' {% if usuario.ultimo_pagamento.status == 'em_analise' %}selected{% endif %}>Em Análise</option>
                                     </div>
                                 </div>
                                 {% endif %}

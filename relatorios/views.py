@@ -4,7 +4,7 @@ from django.db.models import Count, Q, Sum
 from agendamento.models import Agendamento
 from financeiro.models import Pagamento, Despesa
 from usuarios.models import Usuario
-from datetime import date
+from datetime import date, timedelta
 
 @login_required
 def relatorio_geral(request):
@@ -63,6 +63,8 @@ def relatorio_geral(request):
 
 @login_required
 def relatorio_financeiro(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return render(request, '403.html', status=403)
     # Todos os alunos
     usuarios = Usuario.objects.all().select_related('user')
     
@@ -100,6 +102,8 @@ def relatorio_financeiro(request):
 
 @login_required
 def relatorio_usuarios(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return render(request, '403.html', status=403)
     usuarios = Usuario.objects.all().order_by('nome')
     context = {
         'title': 'Relatório de Usuários',
@@ -110,6 +114,8 @@ def relatorio_usuarios(request):
 
 @login_required
 def relatorio_extrato(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return render(request, '403.html', status=403)
     # Entradas (Pagamentos Pagos)
     entradas = Pagamento.objects.filter(status='pago').order_by('-data_pagamento')
     total_entradas = entradas.aggregate(Sum('valor_pago'))['valor_pago__sum'] or 0
@@ -136,3 +142,40 @@ def relatorio_extrato(request):
         'today': date.today(),
     }
     return render(request, 'relatorios/relatorio_extrato.html', context)
+
+@login_required
+def relatorio_professor(request):
+    """Relatório específico para o professor ver quem agendou suas aulas"""
+    if not request.user.is_professor and not (request.user.is_superuser or request.user.is_staff):
+        return render(request, '403.html', status=403) # Ou redirecionar
+        
+    # Agendamentos nos painéis onde o professor é responsável
+    agendamentos = Agendamento.objects.filter(
+        painel__responsavel=request.user
+    ).select_related('aluno', 'painel').order_by('-painel__data', '-painel__hora_inicio')
+    
+    context = {
+        'title': 'Relatório de Agendamentos (Por Aluno)',
+        'agendamentos': agendamentos,
+        'today': date.today(),
+    }
+    return render(request, 'relatorios/relatorio_professor.html', context)
+
+@login_required
+def relatorio_aluno(request):
+    """Relatório específico para o aluno ver seus agendamentos da semana"""
+    hoje = date.today()
+    proxima_semana = hoje + timedelta(days=7)
+    
+    agendamentos = Agendamento.objects.filter(
+        aluno=request.user,
+        painel__data__range=[hoje, proxima_semana]
+    ).select_related('painel', 'painel__responsavel').order_by('painel__data', 'painel__hora_inicio')
+    
+    context = {
+        'title': 'Meus Agendamentos da Semana',
+        'agendamentos': agendamentos,
+        'hoje': hoje,
+        'proxima_semana': proxima_semana,
+    }
+    return render(request, 'relatorios/relatorio_aluno.html', context)

@@ -6,4 +6,6 @@ urlpatterns = [
     path('financeiro/', views.relatorio_financeiro, name='relatorio_financeiro'),
     path('usuarios/', views.relatorio_usuarios, name='relatorio_usuarios'),
     path('extrato/', views.relatorio_extrato, name='relatorio_extrato'),
+    path('professor/', views.relatorio_professor, name='relatorio_professor'),
+    path('aluno/', views.relatorio_aluno, name='relatorio_aluno'),
 ]

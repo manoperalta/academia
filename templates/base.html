@@ -80,7 +80,7 @@
 
                     <li class="nav-item">
                         <a class="nav-link {% if 'relatorio' in request.path %}active{% endif %}"
-                            href="{% url 'relatorio_geral' %}">
+                            href="{% if user.is_professor %}{% url 'relatorio_professor' %}{% elif user.is_student %}{% url 'relatorio_aluno' %}{% else %}{% url 'relatorio_geral' %}{% endif %}">
                             <i class="fas fa-file-alt me-2"></i>Relatórios
                         </a>
                     </li>

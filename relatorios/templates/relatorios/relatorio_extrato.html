@@ -67,15 +67,12 @@
                                 <tr>
                                     <td class="ps-3">{{ item.data_pagamento|date:"d/m/Y" }}</td>
                                     <td>
-                                        <div class="fw-bold">{{
-                                            item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username
-                                            }}</div>
+                                        <div class='fw-bold'>{{ item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username }}</div>
                                         <small class="text-secondary">{{ item.plano.nome }}</small>
                                     </td>
                                     <td class="text-end pe-3 text-success fw-bold">+ R$ {{ item.valor_pago|floatformat:2
                                         }}</td>
-                                </tr>
-                                {% empty %}
+                                    <td class='text-end pe-3 text-success fw-bold'>+ R$ {{ item.valor_pago|floatformat:2 }}</td>
                                 <tr>
                                     <td colspan="3" class="text-center py-3 text-muted">Nenhuma entrada registrada.</td>
                                 </tr>
@@ -151,9 +148,7 @@
                                     <td>{{
                                         item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username
                                         }}</td>
-                                    <td>{{ item.plano.nome }}</td>
-                                    <td class="text-end pe-3 fw-bold">R$ {{ item.valor_pago|floatformat:2 }}</td>
-                                </tr>
+                                    <td>{{ item.usuario.usuario_profile.nome|default:item.usuario.get_full_name|default:item.usuario.username }}</td>
                                 {% empty %}
                                 <tr>
                                     <td colspan="4" class="text-center py-3 text-muted">Nenhum pagamento pendente.</td>

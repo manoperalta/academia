@@ -149,6 +149,74 @@
     </div>
 </div>
 
+<hr class="my-5">
+
+<!-- Seção de Relatórios -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="fw-bold mb-4"><i class="fas fa-file-invoice text-primary me-2"></i>Relatórios do Sistema</h3>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <a href="{% url 'relatorio_geral' %}" class="text-decoration-none shadow-sm">
+                    <div class="card h-100 border-0 hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 mx-auto mb-3"
+                                style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-tasks fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold text-theme-dark">Atividades Gerais</h5>
+                            <p class="text-muted small mb-0">Resumo de todas as atividades e agendamentos.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'relatorio_financeiro' %}" class="text-decoration-none shadow-sm">
+                    <div class="card h-100 border-0 hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 mx-auto mb-3"
+                                style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-search-dollar fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold text-theme-dark">Situação Financeira</h5>
+                            <p class="text-muted small mb-0">Status de pagamento de todos os alunos.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'relatorio_usuarios' %}" class="text-decoration-none shadow-sm">
+                    <div class="card h-100 border-0 hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-3 mx-auto mb-3"
+                                style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-users-cog fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold text-theme-dark">Relação de Usuários</h5>
+                            <p class="text-muted small mb-0">Listagem completa e detalhada de usuários.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{% url 'relatorio_extrato' %}" class="text-decoration-none shadow-sm">
+                    <div class="card h-100 border-0 hover-lift">
+                        <div class="card-body text-center p-4">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 mx-auto mb-3"
+                                style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                            </div>
+                            <h5 class="fw-bold text-theme-dark">Extrato Mensal</h5>
+                            <p class="text-muted small mb-0">Fluxo de caixa: entradas, saídas e pendências.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <!-- Modal para Envio de Notificação de Atraso -->
 <div class="modal fade" id="atrasadosModal" tabindex="-1" aria-labelledby="atrasadosModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

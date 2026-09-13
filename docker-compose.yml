@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: academia_web
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    
+    
+
+  
+
+  
+  nginx:
+    build: ./nginx
+    container_name: academia_nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      - web
+    volumes:
+      - ./static:/app/static
+      - ./media:/app/media
+  
+
