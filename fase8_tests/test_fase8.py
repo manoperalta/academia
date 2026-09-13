@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 
 from area_do_aluno.models import CheckinDoAluno
 from area_do_aluno.servicos import ErroDeCheckin, registrar_checkin
@@ -268,8 +270,10 @@ def test_checkin_recusa_unidade_de_outra_rede_e_matricula_inativa(db, rede, unid
 def test_area_do_aluno_exige_login_e_mostra_acessibilidade(client, db, aluno):
     resposta = client.get("/aluno/")
     assert (
-        resposta.status_code == 302 and "/entrar" in resposta["Location"]
-    ) or resposta.status_code == 302
+        resposta.status_code == 302
+        and "/entrar" in resposta["Location"]
+        or resposta.status_code == 302
+    )
     client.force_login(aluno.user)
     pagina = client.get("/aluno/")
     assert pagina.status_code == 200
@@ -346,3 +350,23 @@ def test_apurar_pela_tela_e_ver_demonstrativo(
     html = demonstrativo.content.decode()
     assert demonstrativo.status_code == 200
     assert "conferencia" in html.lower() or "Conferencia" in html
+
+
+def test_todo_modulo_tem_rota_no_menu(db):
+    """Invariante do painel: modulo sem rota vira reverse("") e derruba todas as telas."""
+    from gestao.menu import ROTAS
+    from gestao.permissoes import Modulo
+
+    sem_rota = [modulo.name for modulo in Modulo if modulo not in ROTAS]
+    assert sem_rota == [], f"modulo sem rota no menu: {sem_rota}"
+    for modulo, rota in ROTAS.items():
+        assert reverse(rota), f"{modulo.name} aponta para rota vazia"
+
+
+def test_modulos_da_fase8_estao_na_matriz(db):
+    """Os tres modulos novos precisam existir no enum e na matriz de papeis."""
+    from gestao.permissoes import MATRIZ, Modulo
+
+    for nome in ("COMISSOES", "GAMIFICACAO", "PESQUISAS"):
+        assert hasattr(Modulo, nome), f"Modulo.{nome} ausente"
+    assert Modulo.COMISSOES in MATRIZ["gestor_unidade"]
