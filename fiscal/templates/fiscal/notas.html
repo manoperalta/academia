@@ -1,0 +1,36 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<h2 class="mb-3 text-lg font-semibold text-slate-900">Notas fiscais</h2>
+<form class="mb-3 flex items-end gap-3" method="get">
+  <label class="text-xs text-slate-600">Situação
+    <select name="situacao" class="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <option value="">todas</option>
+      {% for valor, rotulo in situacoes %}<option value="{{ valor }}" {% if filtro == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+    </select>
+  </label>
+  <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Filtrar</button>
+</form>
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Número</th><th class="px-4 py-3">Competência</th><th class="px-4 py-3">Tomador</th>
+          <th class="px-4 py-3">Valor</th><th class="px-4 py-3">ISS</th><th class="px-4 py-3">Situação</th><th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for nota in notas %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ nota.numero|default:"—" }}/{{ nota.serie|default:"-" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ nota.competencia|date:"m/Y" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ nota.aluno.nome|default:"consumidor" }}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ nota.valor_do_servico }}</td>
+        <td class="px-4 py-3 text-slate-600">R$ {{ nota.valor_do_iss }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ nota.get_situacao_display }}</td>
+        <td class="px-4 py-3 text-right"><a class="text-xs text-sky-700 underline" href="{% url 'fiscal:nota' nota.pk %}">Abrir</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma nota com esse filtro.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

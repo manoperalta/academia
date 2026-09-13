@@ -1,0 +1,28 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h2 class="text-lg font-semibold text-slate-900">
+      {% if resultado.dry_run %}Simulação de emissão{% else %}Notas emitidas{% endif %}
+    </h2>
+    <p class="mt-1 text-xs text-slate-500">
+      Competência {{ resultado.competencia|date:"m/Y" }} · {{ resultado.total_de_pagamentos }} pagamento(s) pago(s) ·
+      {{ resultado.emitidas|length }} {% if resultado.dry_run %}seriam emitidas{% else %}emitida(s){% endif %} ·
+      {{ resultado.ja_tinham_nota|length }} já tinha(m) nota
+      {% if resultado.dry_run %}· <strong>nada foi gravado</strong>{% endif %}
+    </p>
+  </div>
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <table class="min-w-full text-sm">
+      <tbody>
+        {% for linha in resultado.emitidas %}
+        <tr class="border-t border-slate-100"><td class="px-4 py-3">{{ linha.aluno }}</td><td class="px-4 py-3">R$ {{ linha.valor }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" class="px-4 py-6 text-center text-sm text-slate-500">Nenhuma nota nova.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <a class="text-sm text-sky-700 underline" href="{% url 'fiscal:notas' %}">Ver as notas</a>
+</div>
+{% endblock %}

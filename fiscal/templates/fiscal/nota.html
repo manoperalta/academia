@@ -1,0 +1,53 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900">Nota {{ nota.numero|default:"(sem número)" }}/{{ nota.serie|default:"-" }}</h2>
+        <p class="text-xs text-slate-500">{{ nota.rede.nome }} · {{ nota.get_situacao_display }} ·
+          competência {{ nota.competencia|date:"m/Y" }}{% if nota.unidade %} · {{ nota.unidade.nome }}{% endif %}</p>
+        <p class="text-xs text-slate-500">Tomador: {{ nota.aluno.nome|default:"consumidor" }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-lg font-semibold text-slate-900">R$ {{ nota.valor_do_servico }}</p>
+        <p class="text-xs text-slate-500">líquido R$ {{ nota.valor_liquido }}</p>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <a class="rounded-lg border border-slate-300 px-4 py-2 text-sm" href="{% url 'fiscal:pdf' nota.pk %}">Baixar PDF</a>
+      {% if nota.situacao == "emitida" %}
+      <form method="post" action="{% url 'fiscal:cancelar' nota.pk %}" class="flex items-end gap-2">{% csrf_token %}
+        <input name="motivo" placeholder="Motivo do cancelamento" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        <button class="rounded-lg border border-rose-300 px-4 py-2 text-sm text-rose-700">Cancelar nota</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if nota.provedor == "simulado" %}
+    <p class="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+      {{ nota.resposta_do_provedor.aviso }}
+    </p>
+    {% endif %}
+  </div>
+
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Memória de cálculo</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for linha in memoria %}<li class="rounded bg-slate-50 px-3 py-1.5">{{ linha }}</li>{% endfor %}
+      {% for chave, valor in nota.retencoes.items %}<li>Retenção {{ chave|upper }}: R$ {{ valor }}</li>{% endfor %}
+    </ul>
+    <p class="mt-2 text-xs text-slate-500">Código de verificação: {{ nota.codigo_de_verificacao|default:"—" }}</p>
+  </div>
+
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Histórico</h3>
+    <ol class="mt-2 space-y-2 text-xs text-slate-600">
+      {% for evento in eventos %}
+      <li><strong>{{ evento.get_tipo_display }}</strong> em {{ evento.criado_em|date:"d/m/Y H:i" }} — {{ evento.detalhe }}</li>
+      {% endfor %}
+    </ol>
+  </div>
+</div>
+{% endblock %}

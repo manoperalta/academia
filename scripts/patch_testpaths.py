@@ -7,7 +7,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 PASTAS = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede",
-          "fase8_tests", "documentos", "midia", "relacionamento", "busca", "acesso", "cobranca"]
+          "fase8_tests", "documentos", "midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal"]
 
 caminho = RAIZ / "pyproject.toml"
 texto = caminho.read_text(encoding="utf-8")
