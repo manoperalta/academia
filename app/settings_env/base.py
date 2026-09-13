@@ -69,6 +69,7 @@ LOCAIS = [
     "financeiro",
     "relatorios",
     "notificacoes",
+    "documentos",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + TERCEIROS + LOCAIS

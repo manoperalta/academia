@@ -41,6 +41,7 @@ urlpatterns = [
     path('relatorios/', include('relatorios.urls')),
     path('notificacoes/', include('notificacoes.urls')),
     path("", include("vitrine.urls")),
+    path("", include("documentos.urls")),
     path("", include("governanca.urls")),
     path("academia/", academia_views.index, name="index"),
 ]

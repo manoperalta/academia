@@ -6,6 +6,7 @@
     <p class="text-xs text-slate-500">Período {{ repasse.inicio|date:"d/m/Y" }} a {{ repasse.fim|date:"d/m/Y" }} · {{ repasse.get_situacao_display }}</p>
   </div>
   <a href="{% url 'rede:repasse_csv' repasse.pk %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Baixar demonstrativo (CSV)</a>
+  <a href="{% url 'documentos:demonstrativo_de_repasse' repasse.pk %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Baixar demonstrativo (PDF)</a>
   <a href="{% url 'rede:repasses' %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Voltar</a>
 </div>
 

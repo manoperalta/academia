@@ -3,6 +3,7 @@
 {% if aluno %}
 <section class="rounded-2xl bg-white p-4 shadow" aria-labelledby="ola">
   <h1 id="ola" class="text-lg font-semibold">Ola, {{ aluno.nome }}</h1>
+  <p class="mt-1"><a class="text-sm text-sky-700 underline" href="{% url 'documentos:minha_carteirinha' %}">Minha carteirinha (PDF)</a></p>
   <p class="text-xs text-slate-500">
     {{ resumo.unidade_de_origem|default:"Sem unidade" }} · nivel {{ resumo.gamificacao.nivel }} ·
     {{ resumo.gamificacao.pontos }} pontos
