@@ -1,0 +1,32 @@
+{% extends "gestao/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Alunos</p>
+    <p class="mt-2 text-2xl font-semibold">{{ total_alunos }}</p>
+    <p class="text-xs text-slate-500">{{ ativos }} ativos</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Com pendência</p>
+    <p class="mt-2 text-2xl font-semibold text-amber-600">{{ inadimplentes }}</p>
+    <p class="text-xs text-slate-500">alunos com pagamento em aberto</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Receita acumulada</p>
+    <p class="mt-2 text-2xl font-semibold text-emerald-700">{{ receita_total|moeda }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Vencem em 7 dias</p>
+    <p class="mt-2 text-2xl font-semibold">{{ vencendo_7 }}</p>
+  </div>
+</div>
+<div class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+  <h2 class="mb-3 text-sm font-semibold text-slate-900">Exportar</h2>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'gestao:relatorio_alunos_csv' %}" class="rounded-lg bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700">Alunos (CSV)</a>
+    <a href="{% url 'gestao:relatorio_pagamentos_csv' %}" class="rounded-lg bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700">Pagamentos (CSV)</a>
+  </div>
+  <p class="mt-3 text-xs text-slate-500">Toda exportação fica registrada na auditoria.</p>
+</div>
+{% endblock %}

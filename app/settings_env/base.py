@@ -48,6 +48,7 @@ TERCEIROS = [
 
 LOCAIS = [
     "core",
+    "gestao",
     "api",
     "usuarios",
     "professores",
@@ -91,6 +92,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "academia.context_processors.site_config",
                 "core.context_processors.contexto_rede",
+                "gestao.context_processors.menu_do_painel",
             ],
         },
     },

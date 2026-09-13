@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import secrets
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -215,3 +217,87 @@ class UnidadeModel(TenantModel):
 
     class Meta:
         abstract = True
+
+
+class ConviteEquipe(models.Model):
+    """Convite para alguem entrar na equipe de uma rede (opcionalmente de uma unidade)."""
+
+    class Status(models.TextChoices):
+        PENDENTE = "pendente", "Pendente"
+        ACEITO = "aceito", "Aceito"
+        EXPIRADO = "expirado", "Expirado"
+        CANCELADO = "cancelado", "Cancelado"
+
+    rede = models.ForeignKey(
+        "core.Rede", on_delete=models.CASCADE, related_name="convites", verbose_name="rede"
+    )
+    unidade = models.ForeignKey(
+        "core.Unidade",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="convites",
+        verbose_name="unidade",
+    )
+    email = models.EmailField("e-mail")
+    papel = models.CharField("papel", max_length=32, choices=Papel.choices)
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.PENDENTE, db_index=True
+    )
+    expira_em = models.DateTimeField("expira em")
+    criado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="convites_criados",
+        verbose_name="criado por",
+    )
+    criado_em = models.DateTimeField(default=timezone.now)
+    aceito_em = models.DateTimeField(null=True, blank=True)
+    aceito_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="convites_aceitos",
+        verbose_name="aceito por",
+    )
+
+    class Meta:
+        verbose_name = "convite de equipe"
+        verbose_name_plural = "convites de equipe"
+        ordering = ("-criado_em",)
+
+    def __str__(self) -> str:
+        return f"{self.email} ({self.get_papel_display()})"
+
+    @staticmethod
+    def gerar_token() -> str:
+        return secrets.token_urlsafe(32)
+
+    @property
+    def expirado(self) -> bool:
+        return bool(self.expira_em and self.expira_em < timezone.now())
+
+    def esta_valido(self) -> bool:
+        return self.status == self.Status.PENDENTE and not self.expirado
+
+    def aceitar(self, usuario):
+        """Cria (ou ajusta) o vinculo do usuario e marca o convite como aceito."""
+        vinculo, _ = VinculoUsuario.objects.get_or_create(
+            usuario=usuario,
+            rede=self.rede,
+            unidade=self.unidade,
+            defaults={"papel": self.papel, "ativo": True},
+        )
+        if vinculo.papel != self.papel or not vinculo.ativo:
+            vinculo.papel = self.papel
+            vinculo.ativo = True
+            vinculo.save(update_fields=["papel", "ativo"])
+        self.status = self.Status.ACEITO
+        self.aceito_em = timezone.now()
+        self.aceito_por = usuario
+        self.save(update_fields=["status", "aceito_em", "aceito_por"])
+        return vinculo

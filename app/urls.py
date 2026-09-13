@@ -21,7 +21,8 @@ from django.conf.urls.static import static
 from academia import views as academia_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    path("gestao/", include("gestao.urls")),
     path('api/', include('api.urls')),
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('dashboard.urls')),

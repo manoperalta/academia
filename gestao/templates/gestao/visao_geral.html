@@ -1,0 +1,55 @@
+{% extends "gestao/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-500">Alunos ativos</p>
+    <p class="mt-2 text-3xl font-semibold text-slate-900">{{ alunos_ativos }}</p>
+    <p class="mt-1 text-xs text-slate-500">{{ alunos_total }} no total · {{ alunos_arquivados }} arquivados</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-500">Professores ativos</p>
+    <p class="mt-2 text-3xl font-semibold text-slate-900">{{ professores }}</p>
+    <p class="mt-1 text-xs text-slate-500">{{ aulas }} aulas · {{ planos }} planos</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-500">Receita do mês</p>
+    <p class="mt-2 text-3xl font-semibold text-emerald-700">{{ receita_mes|moeda }}</p>
+    <p class="mt-1 text-xs text-slate-500">A receber: {{ a_receber|moeda }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-500">Configuração</p>
+    <p class="mt-2 text-3xl font-semibold text-slate-900">{{ passos.0.percentual }}%</p>
+    <a href="{% url 'gestao:onboarding' %}" class="mt-1 inline-block text-xs text-emerald-700 hover:underline">Ver o que falta</a>
+  </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Últimos alunos</h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for aluno in ultimos_alunos %}
+        <li class="flex items-center justify-between py-2">
+          <a class="text-emerald-700 hover:underline" href="{% url 'gestao:aluno_detalhe' aluno.pk %}">{{ aluno.nome }}</a>
+          <span class="text-xs text-slate-500">{{ aluno.status_user }}</span>
+        </li>
+      {% empty %}
+        <li class="py-2 text-slate-500">Nenhum aluno ainda. <a class="text-emerald-700 hover:underline" href="{% url 'gestao:aluno_novo' %}">Cadastrar o primeiro</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Últimos pagamentos</h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for pagamento in ultimos_pagamentos %}
+        <li class="flex items-center justify-between py-2">
+          <span>{{ pagamento.usuario.username }}</span>
+          <span class="text-xs text-slate-500">{{ pagamento.valor_pago|moeda }} · {{ pagamento.get_status_display }}</span>
+        </li>
+      {% empty %}
+        <li class="py-2 text-slate-500">Nenhum pagamento lançado.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

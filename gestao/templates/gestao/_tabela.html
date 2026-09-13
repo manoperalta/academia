@@ -1,0 +1,35 @@
+{% load gestao_extras %}
+<div id="tabela" class="overflow-x-auto">
+  <table class="min-w-full divide-y divide-slate-100 text-sm">
+    <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        {% for coluna in colunas %}<th class="whitespace-nowrap px-4 py-3">{{ coluna.0 }}</th>{% endfor %}
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100 bg-white">
+      {% for objeto in object_list %}
+        <tr class="hover:bg-slate-50">
+          {% for coluna in colunas %}
+            <td class="px-4 py-3 align-middle">
+              {% if coluna.2 == "moeda" %}{{ objeto|valor:coluna.1|moeda }}{% else %}{{ objeto|valor:coluna.1 }}{% endif %}
+            </td>
+          {% endfor %}
+          <td class="whitespace-nowrap px-4 py-3 text-right text-xs">
+            {% if url_detalhe %}<a class="text-emerald-700 hover:underline" href="{% url url_detalhe objeto.pk %}">Ver</a>{% endif %}
+            {% if url_editar and pode_editar %}<a class="ml-3 text-slate-600 hover:underline" href="{% url url_editar objeto.pk %}">Editar</a>{% endif %}
+            {% if url_arquivar and pode_editar %}
+              <form method="post" action="{% url url_arquivar objeto.pk %}" class="ml-3 inline">
+                {% csrf_token %}
+                <button class="text-slate-500 hover:underline">{% if objeto.arquivado_em %}Restaurar{% else %}Arquivar{% endif %}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8" class="px-4 py-10 text-center text-slate-500">{{ texto_vazio }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% include "gestao/_paginacao.html" %}
+</div>

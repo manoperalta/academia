@@ -1,0 +1,76 @@
+{% extends "gestao/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-base font-semibold text-slate-900">{{ object.nome }}</h2>
+          <p class="text-xs text-slate-500">{{ object.email_user }} · {{ object.telefone_user }}</p>
+        </div>
+        {% if pode_editar %}
+          <a href="{% url 'gestao:aluno_editar' object.pk %}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-50">Editar cadastro</a>
+        {% endif %}
+      </div>
+      <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
+        <div><dt class="text-xs text-slate-500">CPF/CNPJ</dt><dd>{{ object.cpf_cnpj_user|default:"—" }}</dd></div>
+        <div><dt class="text-xs text-slate-500">Nascimento</dt><dd>{{ object.data_nasc|default:"—" }}</dd></div>
+        <div><dt class="text-xs text-slate-500">Status</dt><dd>{{ object.status_user }}</dd></div>
+        <div><dt class="text-xs text-slate-500">Acesso ao sistema</dt><dd>{{ object.user.username|default:"sem acesso" }}</dd></div>
+        <div class="col-span-2"><dt class="text-xs text-slate-500">Endereço</dt>
+          <dd>{{ object.endereco_user|default:"" }} {{ object.numero_end_user|default:"" }} {{ object.bairro_user|default:"" }} {{ object.cep_user|default:"" }}</dd></div>
+      </dl>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 class="mb-3 text-sm font-semibold text-slate-900">Ficha de saúde</h3>
+      {% if pode_editar %}
+        <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {% csrf_token %}
+          {% for campo in ficha_form %}
+            <div class="{% if campo.name in 'restricoes,prescricoes,obs' %}md:col-span-2{% endif %}">
+              <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>
+              {{ campo }}
+            </div>
+          {% endfor %}
+          <div class="md:col-span-2"><button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700">Salvar ficha</button></div>
+        </form>
+      {% else %}
+        <p class="text-sm text-slate-600">Altura: {{ ficha.altura|default:"—" }} · Peso: {{ ficha.peso|default:"—" }}</p>
+        <p class="mt-2 text-sm text-slate-600">Restrições: {{ ficha.restricoes|default:"nenhuma registrada" }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 class="mb-3 text-sm font-semibold text-slate-900">Pagamentos</h3>
+      <ul class="divide-y divide-slate-100 text-sm">
+        {% for pagamento in pagamentos %}
+          <li class="py-2">
+            <p class="font-medium">{{ pagamento.plano.nome|default:"Avulso" }} · {{ pagamento.valor_pago|moeda }}</p>
+            <p class="text-xs text-slate-500">{{ pagamento.data_inicio }} → {{ pagamento.data_fim }} · {{ pagamento.get_status_display }}</p>
+          </li>
+        {% empty %}
+          <li class="py-2 text-slate-500">Nenhum pagamento.</li>
+        {% endfor %}
+      </ul>
+      {% if pode_editar %}<a href="{% url 'gestao:pagamento_novo' %}" class="mt-3 inline-block text-xs text-emerald-700 hover:underline">Lançar pagamento</a>{% endif %}
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 class="mb-3 text-sm font-semibold text-slate-900">Agendamentos</h3>
+      <ul class="divide-y divide-slate-100 text-sm">
+        {% for agendamento in agendamentos %}
+          <li class="py-2 flex items-center justify-between">
+            <span class="text-xs">{{ agendamento.data_agendamento }}</span>
+            <span class="text-xs text-slate-500">{{ agendamento.get_status_display }}</span>
+          </li>
+        {% empty %}
+          <li class="py-2 text-slate-500">Nenhum agendamento.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

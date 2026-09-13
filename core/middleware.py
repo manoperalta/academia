@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from django.http import HttpResponseForbidden
 
@@ -46,9 +47,12 @@ class RedeMiddleware:
 
         try:
             definir_contexto_da_requisicao(request)
-        except Exception:  # pragma: no cover - nunca derruba a requisicao por contexto
+        except Exception:
             logger.exception("Falha ao resolver o contexto de rede")
             limpar_contexto()
+            if ambiente_de_desenvolvimento():
+                # Em dev/teste queremos ver o erro, nao um usuario deslogado em silencio.
+                raise
             return self.get_response(request)
 
         try:
@@ -79,3 +83,8 @@ class RedeMiddleware:
             "A conta desta academia esta com o acesso bloqueado. "
             "Regularize o pagamento para voltar a editar os dados."
         )
+
+
+def ambiente_de_desenvolvimento() -> bool:
+    """True em dev/teste, onde falha de contexto de rede deve ser visivel."""
+    return os.environ.get("DJANGO_ENV", "") in {"dev", "test"}

@@ -1,0 +1,77 @@
+{% load gestao_extras %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titulo|default:"Painel" }} · {{ request.rede.nome|default:"Painel" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800" x-data="{ menu: false }">
+<div class="flex min-h-screen">
+  <aside :class="menu ? 'flex' : 'hidden'" class="w-64 shrink-0 flex-col bg-slate-900 text-slate-100 lg:flex">
+    <div class="flex items-center gap-2 px-5 py-5">
+      <span class="text-2xl">🏋️</span>
+      <div>
+        <p class="text-sm font-semibold leading-tight">{{ request.rede.nome|default:"Academia" }}</p>
+        <p class="text-xs text-slate-400">{{ request.unidade.nome|default:"Todas as unidades" }}</p>
+      </div>
+    </div>
+    <nav class="flex-1 space-y-1 px-3 pb-6">
+      {% for item in menu_painel %}
+        <a href="{% url item.rota %}"
+           class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm
+                  {% if item.modulo == modulo %}bg-emerald-600 text-white{% else %}text-slate-300 hover:bg-slate-800{% endif %}">
+          <span>{{ item.icone }}</span><span>{{ item.rotulo }}</span>
+        </a>
+      {% empty %}
+        <p class="px-3 py-2 text-xs text-slate-400">Sem módulos liberados para o seu acesso.</p>
+      {% endfor %}
+    </nav>
+    <div class="border-t border-slate-800 px-5 py-4 text-xs text-slate-400">
+      <p class="truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
+      <a href="/accounts/logout/" class="mt-1 inline-block text-emerald-400 hover:underline">Sair</a>
+    </div>
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:px-8">
+      <button @click="menu = !menu" class="rounded-lg border border-slate-300 px-3 py-2 text-sm lg:hidden">☰</button>
+      <div class="min-w-0 flex-1">
+        <h1 class="truncate text-lg font-semibold text-slate-900">{{ titulo|default:"Painel" }}</h1>
+        {% if subtitulo %}<p class="truncate text-xs text-slate-500">{{ subtitulo }}</p>{% endif %}
+      </div>
+      <form method="post" action="{% url 'gestao:selecionar_unidade' %}" class="flex items-center gap-2">
+        {% csrf_token %}
+        <input type="hidden" name="voltar" value="{{ request.path }}">
+        <select name="unidade" onchange="this.form.submit()"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+          <option value="">Todas as unidades</option>
+          {% for u in unidades_disponiveis %}
+            <option value="{{ u.pk }}" {% if request.unidade.pk == u.pk %}selected{% endif %}>{{ u.nome }}</option>
+          {% endfor %}
+        </select>
+        <noscript><button class="text-xs text-emerald-700 underline">Trocar</button></noscript>
+      </form>
+    </header>
+
+    <main class="flex-1 p-4 lg:p-8">
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for mensagem in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm
+                        {% if mensagem.tags == 'error' %}border-red-200 bg-red-50 text-red-800
+                        {% elif mensagem.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-900
+                        {% else %}border-emerald-200 bg-emerald-50 text-emerald-900{% endif %}">
+              {{ mensagem }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+</div>
+</body>
+</html>

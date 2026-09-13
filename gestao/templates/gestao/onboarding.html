@@ -1,0 +1,27 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="max-w-3xl">
+  <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div class="flex items-center justify-between">
+      <h2 class="text-sm font-semibold text-slate-900">Passos para deixar a academia operando</h2>
+      <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">
+        {{ passos.0.percentual }}% pronto
+      </span>
+    </div>
+    <ul class="mt-5 space-y-3">
+      {% for passo in passos %}
+        <li class="flex items-start gap-3 rounded-lg border border-slate-100 p-3">
+          <span class="mt-0.5 text-lg">{% if passo.feito %}✅{% else %}⬜{% endif %}</span>
+          <div class="flex-1">
+            <p class="text-sm font-medium {% if passo.feito %}text-slate-500 line-through{% else %}text-slate-900{% endif %}">{{ passo.rotulo }}</p>
+            <p class="text-xs text-slate-500">{{ passo.dica }}</p>
+          </div>
+          {% if not passo.feito %}
+            <a href="{% url passo.rota %}" class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-white hover:bg-slate-700">Resolver</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convite · {{ convite.rede.nome }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex min-h-screen items-center justify-center bg-slate-100 p-4">
+  <div class="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <p class="text-xs uppercase tracking-wide text-slate-500">Convite de {{ convite.rede.nome }}</p>
+    <h1 class="mt-1 text-lg font-semibold text-slate-900">{{ convite.get_papel_display }}</h1>
+    {% if not valido %}
+      <p class="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        Este convite não está mais disponível ({{ convite.get_status_display }}). Peça um novo link a quem te convidou.
+      </p>
+    {% elif logado %}
+      <p class="mt-3 text-sm text-slate-600">Você está conectado como <strong>{{ request.user.username }}</strong>.</p>
+      <form method="post" class="mt-5">
+        {% csrf_token %}
+        <button class="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700">Aceitar convite</button>
+      </form>
+    {% else %}
+      <p class="mt-3 text-sm text-slate-600">Crie sua senha para acessar o painel com o e-mail <strong>{{ convite.email }}</strong>.</p>
+      <form method="post" class="mt-5 space-y-3">
+        {% csrf_token %}
+        {% for campo in form %}
+          <div>
+            <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>{{ campo }}
+            {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700">Criar acesso</button>
+      </form>
+    {% endif %}
+  </div>
+</body>
+</html>

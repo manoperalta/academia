@@ -1,0 +1,54 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Quem tem acesso</h2>
+    <table class="min-w-full text-sm">
+      <thead class="text-left text-xs uppercase text-slate-500"><tr><th class="py-2">Pessoa</th><th>Papel</th><th>Unidade</th><th>Situação</th><th></th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for vinculo in vinculos %}
+          <tr>
+            <td class="py-2">{{ vinculo.usuario.get_full_name|default:vinculo.usuario.username }}<br><span class="text-xs text-slate-500">{{ vinculo.usuario.email }}</span></td>
+            <td>{{ vinculo.get_papel_display }}</td>
+            <td>{{ vinculo.unidade.nome|default:"todas" }}</td>
+            <td>{% if vinculo.ativo %}<span class="text-emerald-700">ativo</span>{% else %}<span class="text-red-600">inativo</span>{% endif %}</td>
+            <td class="text-right">
+              {% if pode_editar %}
+                <form method="post" action="{% url 'gestao:vinculo_alternar' vinculo.pk %}">
+                  {% csrf_token %}<button class="text-xs text-slate-600 hover:underline">{% if vinculo.ativo %}Desativar{% else %}Ativar{% endif %}</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="py-6 text-center text-slate-500">Nenhum acesso cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">Convites</h2>
+      {% if pode_editar %}
+        <a href="{% url 'gestao:convite_novo' %}" class="mb-3 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700">+ Convidar</a>
+      {% endif %}
+      <ul class="divide-y divide-slate-100 text-sm">
+        {% for convite in convites %}
+          <li class="py-2">
+            <p class="font-medium">{{ convite.email }}</p>
+            <p class="text-xs text-slate-500">{{ convite.get_papel_display }} · {{ convite.get_status_display }}</p>
+            {% if pode_editar and convite.status == "pendente" %}
+              <form method="post" action="{% url 'gestao:convite_cancelar' convite.pk %}" class="mt-1">
+                {% csrf_token %}<button class="text-xs text-red-600 hover:underline">Cancelar</button>
+              </form>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="py-2 text-slate-500">Nenhum convite enviado.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% if is_paginated %}
+  <div class="flex items-center justify-between px-4 py-3 text-xs text-slate-500">
+    <span>Página {{ page_obj.number }} de {{ paginator.num_pages }} · {{ paginator.count }} registros</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+        <a class="rounded border border-slate-300 px-3 py-1 hover:bg-slate-50"
+           hx-get="?page={{ page_obj.previous_page_number }}{% if termo %}&q={{ termo }}{% endif %}{% if filtrando_arquivados %}&arquivados=1{% endif %}"
+           hx-target="#tabela" hx-push-url="true" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a class="rounded border border-slate-300 px-3 py-1 hover:bg-slate-50"
+           hx-get="?page={{ page_obj.next_page_number }}{% if termo %}&q={{ termo }}{% endif %}{% if filtrando_arquivados %}&arquivados=1{% endif %}"
+           hx-target="#tabela" hx-push-url="true" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

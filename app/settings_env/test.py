@@ -1,3 +1,7 @@
+import os
+
+os.environ.setdefault("DJANGO_ENV", "test")
+
 """Testes: rapido e deterministico (nao use isto em producao)."""
 
 from app.settings_env.base import *  # noqa: F401,F403

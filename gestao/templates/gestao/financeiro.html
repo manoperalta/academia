@@ -1,0 +1,64 @@
+{% extends "gestao/base.html" %}
+{% load gestao_extras %}
+{% block conteudo %}
+<div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Receita do mês</p>
+    <p class="mt-2 text-2xl font-semibold text-emerald-700">{{ receita_mes|moeda }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Despesas do mês</p>
+    <p class="mt-2 text-2xl font-semibold text-red-600">{{ despesa_mes|moeda }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">Resultado</p>
+    <p class="mt-2 text-2xl font-semibold text-slate-900">{{ resultado_mes|moeda }}</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <p class="text-xs uppercase text-slate-500">A receber / vencendo</p>
+    <p class="mt-2 text-2xl font-semibold text-amber-600">{{ pendentes|moeda }}</p>
+    <p class="text-xs text-slate-500">{{ vencendo }} assinaturas vencem em 7 dias</p>
+  </div>
+</div>
+
+<div class="mt-4 flex flex-wrap gap-2">
+  <a href="{% url 'gestao:planos' %}" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50">Planos</a>
+  <a href="{% url 'gestao:pagamentos' %}" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50">Pagamentos</a>
+  <a href="{% url 'gestao:despesas' %}" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50">Despesas</a>
+</div>
+
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Planos da academia</h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for plano in planos %}
+        <li class="flex items-center justify-between py-2">
+          <span>{{ plano.nome }} <span class="text-xs text-slate-500">({{ plano.get_tipo_display }})</span></span>
+          <span class="font-medium">{{ plano.valor|moeda }}</span>
+        </li>
+      {% empty %}
+        <li class="py-2 text-slate-500">Nenhum plano. <a class="text-emerald-700 hover:underline" href="{% url 'gestao:plano_novo' %}">Cadastrar</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="mb-3 text-sm font-semibold text-slate-900">Últimos pagamentos</h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for pagamento in ultimos_pagamentos %}
+        <li class="flex items-center justify-between py-2">
+          <span>{{ pagamento.usuario.username }}</span>
+          <span class="text-xs">{{ pagamento.valor_pago|moeda }} · {{ pagamento.get_status_display }}
+            {% if pode_editar and pagamento.status != "pago" %}
+              <form method="post" action="{% url 'gestao:pagamento_baixar' pagamento.pk %}" class="ml-2 inline">
+                {% csrf_token %}<button class="text-emerald-700 hover:underline">Dar baixa</button>
+              </form>
+            {% endif %}
+          </span>
+        </li>
+      {% empty %}
+        <li class="py-2 text-slate-500">Nenhum pagamento lançado.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

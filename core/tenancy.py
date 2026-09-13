@@ -20,6 +20,7 @@ from django.db import transaction
 
 from core.context import definir_contexto
 from core.models import Rede, Unidade, VinculoUsuario
+from core.papeis import PAPEIS_DA_REDE
 
 SLUG_REDE_PADRAO = "padrao"
 NOME_REDE_PADRAO = "Academia (rede padrao)"
@@ -111,11 +112,12 @@ def resolver_rede(request):
     if usuario is not None and usuario.is_authenticated:
         rede = rede_do_usuario(usuario)
         if rede:
-            vinculo = (
-                VinculoUsuario.todos.filter(usuario=usuario, rede=rede, ativo=True)
-                .select_related("unidade")
-                .first()
-            )
+            vinculos = VinculoUsuario.todos.filter(usuario=usuario, rede=rede, ativo=True)
+            papeis_de_rede_do_usuario = set(vinculos.values_list("papel", flat=True))
+            # Papeis de rede veem todas as unidades; a unidade entra pela sessao.
+            if usuario.is_superuser or (papeis_de_rede_do_usuario & PAPEIS_DA_REDE):
+                return rede, None
+            vinculo = vinculos.select_related("unidade").first()
             return rede, (vinculo.unidade if vinculo else None)
 
     rede = _do_dominio(request)[0]

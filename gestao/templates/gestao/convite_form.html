@@ -1,0 +1,19 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<form method="post" class="max-w-xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+  {% csrf_token %}
+  <h2 class="mb-1 text-sm font-semibold text-slate-900">Convidar para a equipe</h2>
+  <p class="mb-4 text-xs text-slate-500">A pessoa recebe um link para criar a própria senha. O convite expira em 7 dias.</p>
+  {% for campo in form %}
+    <div class="mb-3">
+      <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>{{ campo }}
+      {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
+      {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+    </div>
+  {% endfor %}
+  <div class="flex items-center gap-3">
+    <button class="rounded-lg bg-emerald-600 px-5 py-2 text-sm text-white hover:bg-emerald-700">Enviar convite</button>
+    <a href="{% url 'gestao:equipe' %}" class="text-sm text-slate-600 hover:underline">Cancelar</a>
+  </div>
+</form>
+{% endblock %}
