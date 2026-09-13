@@ -155,7 +155,7 @@ class DocumentoPDF:
         alinhamento: str = "esquerda",
         cor: tuple[float, float, float] = (0, 0, 0),
         recuo: float = 0.0,
-    ) -> "DocumentoPDF":
+    ) -> DocumentoPDF:
         linha_texto = como_texto(conteudo)
         mono = fonte.startswith("mono")
         largura = self._largura(linha_texto, tamanho, mono)
@@ -171,7 +171,7 @@ class DocumentoPDF:
         self._y -= tamanho + 4.5
         return self
 
-    def par(self, rotulo: str, valor: object, tamanho: float = 10) -> "DocumentoPDF":
+    def par(self, rotulo: str, valor: object, tamanho: float = 10) -> DocumentoPDF:
         """Uma linha rotulo/valor, com o valor em Courier (alinhavel)."""
         self._garantir(tamanho + 3)
         self._emitir_texto(
@@ -195,7 +195,7 @@ class DocumentoPDF:
         self._y -= tamanho + 5
         return self
 
-    def secao(self, titulo: str) -> "DocumentoPDF":
+    def secao(self, titulo: str) -> DocumentoPDF:
         self.espaco(6)
         self.texto(titulo.upper(), tamanho=9, fonte="negrito", cor=(0.25, 0.25, 0.25))
         self.linha(espessura=0.5, cor=(0.75, 0.75, 0.75))
@@ -215,7 +215,7 @@ class DocumentoPDF:
             f"{self.largura_util:.2f} {altura:.2f} re S"
         )
 
-    def espaco(self, pontos: float = 6) -> "DocumentoPDF":
+    def espaco(self, pontos: float = 6) -> DocumentoPDF:
         self._y -= pontos
         return self
 
@@ -225,7 +225,7 @@ class DocumentoPDF:
         cor: tuple[float, float, float] = (0.6, 0.6, 0.6),
         largura: float | None = None,
         x: float | None = None,
-    ) -> "DocumentoPDF":
+    ) -> DocumentoPDF:
         r, g, b = cor
         x1 = self.margem if x is None else x
         x2 = x1 + (self.largura_util if largura is None else largura)
@@ -244,7 +244,7 @@ class DocumentoPDF:
 
     def tabela(
         self, colunas: list[tuple[str, float, str]], linhas: list[list[object]], tamanho: float = 9
-    ) -> "DocumentoPDF":
+    ) -> DocumentoPDF:
         """Tabela com colunas ``(titulo, fracao da largura, alinhamento)``."""
         soma = sum(fracao for _, fracao, _ in colunas)
         larguras = [self.largura_util * fracao / soma for _, fracao, _ in colunas]
@@ -279,7 +279,7 @@ class DocumentoPDF:
         self.espaco(4)
         return self
 
-    def quebra_de_pagina(self) -> "DocumentoPDF":
+    def quebra_de_pagina(self) -> DocumentoPDF:
         self._paginas.append([])
         self._y = self.altura - self.margem
         self.cabecalho()

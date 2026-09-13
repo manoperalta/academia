@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 from django.urls import reverse
 from django.utils import timezone
