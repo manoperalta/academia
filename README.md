@@ -141,16 +141,16 @@ Edite `app/settings.py`:
 
 ```python
 # Para desenvolvimento (console)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Para produção (SMTP - Gmail)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'seu-email@gmail.com'
-EMAIL_HOST_PASSWORD = 'sua-senha-app'  # Use senha de app do Gmail
-DEFAULT_FROM_EMAIL = 'seu-email@gmail.com'
+EMAIL_HOST_USER = "seu-email@gmail.com"
+EMAIL_HOST_PASSWORD = "sua-senha-app"  # Use senha de app do Gmail
+DEFAULT_FROM_EMAIL = "seu-email@gmail.com"
 ```
 
 ### Upload de Logo

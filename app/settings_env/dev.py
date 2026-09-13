@@ -1,6 +1,6 @@
 """Desenvolvimento: conveniencia acima de rigor, sem segredo real."""
 
-from app.settings_env.base import *  # noqa: F401,F403
+from app.settings_env.base import *  # noqa: F403
 from app.settings_env.base import env
 
 DEBUG = env.bool("DJANGO_DEBUG", default=True)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Acrescenta o app 'rede' ao conjunto de apps de plataforma nos testes de isolamento."""
+
 from __future__ import annotations
 
 from pathlib import Path

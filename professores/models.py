@@ -1,14 +1,21 @@
+from django.conf import settings
 from django.db import models
 
-from django.conf import settings
 from core.models import TenantModel
 
+
 class Professor(TenantModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='professor_profile', null=True, blank=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="professor_profile",
+        null=True,
+        blank=True,
+    )
 
     STATUS_CHOICES = (
-        ('Ativo', 'Ativo'),
-        ('Inativo', 'Inativo'),
+        ("Ativo", "Ativo"),
+        ("Inativo", "Inativo"),
     )
 
     nome = models.CharField(max_length=255, verbose_name="Nome Completo")
@@ -22,8 +29,12 @@ class Professor(TenantModel):
     telefone_prof = models.CharField(max_length=20, verbose_name="Telefone", blank=True, null=True)
     data_create_prof = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_prof = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
-    foto_prof = models.ImageField(upload_to='professores_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")
-    status_prof = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
+    foto_prof = models.ImageField(
+        upload_to="professores_fotos/", null=True, blank=True, verbose_name="Foto de Perfil"
+    )
+    status_prof = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default="Ativo", verbose_name="Status"
+    )
 
     def __str__(self):
         return self.nome

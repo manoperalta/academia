@@ -1,4 +1,5 @@
 """Gera os documentos de negocio com dados reais de uma rede de demonstracao (limpa depois)."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -18,24 +19,47 @@ from usuarios.models import Usuario
 SLUG = "demo-documentos-verificacao"
 Rede.todos.filter(slug=SLUG).delete()
 rede = Rede.todos.create(nome="Academia Peralta", slug=SLUG, cnpj="12.345.678/0001-90")
-unidade = Unidade.objects.create(rede=rede, nome="Unidade Centro", codigo="centro", tipo="propria",
-                                 endereco="Rua das Acacias, 100", cidade="Montenegro", uf="RS",
-                                 telefone="51 3632-0000")
-professor = Professor.todos.create(rede=rede, unidade=unidade, nome="Prof. Joao", status_prof="Ativo")
+unidade = Unidade.objects.create(
+    rede=rede,
+    nome="Unidade Centro",
+    codigo="centro",
+    tipo="propria",
+    endereco="Rua das Acacias, 100",
+    cidade="Montenegro",
+    uf="RS",
+    telefone="51 3632-0000",
+)
+professor = Professor.todos.create(
+    rede=rede, unidade=unidade, nome="Prof. Joao", status_prof="Ativo"
+)
 login = get_user_model().objects.create_user(username="aluno.demo.doc", password="SenhaDemo!23")
-aluno = Usuario.todos.create(rede=rede, unidade=unidade, user=login, nome="Joao Conceicao da Silva",
-                             status_user="Ativo")
-plano = Plano.objects.create(rede=rede, unidade=unidade, nome="Mensal Ouro", tipo="mensal",
-                             valor=Decimal("199.00"))
+aluno = Usuario.todos.create(
+    rede=rede, unidade=unidade, user=login, nome="Joao Conceicao da Silva", status_user="Ativo"
+)
+plano = Plano.objects.create(
+    rede=rede, unidade=unidade, nome="Mensal Ouro", tipo="mensal", valor=Decimal("199.00")
+)
 hoje = timezone.localdate()
-pagamento = Pagamento.objects.create(rede=rede, unidade=unidade, usuario=login, plano=plano,
-                                     valor_pago=Decimal("189.05"), data_pagamento=hoje,
-                                     data_inicio=hoje, data_fim=hoje + timedelta(days=30),
-                                     status="pago")
-RegraDeComissao.objects.create(rede=rede, professor=professor, tipo=TipoDeComissao.PERCENTUAL,
-                               percentual=Decimal("10.000"), piso_mensal=Decimal("50.00"))
+pagamento = Pagamento.objects.create(
+    rede=rede,
+    unidade=unidade,
+    usuario=login,
+    plano=plano,
+    valor_pago=Decimal("189.05"),
+    data_pagamento=hoje,
+    data_inicio=hoje,
+    data_fim=hoje + timedelta(days=30),
+    status="pago",
+)
+RegraDeComissao.objects.create(
+    rede=rede,
+    professor=professor,
+    tipo=TipoDeComissao.PERCENTUAL,
+    percentual=Decimal("10.000"),
+    piso_mensal=Decimal("50.00"),
+)
 apurar_competencia(rede)
-from remuneracao.models import ApuracaoDeComissao
+from remuneracao.models import ApuracaoDeComissao  # noqa: E402 - import depois do setup do Django
 
 apuracao = ApuracaoDeComissao.objects.get()
 

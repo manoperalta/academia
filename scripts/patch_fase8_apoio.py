@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Fase 8: modelos filhos (sem rede propria) entram na lista de ignorados do teste de isolamento."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-FILHOS = ("remuneracao.itemdecomissao", "gamificacao.lancamentodepontos",
-          "gamificacao.conquistadoaluno", "nps.resposta")
+FILHOS = (
+    "remuneracao.itemdecomissao",
+    "gamificacao.lancamentodepontos",
+    "gamificacao.conquistadoaluno",
+    "nps.resposta",
+)
 
 
 def main() -> None:

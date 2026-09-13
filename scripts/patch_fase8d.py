@@ -5,6 +5,7 @@ O sintoma que isso corrige: um modulo presente em ``Modulo`` mas ausente de ``RO
 faz o menu renderizar ``{% url "" %}`` e derruba TODAS as telas do painel com
 NoReverseMatch. A checagem no fim deste script falha justamente para isso nao voltar.
 """
+
 from __future__ import annotations
 
 import sys
@@ -34,7 +35,9 @@ def patch_menu() -> None:
         caminho.write_text(texto, encoding="utf-8")
         print("menu: rotas de comissoes, gamificacao e pesquisas adicionadas")
 
-    faltando = [nome for nome, rota in NOVAS.items() if rota not in caminho.read_text(encoding="utf-8")]
+    faltando = [
+        nome for nome, rota in NOVAS.items() if rota not in caminho.read_text(encoding="utf-8")
+    ]
     if faltando:
         raise SystemExit(f"ERRO: rotas ausentes no menu: {faltando}")
 

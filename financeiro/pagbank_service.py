@@ -1,20 +1,25 @@
-import requests
-import json
 from datetime import datetime, timedelta
-from django.conf import settings
+
+import requests
+
 from .models import GatewayConfig
+
 
 class PagBankService:
     def __init__(self):
         self.config = GatewayConfig.objects.first()
         if not self.config or not self.config.ativo:
             raise Exception("Gateway PagBank não configurado ou inativo.")
-        
-        self.base_url = "https://sandbox.api.pagseguro.com" if self.config.ambiente == 'sandbox' else "https://api.pagseguro.com"
+
+        self.base_url = (
+            "https://sandbox.api.pagseguro.com"
+            if self.config.ambiente == "sandbox"
+            else "https://api.pagseguro.com"
+        )
         self.headers = {
             "Authorization": f"Bearer {self.config.token}",
             "Content-Type": "application/json",
-            "x-api-version": "4.0"
+            "x-api-version": "4.0",
         }
 
     def criar_pedido(self, pagamento, usuario):
@@ -23,17 +28,17 @@ class PagBankService:
         """
         # Formata o valor para centavos (inteiro)
         valor_centavos = int(pagamento.valor_pago * 100)
-        
+
         # Dados do cliente
         # Tenta pegar telefone e CPF do usuário se existirem, senão usa dados fictícios para teste (sandbox)
         # Em produção, esses dados devem ser obrigatórios e validados
         telefone_numero = "999999999"
         telefone_ddd = "11"
-        cpf = "12345678909" # CPF de teste
-        
+        cpf = "12345678909"  # CPF de teste
+
         # Se o usuário tiver perfil com esses dados, use-os
         # Exemplo: if hasattr(usuario, 'perfil'): ...
-        
+
         payload = {
             "reference_id": f"pag-{pagamento.id}",
             "customer": {
@@ -45,30 +50,26 @@ class PagBankService:
                         "country": "55",
                         "area": telefone_ddd,
                         "number": telefone_numero,
-                        "type": "MOBILE"
+                        "type": "MOBILE",
                     }
-                ]
+                ],
             },
             "items": [
                 {
                     "reference_id": f"plano-{pagamento.plano.id}",
                     "name": pagamento.plano.nome,
                     "quantity": 1,
-                    "unit_amount": valor_centavos
+                    "unit_amount": valor_centavos,
                 }
             ],
-            "notification_urls": [
-                self.config.url_webhook
-            ] if self.config.url_webhook else []
+            "notification_urls": [self.config.url_webhook] if self.config.url_webhook else [],
         }
 
         # Adiciona QR Code Pix como opção padrão
         payload["qr_codes"] = [
             {
-                "amount": {
-                    "value": valor_centavos
-                },
-                "expiration_date": (datetime.now() + timedelta(days=1)).isoformat()
+                "amount": {"value": valor_centavos},
+                "expiration_date": (datetime.now() + timedelta(days=1)).isoformat(),
             }
         ]
 
@@ -77,13 +78,12 @@ class PagBankService:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            error_msg = f"Erro ao comunicar com PagBank: {str(e)}"
-            if hasattr(e, 'response') and e.response is not None:
-                try:
-                    error_msg += f" - Detalhes: {e.response.text}"
-                except:
-                    pass
-            raise Exception(error_msg)
+            error_msg = f"Erro ao comunicar com PagBank: {e!s}"
+            if hasattr(e, "response") and e.response is not None:
+                detalhes = getattr(e.response, "text", "")
+                if detalhes:
+                    error_msg += f" - Detalhes: {detalhes}"
+            raise Exception(error_msg) from e
 
     def consultar_pedido(self, order_id):
         try:
@@ -91,4 +91,4 @@ class PagBankService:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Erro ao consultar pedido PagBank: {str(e)}")
+            raise Exception(f"Erro ao consultar pedido PagBank: {e!s}") from e

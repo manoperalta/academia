@@ -1,4 +1,5 @@
 """Lista todas as rotas resolvidas do projeto. Importe com manage.py shell -c "import scripts.listar_rotas"."""
+
 from __future__ import annotations
 
 from django.urls import URLPattern, URLResolver, get_resolver

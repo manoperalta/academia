@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (pdv): modulo PDV no enum, na matriz do gestor e no menu."""
+
 from __future__ import annotations
 
 from pathlib import Path

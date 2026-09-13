@@ -1,4 +1,5 @@
 """Reproduz o caminho da view de agendar e mostra onde falha."""
+
 from __future__ import annotations
 
 from datetime import time, timedelta
@@ -22,13 +23,20 @@ login, _ = get_user_model().objects.get_or_create(username="diag.aluno")
 login.set_password("SenhaDiag!23")
 login.save()
 aluno, _criado = Usuario.todos.get_or_create(
-    rede=rede, user=login, defaults={"unidade": unidade, "nome": "Aluno Diag", "status_user": "Ativo"}
+    rede=rede,
+    user=login,
+    defaults={"unidade": unidade, "nome": "Aluno Diag", "status_user": "Ativo"},
 )
 dono, _ = get_user_model().objects.get_or_create(username="diag.dono")
 turma, _criada = Painel.objects.get_or_create(
-    rede=rede, nome="Turma Diag", defaults={
-        "unidade": unidade, "data": timezone.localdate() + timedelta(days=2),
-        "hora_inicio": time(19, 0), "hora_fim": time(20, 0), "numero_de_user": 2,
+    rede=rede,
+    nome="Turma Diag",
+    defaults={
+        "unidade": unidade,
+        "data": timezone.localdate() + timedelta(days=2),
+        "hora_inicio": time(19, 0),
+        "hora_fim": time(20, 0),
+        "numero_de_user": 2,
         "responsavel": dono,
     },
 )
@@ -40,7 +48,7 @@ print("agendamentos existentes:", existentes)
 try:
     agendamento = servicos.agendar(aluno=aluno, turma=turma)
     print("OK criado:", agendamento.pk, agendamento.status)
-except Exception as erro:  # noqa: BLE001
+except Exception as erro:
     print("FALHOU:", type(erro).__name__, "-", erro)
 Agendamento.objects.filter(aluno=aluno.user).delete()
 Painel.objects.filter(nome="Turma Diag").delete()

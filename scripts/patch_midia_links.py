@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (midia): atalho para a midia da rede na tela de aulas."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,13 +13,13 @@ BLOCO = (
     '  <div class="mr-auto">\n'
     '    <h2 class="text-sm font-semibold text-slate-900">Vídeos e materiais</h2>\n'
     '    <p class="text-xs text-slate-500">Envie o vídeo da aula em partes, com conferência de '
-    'integridade.</p>\n'
-    '  </div>\n'
+    "integridade.</p>\n"
+    "  </div>\n"
     '  <a href="{% url \'midia:lista\' %}" class="rounded-lg border border-slate-300 px-4 py-2 '
     'text-sm">Mídia da rede</a>\n'
     '  <a href="{% url \'midia:enviar\' %}" class="rounded-lg bg-slate-900 px-4 py-2 text-sm '
     'text-white">Enviar arquivo</a>\n'
-    '</div>\n\n'
+    "</div>\n\n"
 )
 
 

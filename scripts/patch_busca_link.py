@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (busca): caixa de busca no cabecalho do painel."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,7 +16,7 @@ BLOCO = (
     'aria-label="Buscar no painel"\n'
     '               class="w-56 rounded-lg border border-slate-300 px-3 py-1.5 text-sm">\n'
     '        <button class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">Buscar</button>\n'
-    '      </form>\n      '
+    "      </form>\n      "
 )
 
 

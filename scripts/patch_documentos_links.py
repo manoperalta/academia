@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (documentos): botoes de download nas telas, com ancora verificada."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,44 +12,50 @@ ESTILO = 'class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs hover:bg
 EDICOES = [
     (
         "gestao/templates/gestao/aluno_detalhe.html",
-        '<a href="{% url \'gestao:aluno_editar\' object.pk %}" ' + ESTILO + '>Editar cadastro</a>',
-        lambda ancora: ancora
-        + '\n          <a href="{% url \'documentos:comprovante_de_matricula\' object.pk %}" '
-        + ESTILO
-        + '>Comprovante de matrícula</a>'
-        + '\n          <a href="{% url \'documentos:carteirinha\' object.pk %}" '
-        + ESTILO
-        + '>Carteirinha</a>'
-        + '\n          <a href="{% url \'documentos:contrato\' object.pk %}" '
-        + ESTILO
-        + '>Contrato de adesão</a>',
+        "<a href=\"{% url 'gestao:aluno_editar' object.pk %}\" " + ESTILO + ">Editar cadastro</a>",
+        lambda ancora: (
+            ancora
+            + "\n          <a href=\"{% url 'documentos:comprovante_de_matricula' object.pk %}\" "
+            + ESTILO
+            + ">Comprovante de matrícula</a>"
+            + "\n          <a href=\"{% url 'documentos:carteirinha' object.pk %}\" "
+            + ESTILO
+            + ">Carteirinha</a>"
+            + "\n          <a href=\"{% url 'documentos:contrato' object.pk %}\" "
+            + ESTILO
+            + ">Contrato de adesão</a>"
+        ),
         "aluno_detalhe",
     ),
     (
         "rede/templates/rede/repasse_detalhe.html",
         '<a href="{% url \'rede:repasse_csv\' repasse.pk %}" class="rounded-lg border '
         'border-slate-300 px-4 py-2 text-sm">Baixar demonstrativo (CSV)</a>',
-        lambda ancora: ancora
-        + '\n  <a href="{% url \'documentos:demonstrativo_de_repasse\' repasse.pk %}" '
-        'class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Baixar demonstrativo (PDF)</a>',
+        lambda ancora: (
+            ancora + "\n  <a href=\"{% url 'documentos:demonstrativo_de_repasse' repasse.pk %}\" "
+            'class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Baixar demonstrativo (PDF)</a>'
+        ),
         "repasse_detalhe",
     ),
     (
         "remuneracao/templates/remuneracao/apuracao_detalhe.html",
         "{% block conteudo %}",
-        lambda ancora: ancora
-        + '\n<div class="mx-auto max-w-4xl pb-2 text-right">'
-        + '<a href="{% url \'documentos:extrato_de_comissao\' apuracao.pk %}" '
-        + ESTILO
-        + '>Baixar extrato (PDF)</a></div>',
+        lambda ancora: (
+            ancora
+            + '\n<div class="mx-auto max-w-4xl pb-2 text-right">'
+            + "<a href=\"{% url 'documentos:extrato_de_comissao' apuracao.pk %}\" "
+            + ESTILO
+            + ">Baixar extrato (PDF)</a></div>"
+        ),
         "apuracao_detalhe",
     ),
     (
         "area_do_aluno/templates/area_do_aluno/inicio.html",
         '<h1 id="ola" class="text-lg font-semibold">Ola, {{ aluno.nome }}</h1>',
-        lambda ancora: ancora
-        + '\n  <p class="mt-1"><a class="text-sm text-sky-700 underline" '
-        'href="{% url \'documentos:minha_carteirinha\' %}">Minha carteirinha (PDF)</a></p>',
+        lambda ancora: (
+            ancora + '\n  <p class="mt-1"><a class="text-sm text-sky-700 underline" '
+            "href=\"{% url 'documentos:minha_carteirinha' %}\">Minha carteirinha (PDF)</a></p>"
+        ),
         "pwa_inicio",
     ),
 ]

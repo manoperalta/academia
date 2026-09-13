@@ -18,7 +18,13 @@ from django.core import signing
 from django.db.models import Sum
 from django.utils import timezone
 
-from midia.models import TAMANHO_DA_PARTE, TAMANHO_MAXIMO, ArquivoDeMidia, ParteDeMidia, tamanho_legivel
+from midia.models import (
+    TAMANHO_DA_PARTE,
+    TAMANHO_MAXIMO,
+    ArquivoDeMidia,
+    ParteDeMidia,
+    tamanho_legivel,
+)
 
 SAL_DA_ENTREGA = "midia-entrega"
 EXTENSOES = {
@@ -59,25 +65,40 @@ def partes_esperadas(tamanho: int) -> int:
     return (tamanho + TAMANHO_DA_PARTE - 1) // TAMANHO_DA_PARTE
 
 
-def iniciar_envio(*, rede, titulo: str, nome_original: str, tamanho: int, tipo: str,
-                  criado_por=None, unidade=None, aula=None, hash_esperado: str = "",
-                  mime: str = "") -> ArquivoDeMidia:
+def iniciar_envio(
+    *,
+    rede,
+    titulo: str,
+    nome_original: str,
+    tamanho: int,
+    tipo: str,
+    criado_por=None,
+    unidade=None,
+    aula=None,
+    hash_esperado: str = "",
+    mime: str = "",
+) -> ArquivoDeMidia:
     """Abre um envio e devolve o registro que recebera as partes."""
     if tipo not in dict(ArquivoDeMidia.Tipo.choices):
         raise ErroDeMidia("Tipo de arquivo nao suportado.")
     if tamanho <= 0:
         raise ErroDeMidia("Informe o tamanho do arquivo.")
     if tamanho > TAMANHO_MAXIMO:
-        raise ErroDeMidia(
-            f"Arquivo maior que o limite de {tamanho_legivel(TAMANHO_MAXIMO)}."
-        )
+        raise ErroDeMidia(f"Arquivo maior que o limite de {tamanho_legivel(TAMANHO_MAXIMO)}.")
     if not (titulo or "").strip():
         raise ErroDeMidia("Dê um titulo para o arquivo.")
     if not mime:
         mime = mimetypes.guess_type(nome_original or "")[0] or ""
     arquivo = ArquivoDeMidia.objects.create(
-        rede=rede, unidade=unidade, aula=aula, titulo=titulo.strip(), nome_original=nome_original,
-        tipo=tipo, mime=mime, tamanho_previsto=tamanho, hash_esperado=hash_esperado,
+        rede=rede,
+        unidade=unidade,
+        aula=aula,
+        titulo=titulo.strip(),
+        nome_original=nome_original,
+        tipo=tipo,
+        mime=mime,
+        tamanho_previsto=tamanho,
+        hash_esperado=hash_esperado,
         criado_por=criado_por,
     )
     pasta_do_cliente(rede).mkdir(parents=True, exist_ok=True)
@@ -85,8 +106,9 @@ def iniciar_envio(*, rede, titulo: str, nome_original: str, tamanho: int, tipo: 
     return arquivo
 
 
-def receber_parte(*, arquivo: ArquivoDeMidia, numero: int, conteudo: bytes,
-                  hash_esperado: str = "") -> ParteDeMidia:
+def receber_parte(
+    *, arquivo: ArquivoDeMidia, numero: int, conteudo: bytes, hash_esperado: str = ""
+) -> ParteDeMidia:
     """Grava uma parte no disco temporario, conferindo o hash. Reenvio da mesma parte e aceito."""
     if arquivo.situacao != ArquivoDeMidia.Situacao.ENVIANDO:
         raise ErroDeMidia("Este envio ja foi concluido ou cancelado.")
@@ -106,9 +128,7 @@ def receber_parte(*, arquivo: ArquivoDeMidia, numero: int, conteudo: bytes,
     existente = arquivo.partes.filter(numero=numero).first()
     if existente is not None:
         if existente.hash_da_parte and existente.hash_da_parte != resumo:
-            raise ErroDeMidia(
-                "Esta parte ja foi recebida com outro conteudo. Recomece o envio."
-            )
+            raise ErroDeMidia("Esta parte ja foi recebida com outro conteudo. Recomece o envio.")
         return existente
     destino.write_bytes(conteudo)
     return ParteDeMidia.objects.create(
@@ -127,9 +147,7 @@ def concluir_envio(arquivo: ArquivoDeMidia) -> ArquivoDeMidia:
         raise ErroDeMidia("Este envio ja foi concluido.")
     faltando = partes_faltando(arquivo)
     if faltando:
-        raise ErroDeMidia(
-            f"Ainda faltam {len(faltando)} parte(s) para concluir o envio."
-        )
+        raise ErroDeMidia(f"Ainda faltam {len(faltando)} parte(s) para concluir o envio.")
 
     extensao = Path(arquivo.nome_original or "").suffix or EXTENSOES.get(arquivo.tipo, ".bin")
     destino = pasta_do_cliente(arquivo.rede) / f"{uuid4().hex}{extensao}"
@@ -145,8 +163,10 @@ def concluir_envio(arquivo: ArquivoDeMidia) -> ArquivoDeMidia:
 
     if gravado != arquivo.tamanho_previsto:
         destino.unlink(missing_ok=True)
-        _marcar_erro(arquivo, f"Tamanho final diferente do previsto ({gravado} de "
-                              f"{arquivo.tamanho_previsto}).")
+        _marcar_erro(
+            arquivo,
+            f"Tamanho final diferente do previsto ({gravado} de {arquivo.tamanho_previsto}).",
+        )
         raise ErroDeMidia("O arquivo montado nao bate com o tamanho previsto. Recomece o envio.")
 
     hash_final = resumo.hexdigest()
@@ -160,8 +180,9 @@ def concluir_envio(arquivo: ArquivoDeMidia) -> ArquivoDeMidia:
     arquivo.hash_final = hash_final
     arquivo.situacao = ArquivoDeMidia.Situacao.PROCESSANDO
     arquivo.concluido_em = timezone.now()
-    arquivo.save(update_fields=["caminho", "tamanho_bytes", "hash_final", "situacao",
-                               "concluido_em"])
+    arquivo.save(
+        update_fields=["caminho", "tamanho_bytes", "hash_final", "situacao", "concluido_em"]
+    )
     shutil.rmtree(pasta_temporaria(arquivo), ignore_errors=True)
     arquivo.partes.all().delete()
     arquivo = processar_midia(arquivo)
@@ -195,8 +216,17 @@ def processar_midia(arquivo: ArquivoDeMidia) -> ArquivoDeMidia:
         arquivo.mime = mimetypes.guess_type(caminho.name)[0] or "application/octet-stream"
     arquivo.situacao = ArquivoDeMidia.Situacao.PRONTO
     arquivo.processado_em = timezone.now()
-    arquivo.save(update_fields=["largura", "altura", "duracao_segundos", "mime", "situacao",
-                               "processado_em", "erro"])
+    arquivo.save(
+        update_fields=[
+            "largura",
+            "altura",
+            "duracao_segundos",
+            "mime",
+            "situacao",
+            "processado_em",
+            "erro",
+        ]
+    )
     return arquivo
 
 
@@ -256,7 +286,5 @@ def estatisticas(rede) -> dict:
         "prontos": arquivos.filter(situacao=ArquivoDeMidia.Situacao.PRONTO).count(),
         "enviando": arquivos.filter(situacao=ArquivoDeMidia.Situacao.ENVIANDO).count(),
         "com_erro": arquivos.filter(situacao=ArquivoDeMidia.Situacao.ERRO).count(),
-        "espaco": tamanho_legivel(
-            arquivos.aggregate(total=Sum("tamanho_bytes"))["total"] or 0
-        ),
+        "espaco": tamanho_legivel(arquivos.aggregate(total=Sum("tamanho_bytes"))["total"] or 0),
     }

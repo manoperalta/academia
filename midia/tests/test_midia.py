@@ -9,11 +9,10 @@ import time
 import pytest
 from django.core import signing
 from django.urls import reverse
-from django.utils import timezone
 
 from midia import servicos
 from midia.models import ArquivoDeMidia
-from midia.servicos import SAL_DA_ENTREGA, ErroDeMidia
+from midia.servicos import SAL_DA_ENTREGA
 
 pytestmark = pytest.mark.django_db
 
@@ -23,8 +22,14 @@ def sha(conteudo: bytes) -> str:
 
 
 def abrir_envio(cliente, conteudo: bytes, **extra):
-    dados = {"titulo": "Video de teste", "nome": "video.mp4", "tamanho": len(conteudo),
-             "tipo": "video", "mime": "video/mp4", "hash": sha(conteudo)}
+    dados = {
+        "titulo": "Video de teste",
+        "nome": "video.mp4",
+        "tamanho": len(conteudo),
+        "tipo": "video",
+        "mime": "video/mp4",
+        "hash": sha(conteudo),
+    }
     dados.update(extra)
     return cliente.post(reverse("midia:api_iniciar"), data=dados, content_type="application/json")
 
@@ -34,8 +39,11 @@ def mandar_parte(cliente, arquivo_id: int, numero: int, conteudo: bytes, hash_: 
 
     return cliente.post(
         reverse("midia:api_parte", args=[arquivo_id]),
-        data={"numero": numero, "hash": hash_ if hash_ is not None else sha(conteudo),
-              "parte": SimpleUploadedFile(f"parte{numero}", conteudo)},
+        data={
+            "numero": numero,
+            "hash": hash_ if hash_ is not None else sha(conteudo),
+            "parte": SimpleUploadedFile(f"parte{numero}", conteudo),
+        },
     )
 
 
@@ -43,7 +51,7 @@ def enviar_tudo(cliente, conteudo: bytes, **extra) -> tuple[int, object]:
     inicio = abrir_envio(cliente, conteudo, **extra).json()
     tamanho = inicio["tamanho_da_parte"]
     for numero in range(1, inicio["total_de_partes"] + 1):
-        pedaco = conteudo[(numero - 1) * tamanho: numero * tamanho]
+        pedaco = conteudo[(numero - 1) * tamanho : numero * tamanho]
         resposta = mandar_parte(cliente, inicio["id"], numero, pedaco)
         assert resposta.status_code == 200, resposta.content
     fim = cliente.post(reverse("midia:api_concluir", args=[inicio["id"]]))
@@ -51,6 +59,7 @@ def enviar_tudo(cliente, conteudo: bytes, **extra) -> tuple[int, object]:
 
 
 # ------------------------------------------------------------------ caminho feliz
+
 
 def test_envio_completo_grava_confere_e_libera_o_player(cliente_painel):
     conteudo = b"a" * (servicos.TAMANHO_DA_PARTE * 2 + 1234)  # tres partes: duas cheias e uma curta
@@ -101,7 +110,7 @@ def test_parte_fora_da_faixa_e_recusada(cliente_painel):
 def test_concluir_sem_todas_as_partes_avisa_quanto_falta(cliente_painel):
     conteudo = b"e" * (servicos.TAMANHO_DA_PARTE * 2 + 10)
     inicio = abrir_envio(cliente_painel, conteudo).json()
-    mandar_parte(cliente_painel, inicio["id"], 1, conteudo[:servicos.TAMANHO_DA_PARTE])
+    mandar_parte(cliente_painel, inicio["id"], 1, conteudo[: servicos.TAMANHO_DA_PARTE])
     resposta = cliente_painel.post(reverse("midia:api_concluir", args=[inicio["id"]]))
     assert resposta.status_code == 400
     assert "faltam 2 parte" in resposta.json()["erro"]
@@ -131,6 +140,7 @@ def test_hash_final_diferente_do_original_marca_erro(cliente_painel):
 
 
 # ------------------------------------------------------------------ entrega assinada
+
 
 def test_token_adulterado_nao_entrega(cliente_painel):
     conteudo = b"h" * 500
@@ -169,14 +179,16 @@ def test_token_de_um_arquivo_nao_serve_para_outro(cliente_painel):
 
 # ------------------------------------------------------------------ imagem, aula e isolamento
 
+
 def test_imagem_ganha_dimensoes_no_processamento(cliente_painel):
     from PIL import Image
 
     buffer = io.BytesIO()
     Image.new("RGB", (64, 48), (10, 120, 200)).save(buffer, "PNG")
     conteudo = buffer.getvalue()
-    arquivo_id, fim = enviar_tudo(cliente_painel, conteudo, tipo="imagem", nome="foto.png",
-                                  mime="image/png")
+    arquivo_id, fim = enviar_tudo(
+        cliente_painel, conteudo, tipo="imagem", nome="foto.png", mime="image/png"
+    )
     assert fim.json()["situacao"] == "pronto"
     arquivo = ArquivoDeMidia.objects.get(pk=arquivo_id)
     assert (arquivo.largura, arquivo.altura) == (64, 48)
@@ -206,14 +218,16 @@ def test_midia_de_outra_rede_nao_aparece_nem_entrega(cliente_painel, outra_rede)
 
     unidade_alheia = UnidadeModelo.objects.create(rede=outra_rede, nome="Filial", codigo="filial")
     alheio = servicos.iniciar_envio(
-        rede=outra_rede, titulo="Da outra rede", nome_original="x.mp4", tamanho=100, tipo="video",
+        rede=outra_rede,
+        titulo="Da outra rede",
+        nome_original="x.mp4",
+        tamanho=100,
+        tipo="video",
         unidade=unidade_alheia,
     )
     assert cliente_painel.get(reverse("midia:player", args=[alheio.pk])).status_code == 404
     assert cliente_painel.get(reverse("midia:api_status", args=[alheio.pk])).status_code == 404
-    assert cliente_painel.post(
-        reverse("midia:api_concluir", args=[alheio.pk])
-    ).status_code == 404
+    assert cliente_painel.post(reverse("midia:api_concluir", args=[alheio.pk])).status_code == 404
 
 
 def test_aluno_nao_entra_na_midia_do_painel(client, aluno):
@@ -237,8 +251,12 @@ def test_estatisticas_da_rede(cliente_painel):
 def test_iniciar_envio_recusa_arquivo_grande_demais(cliente_painel):
     resposta = cliente_painel.post(
         reverse("midia:api_iniciar"),
-        data={"titulo": "Gigante", "nome": "g.mp4", "tamanho": servicos.TAMANHO_MAXIMO + 1,
-              "tipo": "video"},
+        data={
+            "titulo": "Gigante",
+            "nome": "g.mp4",
+            "tamanho": servicos.TAMANHO_MAXIMO + 1,
+            "tipo": "video",
+        },
         content_type="application/json",
     )
     assert resposta.status_code == 400

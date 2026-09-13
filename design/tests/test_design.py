@@ -34,8 +34,10 @@ def test_selo_respeita_o_tom():
 
 
 def test_kpi_mostra_rotulo_valor_e_detalhe():
-    html = render_to_string("design/components/kpi.html",
-                            {"rotulo": "Vendas", "valor": "R$ 100,00", "detalhe": "3 vendas"})
+    html = render_to_string(
+        "design/components/kpi.html",
+        {"rotulo": "Vendas", "valor": "R$ 100,00", "detalhe": "3 vendas"},
+    )
     assert "Vendas" in html and "R$ 100,00" in html and "3 vendas" in html
 
 
@@ -45,8 +47,10 @@ def test_alerta_sem_texto_nao_renderiza_nada():
 
 
 def test_estado_vazio_com_acao():
-    html = render_to_string("design/components/estado_vazio.html",
-                            {"titulo": "Nada aqui", "acao_url": "/x/", "acao_texto": "Ir"})
+    html = render_to_string(
+        "design/components/estado_vazio.html",
+        {"titulo": "Nada aqui", "acao_url": "/x/", "acao_texto": "Ir"},
+    )
     assert "Nada aqui" in html and 'href="/x/"' in html
 
 
@@ -54,12 +58,14 @@ def test_paginacao_so_aparece_com_mais_de_uma_pagina():
     from django.core.paginator import Paginator
 
     paginas = Paginator(list(range(5)), 2)
-    html_uma_pagina = render_to_string("design/components/paginacao.html",
-                                       {"page_obj": paginas.page(1), "paginator": paginas})
+    html_uma_pagina = render_to_string(
+        "design/components/paginacao.html", {"page_obj": paginas.page(1), "paginator": paginas}
+    )
     paginas_pequenas = Paginator(list(range(3)), 10)
-    html_unica = render_to_string("design/components/paginacao.html",
-                                  {"page_obj": paginas_pequenas.page(1),
-                                   "paginator": paginas_pequenas})
+    html_unica = render_to_string(
+        "design/components/paginacao.html",
+        {"page_obj": paginas_pequenas.page(1), "paginator": paginas_pequenas},
+    )
     assert "Próxima" in html_uma_pagina
     assert "ds-paginacao" not in html_unica
 

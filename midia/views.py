@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import mimetypes
-from pathlib import Path
 
 from django.conf import settings
 from django.http import FileResponse, Http404, HttpResponseRedirect, JsonResponse
@@ -103,14 +102,16 @@ class IniciarEnvioView(EdicaoMixin, View):
             return JsonResponse({"erro": str(erro)}, status=400)
         except (TypeError, ValueError):
             return JsonResponse({"erro": "Tamanho do arquivo invalido."}, status=400)
-        return JsonResponse({
-            "id": arquivo.pk,
-            "tamanho_da_parte": servicos.TAMANHO_DA_PARTE,
-            "total_de_partes": arquivo.total_de_partes,
-            "url_parte": f"/midia/api/{arquivo.pk}/parte/",
-            "url_concluir": f"/midia/api/{arquivo.pk}/concluir/",
-            "url_status": f"/midia/api/{arquivo.pk}/status/",
-        })
+        return JsonResponse(
+            {
+                "id": arquivo.pk,
+                "tamanho_da_parte": servicos.TAMANHO_DA_PARTE,
+                "total_de_partes": arquivo.total_de_partes,
+                "url_parte": f"/midia/api/{arquivo.pk}/parte/",
+                "url_concluir": f"/midia/api/{arquivo.pk}/concluir/",
+                "url_status": f"/midia/api/{arquivo.pk}/status/",
+            }
+        )
 
 
 @method_decorator(csrf_protect, name="dispatch")
@@ -130,18 +131,22 @@ class ReceberParteView(EdicaoMixin, View):
             return JsonResponse({"erro": "Numero de parte invalido."}, status=400)
         try:
             gravada = servicos.receber_parte(
-                arquivo=arquivo, numero=numero, conteudo=parte.read(),
+                arquivo=arquivo,
+                numero=numero,
+                conteudo=parte.read(),
                 hash_esperado=request.POST.get("hash", ""),
             )
         except ErroDeMidia as erro:
             return JsonResponse({"erro": str(erro)}, status=400)
-        return JsonResponse({
-            "parte": gravada.numero,
-            "tamanho": gravada.tamanho_bytes,
-            "recebidas": arquivo.partes_recebidas,
-            "total_de_partes": arquivo.total_de_partes,
-            "progresso": arquivo.progresso,
-        })
+        return JsonResponse(
+            {
+                "parte": gravada.numero,
+                "tamanho": gravada.tamanho_bytes,
+                "recebidas": arquivo.partes_recebidas,
+                "total_de_partes": arquivo.total_de_partes,
+                "progresso": arquivo.progresso,
+            }
+        )
 
 
 class ConcluirEnvioView(EdicaoMixin, View):
@@ -155,14 +160,16 @@ class ConcluirEnvioView(EdicaoMixin, View):
             arquivo = servicos.concluir_envio(arquivo)
         except ErroDeMidia as erro:
             return JsonResponse({"erro": str(erro)}, status=400)
-        return JsonResponse({
-            "id": arquivo.pk,
-            "situacao": arquivo.situacao,
-            "progresso": arquivo.progresso,
-            "tamanho": arquivo.tamanho_bytes,
-            "hash": arquivo.hash_final,
-            "url_player": f"/midia/arquivo/{arquivo.pk}/",
-        })
+        return JsonResponse(
+            {
+                "id": arquivo.pk,
+                "situacao": arquivo.situacao,
+                "progresso": arquivo.progresso,
+                "tamanho": arquivo.tamanho_bytes,
+                "hash": arquivo.hash_final,
+                "url_player": f"/midia/arquivo/{arquivo.pk}/",
+            }
+        )
 
 
 class StatusDoEnvioView(PainelMixin, View):
@@ -172,13 +179,15 @@ class StatusDoEnvioView(PainelMixin, View):
 
     def get(self, request, pk: int, *args, **kwargs):
         arquivo = get_object_or_404(_da_rede(request), pk=pk)
-        return JsonResponse({
-            "situacao": arquivo.situacao,
-            "progresso": arquivo.progresso,
-            "recebidas": arquivo.partes_recebidas,
-            "total_de_partes": arquivo.total_de_partes,
-            "erro": arquivo.erro,
-        })
+        return JsonResponse(
+            {
+                "situacao": arquivo.situacao,
+                "progresso": arquivo.progresso,
+                "recebidas": arquivo.partes_recebidas,
+                "total_de_partes": arquivo.total_de_partes,
+                "erro": arquivo.erro,
+            }
+        )
 
 
 class PlayerDaMidiaView(PainelMixin, DetailView):

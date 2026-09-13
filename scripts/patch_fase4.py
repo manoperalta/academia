@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 4: liga o site publico ao projeto (idempotente e verificado)."""
+
 from __future__ import annotations
 
 import re
@@ -40,8 +41,10 @@ def patch_urls() -> None:
         re.MULTILINE,
     )
     novo, trocas = padrao.subn(
-        lambda m: (f'{m.group("indent")}path("", include("vitrine.urls")),\n'
-                   f'{m.group("indent")}path("academia/", academia_views.index, name="index"),'),
+        lambda m: (
+            f'{m.group("indent")}path("", include("vitrine.urls")),\n'
+            f'{m.group("indent")}path("academia/", academia_views.index, name="index"),'
+        ),
         texto,
         count=1,
     )
@@ -60,7 +63,7 @@ def patch_pyproject() -> None:
         print("pyproject: vitrine ja citado")
         return
     novo, trocas = re.subn(
-        r'(testpaths\s*=\s*\[)([^\]]*)(\])',
+        r"(testpaths\s*=\s*\[)([^\]]*)(\])",
         lambda m: f'{m.group(1)}{m.group(2)}, "vitrine"{m.group(3)}',
         texto,
         count=1,

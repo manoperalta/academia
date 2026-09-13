@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (documentos): registra o app, monta as rotas e inclui os testes na suite."""
+
 from __future__ import annotations
 
 from pathlib import Path

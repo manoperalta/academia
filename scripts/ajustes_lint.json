@@ -1,0 +1,105 @@
+{
+ "ajustes": [
+  [
+   "accounts/forms.py",
+   "        fields = UserCreationForm.Meta.fields + (\"user_type\",)",
+   "        fields = (*UserCreationForm.Meta.fields, \"user_type\")"
+  ],
+  [
+   "agendamento/views.py",
+   "            except:\n                restricoes = \"\"",
+   "            except Exception:  # noqa: BLE001 - ficha ausente nao pode derrubar o agendamento\n                restricoes = \"\""
+  ],
+  [
+   "app/settings_env/test.py",
+   "from app.settings_env.base import *  # noqa: F403",
+   "from app.settings_env.base import *  # noqa: E402, F403"
+  ],
+  [
+   "app/settings_env/test.py",
+   "from app.settings_env.base import env\n",
+   "from app.settings_env.base import env  # noqa: E402\n"
+  ],
+  [
+   "dashboard/views.py",
+   "        data_alerta = hoje + timedelta(days=dias_alerta)\n",
+   ""
+  ],
+  [
+   "financeiro/admin.py",
+   "        if GatewayConfig.objects.exists():\n            return False\n        return True",
+   "        return not GatewayConfig.objects.exists()"
+  ],
+  [
+   "notificacoes/admin.py",
+   "        if ConfiguracaoEmail.objects.exists():\n            return False\n        return True",
+   "        return not ConfiguracaoEmail.objects.exists()"
+  ],
+  [
+   "notificacoes/admin.py",
+   "        if ConfiguracaoWhatsapp.objects.exists():\n            return False\n        return True",
+   "        return not ConfiguracaoWhatsapp.objects.exists()"
+  ],
+  [
+   "financeiro/pagbank_service.py",
+   "                try:\n                    error_msg += f\" - Detalhes: {e.response.text}\"\n                except:\n                    pass\n            raise Exception(error_msg)",
+   "                detalhes = getattr(e.response, \"text\", \"\")\n                if detalhes:\n                    error_msg += f\" - Detalhes: {detalhes}\"\n            raise Exception(error_msg) from e"
+  ],
+  [
+   "financeiro/pagbank_service.py",
+   "            raise Exception(f\"Erro ao consultar pedido PagBank: {e!s}\")",
+   "            raise Exception(f\"Erro ao consultar pedido PagBank: {e!s}\") from e"
+  ],
+  [
+   "scripts/demo_fase8.py",
+   "    login = get_user_model().objects.create_user(username=\"demo.f8.%d\" % posicao, password=\"x\")",
+   "    login = get_user_model().objects.create_user(username=f\"demo.f8.{posicao}\", password=\"x\")"
+  ],
+  [
+   "scripts/demo_fase8.py",
+   "        rede=rede, unidade=unidade, user=login, nome=\"Aluno Demo %d\" % posicao, status_user=\"Ativo\"",
+   "        rede=rede, unidade=unidade, user=login, nome=f\"Aluno Demo {posicao}\", status_user=\"Ativo\""
+  ],
+  [
+   "scripts/demo_fase8.py",
+   "    print(\n        \"   linha %d: %-38s base R$ %8s x %s%% = R$ %s\"\n        % (item.ordem, item.descricao[:38], item.base, item.percentual, item.valor)\n    )",
+   "    print(\n        f\"   linha {item.ordem}: {item.descricao[:38]:<38} base R$ {item.base:>8}\"\n        f\" x {item.percentual}% = R$ {item.valor}\"\n    )"
+  ],
+  [
+   "scripts/demo_fase8.py",
+   "print(\"   ranking:\", [(l[\"posicao\"], l[\"nome\"], l[\"pontos\"]) for l in ranking(rede=rede)])",
+   "print(\"   ranking:\", [(item[\"posicao\"], item[\"nome\"], item[\"pontos\"]) for item in ranking(rede=rede)])"
+  ],
+  [
+   "scripts/demo_cadastro.py",
+   "    call_command(\"seed_plataforma\", stdout=open(\"/dev/null\", \"w\"))",
+   "    with open(\"/dev/null\", \"w\") as descarte:\n        call_command(\"seed_plataforma\", stdout=descarte)"
+  ],
+  [
+   "scripts/demo_documentos.py",
+   "from remuneracao.models import ApuracaoDeComissao",
+   "from remuneracao.models import ApuracaoDeComissao  # noqa: E402 - import depois do setup do Django"
+  ],
+  [
+   "usuarios/views.py",
+   "    ficha_saude, created = FichaSaude.objects.get_or_create(usuario=usuario)",
+   "    ficha_saude, _criada = FichaSaude.objects.get_or_create(usuario=usuario)"
+  ],
+  [
+   "usuarios/views.py",
+   "    ficha, created = FichaSaude.objects.get_or_create(usuario=usuario)",
+   "    ficha, _criada = FichaSaude.objects.get_or_create(usuario=usuario)"
+  ],
+  [
+   "scripts/patch_relacionamento.py",
+   "        [\n            linha\n            for linha in permissoes.read_text(encoding=\"utf-8\").splitlines()\n            if linha.startswith(\"    CATALOGO = \")\n        ][0],",
+   "        next(\n            linha\n            for linha in permissoes.read_text(encoding=\"utf-8\").splitlines()\n            if linha.startswith(\"    CATALOGO = \")\n        ),"
+  ],
+  [
+   "dashboard/views.py",
+   "        User = get_user_model()",
+   "        User = get_user_model()  # noqa: N806 - nome do modelo de usuario, como no Django"
+  ]
+ ],
+ "todos": true
+}

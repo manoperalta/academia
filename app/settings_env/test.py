@@ -4,8 +4,8 @@ os.environ.setdefault("DJANGO_ENV", "test")
 
 """Testes: rapido e deterministico (nao use isto em producao)."""
 
-from app.settings_env.base import *  # noqa: F401,F403
-from app.settings_env.base import env
+from app.settings_env.base import *  # noqa: E402, F403
+from app.settings_env.base import env  # noqa: E402
 
 DEBUG = False
 ALLOWED_HOSTS = ["testserver", "localhost", "127.0.0.1", "*"]

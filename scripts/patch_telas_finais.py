@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 """Anexa a auditoria da plataforma e o comparativo de unidades aos apps existentes."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-IMPORTES = {'plataforma/views.py': 'from plataforma.views_auditoria import AuditoriaDaPlataformaView  # noqa: E402, F401', 'rede/views.py': 'from rede.views_comparativo import ComparativoDeUnidadesView  # noqa: E402, F401'}
-ROTAS = {'plataforma/urls.py': ('    path("auditoria/", views.AuditoriaDaPlataformaView.as_view(), name="auditoria"),', 'AuditoriaDaPlataformaView'), 'rede/urls.py': ('    path("comparativo/", views.ComparativoDeUnidadesView.as_view(), name="comparativo"),', 'ComparativoDeUnidadesView')}
+IMPORTES = {
+    "plataforma/views.py": "from plataforma.views_auditoria import AuditoriaDaPlataformaView  # noqa: E402, F401",
+    "rede/views.py": "from rede.views_comparativo import ComparativoDeUnidadesView  # noqa: E402, F401",
+}
+ROTAS = {
+    "plataforma/urls.py": (
+        '    path("auditoria/", views.AuditoriaDaPlataformaView.as_view(), name="auditoria"),',
+        "AuditoriaDaPlataformaView",
+    ),
+    "rede/urls.py": (
+        '    path("comparativo/", views.ComparativoDeUnidadesView.as_view(), name="comparativo"),',
+        "ComparativoDeUnidadesView",
+    ),
+}
 
 
 def anexar_importe(caminho: Path, linha: str, marcador: str) -> None:

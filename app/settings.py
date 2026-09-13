@@ -14,8 +14,8 @@ import os
 AMBIENTE = os.environ.get("DJANGO_ENV", "prod")
 
 if AMBIENTE == "dev":  # pragma: no cover - selecao de ambiente
-    from app.settings_env.dev import *  # noqa: F401,F403
+    from app.settings_env.dev import *  # noqa: F403
 elif AMBIENTE == "test":  # pragma: no cover
-    from app.settings_env.test import *  # noqa: F401,F403
+    from app.settings_env.test import *  # noqa: F403
 else:  # pragma: no cover
-    from app.settings_env.prod import *  # noqa: F401,F403
+    from app.settings_env.prod import *  # noqa: F403

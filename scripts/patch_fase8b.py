@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
 """Fase 8b: fecha o que faltou (enum de modulos, matriz do gestor e modelos de plataforma)."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-MODULOS = ('    COMISSOES = "comissoes", "Comissoes e remuneracao"\n'
-           '    GAMIFICACAO = "gamificacao", "Gamificacao"\n'
-           '    PESQUISAS = "pesquisas", "Pesquisas e NPS"')
+MODULOS = (
+    '    COMISSOES = "comissoes", "Comissoes e remuneracao"\n'
+    '    GAMIFICACAO = "gamificacao", "Gamificacao"\n'
+    '    PESQUISAS = "pesquisas", "Pesquisas e NPS"'
+)
 
-PARENTES_E_FILHOS = ("remuneracao.regradecomissao", "remuneracao.apuracaodecomissao",
-                     "remuneracao.itemdecomissao", "gamificacao.regradepontos",
-                     "gamificacao.saldodepontos", "gamificacao.lancamentodepontos",
-                     "gamificacao.conquista", "gamificacao.conquistadoaluno", "nps.pesquisa",
-                     "nps.resposta", "area_do_aluno.checkindoaluno")
+PARENTES_E_FILHOS = (
+    "remuneracao.regradecomissao",
+    "remuneracao.apuracaodecomissao",
+    "remuneracao.itemdecomissao",
+    "gamificacao.regradepontos",
+    "gamificacao.saldodepontos",
+    "gamificacao.lancamentodepontos",
+    "gamificacao.conquista",
+    "gamificacao.conquistadoaluno",
+    "nps.pesquisa",
+    "nps.resposta",
+    "area_do_aluno.checkindoaluno",
+)
 
 
 def patch_permissoes() -> None:
@@ -33,11 +44,16 @@ def patch_permissoes() -> None:
         ancora = '        Modulo.PRIVACIDADE: "ver",'
         if ancora not in texto:
             raise SystemExit("ERRO: nao achei a matriz do gestor de unidade")
-        texto = texto.replace(ancora, ancora + '\n'
-                              + '        Modulo.COMISSOES: "ver",\n'
-                              + '        Modulo.GAMIFICACAO: "ver",\n'
-                              + '        Modulo.PESQUISAS: "ver",', 1)
-    for exigido in ("COMISSOES", 'Modulo.COMISSOES', 'Modulo.GAMIFICACAO', 'Modulo.PESQUISAS'):
+        texto = texto.replace(
+            ancora,
+            ancora
+            + "\n"
+            + '        Modulo.COMISSOES: "ver",\n'
+            + '        Modulo.GAMIFICACAO: "ver",\n'
+            + '        Modulo.PESQUISAS: "ver",',
+            1,
+        )
+    for exigido in ("COMISSOES", "Modulo.COMISSOES", "Modulo.GAMIFICACAO", "Modulo.PESQUISAS"):
         if exigido not in texto:
             raise SystemExit(f"ERRO: {exigido} ausente em permissoes.py")
     caminho.write_text(texto, encoding="utf-8")

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 7: monta a API v1 (30 recursos), os endpoints novos e os modelos de integracao."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -13,7 +14,10 @@ def patch_models() -> None:
     if "modelos_de_integracao" in texto:
         print("api/models.py: integracao ja importada")
         return
-    texto = texto.rstrip("\n") + "\n\n\n# Fase 7: webhooks de saida e tarefas assincronas\nfrom api.modelos_de_integracao import *  # noqa: F401,F403,E402\n"
+    texto = (
+        texto.rstrip("\n")
+        + "\n\n\n# Fase 7: webhooks de saida e tarefas assincronas\nfrom api.modelos_de_integracao import *  # noqa: F401,F403,E402\n"
+    )
     if "modelos_de_integracao" not in texto:
         raise SystemExit("ERRO: import de integracao nao entrou")
     caminho.write_text(texto, encoding="utf-8")
@@ -31,7 +35,7 @@ def patch_urls() -> None:
     texto = texto[:inicio] + texto[fim:].lstrip("\n")
     corte = texto.index("router = DefaultRouter()")
     cabeca = texto[:corte]
-    novo = '''from api import endpoints as ep
+    novo = """from api import endpoints as ep
 from api.recursos import router as router_recursos
 from api.views import MinhaSessao
 
@@ -51,7 +55,7 @@ urlpatterns = [
     path("docs/", SpectacularSwaggerView.as_view(url_name="api-schema"), name="api-docs"),
     path("redoc/", SpectacularRedocView.as_view(url_name="api-schema"), name="api-redoc"),
 ]
-'''
+"""
     texto = cabeca + novo
     for exigido in ("api.recursos", "auth/token", "playground"):
         if exigido not in texto:
@@ -66,13 +70,16 @@ def patch_settings() -> None:
     if "TAREFAS_DIR" in texto:
         print("settings: TAREFAS_DIR ja definido")
         return
-    texto = texto.rstrip("\n") + '''
+    texto = (
+        texto.rstrip("\n")
+        + """
 
 # ------------------------------------------------ API v1 (fase 7)
 API_JWT_SECRET = os.environ.get("API_JWT_SECRET", "")
 API_JWT_VALIDADE = 3600
 TAREFAS_DIR = os.environ.get("TAREFAS_DIR", BASE_DIR / "tarefas")
-'''
+"""
+    )
     if "API_JWT_SECRET" not in texto:
         raise SystemExit("ERRO: settings da API nao entraram")
     caminho.write_text(texto, encoding="utf-8")

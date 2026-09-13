@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (acesso): modulos ACESSO e PARCEIROS no enum, na matriz do gestor e no menu."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,7 +23,12 @@ ROTAS = [
 ANCORAS = {
     "enum": ('    RETENCAO = "retencao", "Retencao de alunos"', MEMBROS, 'ACESSO = "acesso"'),
     "matriz": ('        Modulo.CRM: "editar",', MATRIZ_GESTOR, 'Modulo.ACESSO: "editar"'),
-    "menu": ('    Modulo.RETENCAO: "relacionamento:retencao",', ROTAS, "acesso:painel", "gestao/menu.py"),
+    "menu": (
+        '    Modulo.RETENCAO: "relacionamento:retencao",',
+        ROTAS,
+        "acesso:painel",
+        "gestao/menu.py",
+    ),
 }
 
 
@@ -42,9 +48,20 @@ def _inserir(caminho: Path, ancora: str, linhas: list[str], marcador: str, rotul
 
 if __name__ == "__main__":
     permissoes = RAIZ / "gestao" / "permissoes.py"
-    _inserir(permissoes, ANCORAS["enum"][0], ANCORAS["enum"][1], ANCORAS["enum"][2],
-             "enum de modulos")
-    _inserir(permissoes, ANCORAS["matriz"][0], ANCORAS["matriz"][1], ANCORAS["matriz"][2],
-             "matriz do gestor")
-    _inserir(RAIZ / "gestao" / "menu.py", ANCORAS["menu"][0], ANCORAS["menu"][1],
-             ANCORAS["menu"][2], "rotas do menu")
+    _inserir(
+        permissoes, ANCORAS["enum"][0], ANCORAS["enum"][1], ANCORAS["enum"][2], "enum de modulos"
+    )
+    _inserir(
+        permissoes,
+        ANCORAS["matriz"][0],
+        ANCORAS["matriz"][1],
+        ANCORAS["matriz"][2],
+        "matriz do gestor",
+    )
+    _inserir(
+        RAIZ / "gestao" / "menu.py",
+        ANCORAS["menu"][0],
+        ANCORAS["menu"][1],
+        ANCORAS["menu"][2],
+        "rotas do menu",
+    )

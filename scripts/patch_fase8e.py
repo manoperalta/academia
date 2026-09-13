@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8e: zera o lint (convencao N818 e dois ajustes pontuais). Roda dentro do container."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -53,7 +54,11 @@ def patch_form() -> None:
     if alvo in texto:
         if texto.count(alvo) != 1:
             raise SystemExit("ERRO: mais de um exclude igual em rede/forms.py")
-        novo = "        fields = [\n" + "".join(f'            "{nome}",\n' for nome in campos) + "        ]"
+        novo = (
+            "        fields = [\n"
+            + "".join(f'            "{nome}",\n' for nome in campos)
+            + "        ]"
+        )
         caminho.write_text(texto.replace(alvo, novo, 1), encoding="utf-8")
         print(f"rede/forms.py: fields explicito com {len(campos)} campo(s) no lugar de exclude")
     else:

@@ -16,8 +16,9 @@ class VitrineView(PainelMixin, TemplateView):
     class ExemploDeFormulario(forms.Form):
         """Campo de exemplo, so para a vitrine mostrar o componente de campo."""
 
-        nome = forms.CharField(label="Nome do aluno", required=True,
-                               help_text="como aparece no cadastro")
+        nome = forms.CharField(
+            label="Nome do aluno", required=True, help_text="como aparece no cadastro"
+        )
 
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)

@@ -54,8 +54,9 @@ def aluno(db, rede, unidade):
     login = get_user_model().objects.create_user(
         username="aluno.midia", password=SENHA, email="aluno.midia@x.com"
     )
-    return Usuario.todos.create(rede=rede, unidade=unidade, user=login, nome="Aluno da Midia",
-                                status_user="Ativo")
+    return Usuario.todos.create(
+        rede=rede, unidade=unidade, user=login, nome="Aluno da Midia", status_user="Ativo"
+    )
 
 
 @pytest.fixture
@@ -63,6 +64,9 @@ def aula(db, rede, admin_do_painel):
     from aulas.models import Aulas
 
     return Aulas.todos.create(
-        rede=rede, nome="Aula de forca", descricao="Treino guiado",
-        professor=admin_do_painel, categorias_exercicios="forca",
+        rede=rede,
+        nome="Aula de forca",
+        descricao="Treino guiado",
+        professor=admin_do_painel,
+        categorias_exercicios="forca",
     )

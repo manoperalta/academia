@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 5: campos de dominio/certificado/midia na Rede (core). Idempotente e verificado."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -63,13 +64,20 @@ def main() -> None:
         texto = texto.replace(marca, ENUMS.strip() + "\n\n\n" + marca, 1)
 
     if "dominio_status" not in texto:
-        marca_campo = '    dominio = models.CharField("dominio proprio", max_length=253, blank=True)'
+        marca_campo = (
+            '    dominio = models.CharField("dominio proprio", max_length=253, blank=True)'
+        )
         if marca_campo not in texto:
             raise SystemExit("ERRO: campo dominio nao encontrado")
         texto = texto.replace(marca_campo, CAMPOS, 1)
 
-    for obrigatorio in ("class StatusDominio", "class StatusCertificado", "dominio_status",
-                        "certificado_status", "media_prefixo"):
+    for obrigatorio in (
+        "class StatusDominio",
+        "class StatusCertificado",
+        "dominio_status",
+        "certificado_status",
+        "media_prefixo",
+    ):
         if obrigatorio not in texto:
             raise SystemExit(f"ERRO: faltou {obrigatorio}")
 

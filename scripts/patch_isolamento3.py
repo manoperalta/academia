@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Acrescenta modelos na lista de excecao do teste de isolamento (busca pelo conteudo, sem ancora fragil)."""
+
 from __future__ import annotations
 
 import re

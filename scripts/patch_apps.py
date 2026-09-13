@@ -4,6 +4,7 @@
 Idempotente e verificador: se a ancora nao existir, falha alto em vez de aplicar pela metade.
 Para acrescentar um app, basta incluir o nome nas listas APPS/ROTAS/TESTPATHS/ISOLAMENTO.
 """
+
 from __future__ import annotations
 
 import re
@@ -11,21 +12,66 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 
-APPS: list[str] = ["midia", "relacionamento", "busca", "acesso", "cobranca", "fiscal", "pdv", "design", "treinos", "painel_do_professor", "portal_do_aluno", "conta"]
-ROTAS: list[str] = ["midia.urls", "relacionamento.urls", "busca.urls", "acesso.urls", "cobranca.urls", "fiscal.urls", "pdv.urls", "design.urls", "treinos.urls", "painel_do_professor.urls", "portal_do_aluno.urls", "conta.urls"]
+APPS: list[str] = [
+    "midia",
+    "relacionamento",
+    "busca",
+    "acesso",
+    "cobranca",
+    "fiscal",
+    "pdv",
+    "design",
+    "treinos",
+    "painel_do_professor",
+    "portal_do_aluno",
+    "conta",
+]
+ROTAS: list[str] = [
+    "midia.urls",
+    "relacionamento.urls",
+    "busca.urls",
+    "acesso.urls",
+    "cobranca.urls",
+    "fiscal.urls",
+    "pdv.urls",
+    "design.urls",
+    "treinos.urls",
+    "painel_do_professor.urls",
+    "portal_do_aluno.urls",
+    "conta.urls",
+]
 TESTPATHS: list[str] = ["midia", "busca"]
 ISOLAMENTO: list[str] = [
-    "midia.arquivodemidia", "midia.partedemidia",
-    "relacionamento.lead", "relacionamento.interacaocomlead", "relacionamento.perfilderisco",
-    "acesso.dispositivodeacesso", "acesso.credencialdeacesso", "acesso.registrodeacesso",
-    "acesso.planodeparceiro", "acesso.extratodeparceiro", "acesso.linhadeextrato",
-    "cobranca.autorizacaodedebito", "cobranca.cobrancarecorrente", "cobranca.eventodacobranca",
-    "fiscal.configuracaofiscal", "fiscal.notafiscal", "fiscal.eventofiscal",
-    "pdv.produto", "pdv.venda", "pdv.itemdavenda", "pdv.movimentodeestoque",
-    "documentos.envelopedeassinatura", "documentos.signatario", "documentos.assinatura",
-    "treinos.treino", "treinos.exerciciodotreino", "treinos.execucaodoexercicio",
+    "midia.arquivodemidia",
+    "midia.partedemidia",
+    "relacionamento.lead",
+    "relacionamento.interacaocomlead",
+    "relacionamento.perfilderisco",
+    "acesso.dispositivodeacesso",
+    "acesso.credencialdeacesso",
+    "acesso.registrodeacesso",
+    "acesso.planodeparceiro",
+    "acesso.extratodeparceiro",
+    "acesso.linhadeextrato",
+    "cobranca.autorizacaodedebito",
+    "cobranca.cobrancarecorrente",
+    "cobranca.eventodacobranca",
+    "fiscal.configuracaofiscal",
+    "fiscal.notafiscal",
+    "fiscal.eventofiscal",
+    "pdv.produto",
+    "pdv.venda",
+    "pdv.itemdavenda",
+    "pdv.movimentodeestoque",
+    "documentos.envelopedeassinatura",
+    "documentos.signatario",
+    "documentos.assinatura",
+    "treinos.treino",
+    "treinos.exerciciodotreino",
+    "treinos.execucaodoexercicio",
     "treinos.avaliacaofisica",
-    "painel_do_professor.ocorrenciadaturma", "painel_do_professor.substituicaodeturna",
+    "painel_do_professor.ocorrenciadaturma",
+    "painel_do_professor.substituicaodeturna",
 ]
 
 

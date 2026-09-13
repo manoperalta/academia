@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Corrige o nome do modelo na lista de excecao do teste de isolamento."""
+
 from __future__ import annotations
 
 from pathlib import Path

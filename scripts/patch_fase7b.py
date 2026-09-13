@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 7b: preserva /api/v1/estado/ (fase 1) e move o estado da rede para /estado-da-rede/."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,8 +23,11 @@ def patch_urls() -> None:
     if not texto.count("EstadoDaInstalacao"):
         raise SystemExit("ERRO: EstadoDaInstalacao nao voltou para /v1/estado/")
     if "from api.views import" not in texto:
-        texto = texto.replace("from api import endpoints as ep",
-                              "from api import endpoints as ep\nfrom api.views import EstadoDaInstalacao", 1)
+        texto = texto.replace(
+            "from api import endpoints as ep",
+            "from api import endpoints as ep\nfrom api.views import EstadoDaInstalacao",
+            1,
+        )
     if "EstadoDaInstalacao" not in texto.split("urlpatterns")[0]:
         raise SystemExit("ERRO: import de EstadoDaInstalacao ausente")
     caminho.write_text(texto, encoding="utf-8")

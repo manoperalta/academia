@@ -2,7 +2,7 @@
 
 import logging
 
-from app.settings_env.base import *  # noqa: F401,F403
+from app.settings_env.base import *  # noqa: F403
 from app.settings_env.base import env
 
 DEBUG = False  # nunca por variavel de ambiente em producao

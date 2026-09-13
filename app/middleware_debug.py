@@ -29,6 +29,7 @@ Efeito colateral conhecido: a excecao nao sobe ate o handler, entao o sinal
 `got_request_exception` nao dispara em requisicao publica; o erro continua
 registrado pelo logger deste modulo.
 """
+
 import hmac
 import logging
 
@@ -62,7 +63,7 @@ PAGINA_404 = (
     '<!doctype html><html lang="pt-br"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width,initial-scale=1">'
     "<title>404 - Pagina nao encontrada</title><style>" + _ESTILO + "</style></head>"
-    '<body><div><h1>404</h1><p>Esta pagina nao existe.</p>'
+    "<body><div><h1>404</h1><p>Esta pagina nao existe.</p>"
     '<p><a href="/">Voltar para a pagina inicial</a></p></div></body></html>'
 )
 
@@ -70,7 +71,7 @@ PAGINA_500 = (
     '<!doctype html><html lang="pt-br"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width,initial-scale=1">'
     "<title>500 - Erro no servidor</title><style>" + _ESTILO + "</style></head>"
-    '<body><div><h1>500</h1><p>Algo deu errado do nosso lado. O erro foi registrado.</p>'
+    "<body><div><h1>500</h1><p>Algo deu errado do nosso lado. O erro foi registrado.</p>"
     '<p><a href="/">Voltar para a pagina inicial</a></p></div></body></html>'
 )
 
@@ -103,12 +104,14 @@ class DebugLocalAutorizadoMiddleware:
             if hasattr(resposta, "render") and not getattr(resposta, "is_rendered", True):
                 resposta = resposta.render()
             return bytes(resposta.content)
-        except Exception:  # noqa: BLE001  (streaming / sem .content)
+        except Exception:
             return b""
 
     def _limpar(self, resposta):
         """Troca a pagina tecnica do Django (resolver 404/500) por uma pagina limpa."""
-        if resposta.status_code not in (404, 500) or "text/html" not in resposta.get("Content-Type", ""):
+        if resposta.status_code not in (404, 500) or "text/html" not in resposta.get(
+            "Content-Type", ""
+        ):
             return resposta
         corpo = self._corpo(resposta)
         if not any(marcador in corpo for marcador in MARCADORES_DEBUG):
@@ -132,8 +135,12 @@ class DebugLocalAutorizadoMiddleware:
             resposta = self.get_response(request)
             if getattr(request, "_debug_via_token", False):
                 resposta.set_cookie(
-                    COOKIE, token, max_age=UM_ANO, httponly=True,
-                    samesite="Lax", secure=request.is_secure(),
+                    COOKIE,
+                    token,
+                    max_age=UM_ANO,
+                    httponly=True,
+                    samesite="Lax",
+                    secure=request.is_secure(),
                 )
             return resposta
 
@@ -142,7 +149,7 @@ class DebugLocalAutorizadoMiddleware:
             resposta = self.get_response(request)
         except Http404:
             return HttpResponseNotFound(PAGINA_404)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception(
                 "Erro nao tratado em requisicao sem token de depuracao (%s)",
                 type(exc).__name__,

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (conta): modulo SUPORTE no enum, na matriz do gestor e no menu."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -31,5 +32,4 @@ if __name__ == "__main__":
     permissoes = RAIZ / "gestao" / "permissoes.py"
     _inserir(permissoes, ANCORA_ENUM, MEMBROS, 'SUPORTE = "suporte"', "enum de modulos")
     _inserir(permissoes, ANCORA_MATRIZ, MATRIZ, 'Modulo.SUPORTE: "editar"', "matriz do gestor")
-    _inserir(RAIZ / "gestao" / "menu.py", ANCORA_MENU, ROTAS, "conta:fila_suporte",
-             "rotas do menu")
+    _inserir(RAIZ / "gestao" / "menu.py", ANCORA_MENU, ROTAS, "conta:fila_suporte", "rotas do menu")

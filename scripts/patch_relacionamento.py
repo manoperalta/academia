@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 8 (relacionamento): modulos CRM e RETENCAO no enum, na matriz, no menu e na suite."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -36,14 +37,31 @@ def _inserir(caminho: Path, ancora: str, linhas: list[str], marcador: str, rotul
 
 def aplicar() -> None:
     permissoes = RAIZ / "gestao" / "permissoes.py"
-    _inserir(permissoes, [linha for linha in
-                          permissoes.read_text(encoding="utf-8").splitlines()
-                          if linha.startswith("    CATALOGO = ")][0],
-             MEMBROS, 'CRM = "crm"', "enum de modulos")
-    _inserir(permissoes, '        Modulo.PRIVACIDADE: "ver",', MATRIZ_GESTOR,
-             'Modulo.CRM: "editar"', "matriz do gestor de unidade")
-    _inserir(RAIZ / "gestao" / "menu.py", '    Modulo.AUDITORIA: "gestao:auditoria",', ROTAS,
-             "relacionamento:funil", "rotas do menu")
+    _inserir(
+        permissoes,
+        next(
+            linha
+            for linha in permissoes.read_text(encoding="utf-8").splitlines()
+            if linha.startswith("    CATALOGO = ")
+        ),
+        MEMBROS,
+        'CRM = "crm"',
+        "enum de modulos",
+    )
+    _inserir(
+        permissoes,
+        '        Modulo.PRIVACIDADE: "ver",',
+        MATRIZ_GESTOR,
+        'Modulo.CRM: "editar"',
+        "matriz do gestor de unidade",
+    )
+    _inserir(
+        RAIZ / "gestao" / "menu.py",
+        '    Modulo.AUDITORIA: "gestao:auditoria",',
+        ROTAS,
+        "relacionamento:funil",
+        "rotas do menu",
+    )
 
 
 def incluir_testes() -> None:

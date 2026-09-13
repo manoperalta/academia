@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Acrescenta os modelos do portal na lista de excecao do teste de isolamento."""
+
 from __future__ import annotations
 
 import re

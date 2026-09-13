@@ -1,14 +1,21 @@
+from django.conf import settings
 from django.db import models
 
-from django.conf import settings
 from core.models import TenantModel
 
+
 class Usuario(TenantModel):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='usuario_profile', null=True, blank=True)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="usuario_profile",
+        null=True,
+        blank=True,
+    )
 
     STATUS_CHOICES = (
-        ('Ativo', 'Ativo'),
-        ('Inativo', 'Inativo'),
+        ("Ativo", "Ativo"),
+        ("Inativo", "Inativo"),
     )
 
     nome = models.CharField(max_length=255, verbose_name="Nome Completo")
@@ -22,8 +29,12 @@ class Usuario(TenantModel):
     telefone_user = models.CharField(max_length=20, verbose_name="Telefone", blank=True, null=True)
     data_create_user = models.DateTimeField(auto_now_add=True, verbose_name="Data de Criação")
     data_at_user = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
-    foto_user = models.ImageField(upload_to='usuarios_fotos/', null=True, blank=True, verbose_name="Foto de Perfil")
-    status_user = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
+    foto_user = models.ImageField(
+        upload_to="usuarios_fotos/", null=True, blank=True, verbose_name="Foto de Perfil"
+    )
+    status_user = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default="Ativo", verbose_name="Status"
+    )
 
     def __str__(self):
         return self.nome
@@ -32,15 +43,22 @@ class Usuario(TenantModel):
         verbose_name = "Usuário"
         verbose_name_plural = "Usuários"
 
+
 class FichaSaude(TenantModel):
-    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='ficha_saude')
-    altura = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Altura (m)", null=True, blank=True)
-    peso = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Peso (kg)", null=True, blank=True)
+    usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name="ficha_saude")
+    altura = models.DecimalField(
+        max_digits=4, decimal_places=2, verbose_name="Altura (m)", null=True, blank=True
+    )
+    peso = models.DecimalField(
+        max_digits=5, decimal_places=2, verbose_name="Peso (kg)", null=True, blank=True
+    )
     restricoes = models.TextField(verbose_name="Restrições", null=True, blank=True)
     prescricoes = models.TextField(verbose_name="Prescrições", null=True, blank=True)
     obs = models.TextField(verbose_name="Observações", null=True, blank=True)
     usa_medicamento = models.BooleanField(default=False, verbose_name="Usa Medicamento?")
-    qual_medicamento = models.CharField(max_length=255, verbose_name="Qual Medicamento?", null=True, blank=True)
+    qual_medicamento = models.CharField(
+        max_length=255, verbose_name="Qual Medicamento?", null=True, blank=True
+    )
 
     def __str__(self):
         return f"Ficha de Saúde - {self.usuario.nome}"

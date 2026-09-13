@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 6: monta as rotas da rede na raiz (/gestao/rede/...) para o namespace ser 'rede'."""
+
 from __future__ import annotations
 
 from pathlib import Path

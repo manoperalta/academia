@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 3: liga o painel da plataforma ao projeto (idempotente e verificado)."""
+
 from __future__ import annotations
 
 import re
@@ -40,8 +41,10 @@ def patch_urls() -> None:
         re.MULTILINE,
     )
     novo, trocas = padrao.subn(
-        lambda m: f'{m.group("indent")}path("admin/", admin.site.urls),\n'
-                  f'{m.group("indent")}path("plataforma/", include("plataforma.urls")),',
+        lambda m: (
+            f'{m.group("indent")}path("admin/", admin.site.urls),\n'
+            f'{m.group("indent")}path("plataforma/", include("plataforma.urls")),'
+        ),
         texto,
         count=1,
     )
@@ -59,7 +62,7 @@ def patch_pyproject() -> None:
         print("pyproject: plataforma ja citado")
         return
     novo, trocas = re.subn(
-        r'(testpaths\s*=\s*\[)([^\]]*)(\])',
+        r"(testpaths\s*=\s*\[)([^\]]*)(\])",
         lambda m: f'{m.group(1)}{m.group(2)}, "plataforma"{m.group(3)}',
         texto,
         count=1,
@@ -79,11 +82,7 @@ def patch_tenancy() -> None:
     if "_impersonacao_da_sessao" in texto:
         print("tenancy: impersonation ja considerada")
         return
-    antigo = (
-        "    rede, unidade = _da_sessao(request)\n"
-        "    if rede:\n"
-        "        return rede, unidade\n"
-    )
+    antigo = "    rede, unidade = _da_sessao(request)\n    if rede:\n        return rede, unidade\n"
     novo = (
         "    rede, unidade = _da_sessao(request)\n"
         "    if rede:\n"
@@ -97,17 +96,21 @@ def patch_tenancy() -> None:
     if antigo not in texto:
         raise SystemExit("ERRO: trecho da sessao nao encontrado em core/tenancy.py")
     texto = texto.replace(antigo, novo, 1)
-    texto = texto.rstrip("\n") + "\n\n\n" + (
-        "def _impersonacao_da_sessao(request):\n"
-        '    """Impersonation ativa na sessao (import tardio evita ciclo com a plataforma)."""\n'
-        '    if not hasattr(request, "session"):\n'
-        "        return None\n"
-        '    identificador = request.session.get("impersonacao_id")\n'
-        "    if not identificador:\n"
-        "        return None\n"
-        "    from plataforma.models import Impersonacao\n"
-        "\n"
-        "    return Impersonacao.objects.filter(pk=identificador, fim__isnull=True).first()\n"
+    texto = (
+        texto.rstrip("\n")
+        + "\n\n\n"
+        + (
+            "def _impersonacao_da_sessao(request):\n"
+            '    """Impersonation ativa na sessao (import tardio evita ciclo com a plataforma)."""\n'
+            '    if not hasattr(request, "session"):\n'
+            "        return None\n"
+            '    identificador = request.session.get("impersonacao_id")\n'
+            "    if not identificador:\n"
+            "        return None\n"
+            "    from plataforma.models import Impersonacao\n"
+            "\n"
+            "    return Impersonacao.objects.filter(pk=identificador, fim__isnull=True).first()\n"
+        )
     )
     _verificar(texto, "_impersonacao_da_sessao(request)", "core/tenancy.py")
     caminho.write_text(texto, encoding="utf-8")
@@ -138,13 +141,16 @@ def patch_mixins() -> None:
         for indice, linha in enumerate(linhas[:60]):
             if linha.startswith("import ") or linha.startswith("from "):
                 ultimo = indice
-        linhas.insert(ultimo + 1, (
-            "\n\ndef impersonando_suporte(request) -> bool:\n"
-            '    """True quando a requisicao esta dentro de um acesso de suporte auditado."""\n'
-            '    if not hasattr(request, "session"):\n'
-            "        return False\n"
-            '    return bool(request.session.get("impersonacao_id"))\n'
-        ))
+        linhas.insert(
+            ultimo + 1,
+            (
+                "\n\ndef impersonando_suporte(request) -> bool:\n"
+                '    """True quando a requisicao esta dentro de um acesso de suporte auditado."""\n'
+                '    if not hasattr(request, "session"):\n'
+                "        return False\n"
+                '    return bool(request.session.get("impersonacao_id"))\n'
+            ),
+        )
         texto = "".join(linhas)
     _verificar(texto, "impersonando_suporte(request)", "core/mixins.py")
     caminho.write_text(texto, encoding="utf-8")

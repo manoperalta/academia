@@ -1,4 +1,5 @@
 """Agrupa as rotas resolvidas por area (o que existe hoje no painel)."""
+
 from __future__ import annotations
 
 from collections import defaultdict

@@ -1,11 +1,23 @@
 """Imprime apps instalados e os campos dos modelos que interessam ao painel do professor."""
+
 from __future__ import annotations
 
 from django.apps import apps
 
 INTERESSA = {
-    "professores", "aulas", "agendamento", "turmas", "usuarios", "financeiro", "treinos",
-    "avaliacoes", "avaliacao", "alunos", "core", "notificacoes", "relatorios",
+    "professores",
+    "aulas",
+    "agendamento",
+    "turmas",
+    "usuarios",
+    "financeiro",
+    "treinos",
+    "avaliacoes",
+    "avaliacao",
+    "alunos",
+    "core",
+    "notificacoes",
+    "relatorios",
 }
 
 print("=== APPS INSTALADOS ===")

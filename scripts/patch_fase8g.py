@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """Fase 8g: inclui os testes da fase 8 na suite padrao (testpaths)."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-ALVO = 'testpaths = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede"]'
+ALVO = (
+    'testpaths = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede"]'
+)
 NOVO = 'testpaths = ["tests", "core", "api", "gestao", "plataforma", "vitrine", "governanca", "rede", "fase8_tests"]'
 
 caminho = RAIZ / "pyproject.toml"

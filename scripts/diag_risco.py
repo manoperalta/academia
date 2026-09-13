@@ -1,4 +1,5 @@
 """Diagnostico do score de risco, mostrando cada sinal (nao altera nada de producao)."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,18 +20,28 @@ Rede.todos.filter(slug=SLUG).delete()
 rede = Rede.todos.create(nome="Diag", slug=SLUG, status="ativo")
 unidade = Unidade.objects.create(rede=rede, nome="Centro", codigo="centro", tipo="propria")
 login = get_user_model().objects.create_user(username="diag.risco", password="SenhaDiag!23")
-aluno = Usuario.todos.create(rede=rede, unidade=unidade, user=login, nome="Aluno Diagnostico",
-                             status_user="Ativo")
-plano = Plano.objects.create(rede=rede, unidade=unidade, nome="Mensal", tipo="mensal",
-                             valor=Decimal("199.00"))
+aluno = Usuario.todos.create(
+    rede=rede, unidade=unidade, user=login, nome="Aluno Diagnostico", status_user="Ativo"
+)
+plano = Plano.objects.create(
+    rede=rede, unidade=unidade, nome="Mensal", tipo="mensal", valor=Decimal("199.00")
+)
 hoje = timezone.localdate()
-p = Pagamento.objects.create(rede=rede, unidade=unidade, usuario=login, plano=plano,
-                             valor_pago=Decimal("199.00"), data_inicio=hoje - timedelta(days=70),
-                             data_fim=hoje - timedelta(days=40), status="pago")
+p = Pagamento.objects.create(
+    rede=rede,
+    unidade=unidade,
+    usuario=login,
+    plano=plano,
+    valor_pago=Decimal("199.00"),
+    data_inicio=hoje - timedelta(days=70),
+    data_fim=hoje - timedelta(days=40),
+    status="pago",
+)
 entrada = CheckinDoAluno.objects.create(rede=rede, aluno=aluno, unidade=unidade)
 CheckinDoAluno.objects.filter(pk=entrada.pk).update(criado_em=timezone.now() - timedelta(days=45))
-pesquisa = Pesquisa.objects.create(rede=rede, unidade=unidade, titulo="Pos-aula",
-                                   pergunta="De 0 a 10?", tipo=TipoDePesquisa.NPS)
+pesquisa = Pesquisa.objects.create(
+    rede=rede, unidade=unidade, titulo="Pos-aula", pergunta="De 0 a 10?", tipo=TipoDePesquisa.NPS
+)
 Resposta.objects.create(pesquisa=pesquisa, aluno=aluno, unidade=unidade, nota=3)
 
 print("data_fim do pagamento:", p.data_fim, "| hoje:", hoje, "| status:", p.status)

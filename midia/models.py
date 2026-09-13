@@ -38,7 +38,10 @@ class ArquivoDeMidia(models.Model):
         Unidade, on_delete=models.SET_NULL, null=True, blank=True, related_name="midias"
     )
     aula = models.ForeignKey(
-        "aulas.Aulas", on_delete=models.SET_NULL, null=True, blank=True,
+        "aulas.Aulas",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="midias_enviadas",
     )
     titulo = models.CharField("titulo", max_length=200)
@@ -59,7 +62,10 @@ class ArquivoDeMidia(models.Model):
     publicado = models.BooleanField("visivel para o aluno", default=False)
     erro = models.CharField("ultimo erro", max_length=300, blank=True)
     criado_por = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="midias_enviadas",
     )
     criado_em = models.DateTimeField("criado em", auto_now_add=True)

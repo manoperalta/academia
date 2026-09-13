@@ -6,6 +6,7 @@
 - registra o context processor do menu do painel
 - adiciona a rota /gestao/ em app/urls.py
 """
+
 from __future__ import annotations
 
 import re
@@ -150,8 +151,10 @@ def patch_urls() -> None:
         re.MULTILINE,
     )
     novo_texto, trocas = padrao.subn(
-        lambda m: f'{m.group("indent")}path("admin/", admin.site.urls),\n'
-                  f'{m.group("indent")}path("gestao/", include("gestao.urls")),',
+        lambda m: (
+            f'{m.group("indent")}path("admin/", admin.site.urls),\n'
+            f'{m.group("indent")}path("gestao/", include("gestao.urls")),'
+        ),
         texto,
         count=1,
     )
@@ -185,7 +188,7 @@ def patch_resolver() -> None:
         "        if rede:\n"
         "            vinculo = (\n"
         "                VinculoUsuario.todos.filter(usuario=usuario, rede=rede, ativo=True)\n"
-        "                .select_related(\"unidade\")\n"
+        '                .select_related("unidade")\n'
         "                .first()\n"
         "            )\n"
         "            return rede, (vinculo.unidade if vinculo else None)\n"
@@ -194,11 +197,11 @@ def patch_resolver() -> None:
         "        rede = rede_do_usuario(usuario)\n"
         "        if rede:\n"
         "            vinculos = VinculoUsuario.todos.filter(usuario=usuario, rede=rede, ativo=True)\n"
-        "            papeis_de_rede_do_usuario = set(vinculos.values_list(\"papel\", flat=True))\n"
+        '            papeis_de_rede_do_usuario = set(vinculos.values_list("papel", flat=True))\n'
         "            # Papeis de rede veem todas as unidades; a unidade entra pela sessao.\n"
         "            if usuario.is_superuser or (papeis_de_rede_do_usuario & PAPEIS_DA_REDE):\n"
         "                return rede, None\n"
-        "            vinculo = vinculos.select_related(\"unidade\").first()\n"
+        '            vinculo = vinculos.select_related("unidade").first()\n'
         "            return rede, (vinculo.unidade if vinculo else None)\n"
     )
     if antigo not in texto:
@@ -217,13 +220,13 @@ def patch_middleware() -> None:
 
     bloco_antigo = (
         "        except Exception:  # pragma: no cover - nunca derruba a requisicao por contexto\n"
-        "            logger.exception(\"Falha ao resolver o contexto de rede\")\n"
+        '            logger.exception("Falha ao resolver o contexto de rede")\n'
         "            limpar_contexto()\n"
         "            return self.get_response(request)\n"
     )
     bloco_novo = (
         "        except Exception:\n"
-        "            logger.exception(\"Falha ao resolver o contexto de rede\")\n"
+        '            logger.exception("Falha ao resolver o contexto de rede")\n'
         "            limpar_contexto()\n"
         "            if ambiente_de_desenvolvimento():\n"
         "                # Em dev/teste queremos ver o erro, nao um usuario deslogado em silencio.\n"
@@ -238,13 +241,15 @@ def patch_middleware() -> None:
 
     if "import os" not in texto:
         texto = texto.replace(
-            "from __future__ import annotations\n", "from __future__ import annotations\n\nimport os\n", 1
+            "from __future__ import annotations\n",
+            "from __future__ import annotations\n\nimport os\n",
+            1,
         )
 
     definicao = (
         "\n\ndef ambiente_de_desenvolvimento() -> bool:\n"
-        "    \"\"\"True em dev/teste, onde falha de contexto de rede deve ser visivel.\"\"\"\n"
-        "    return os.environ.get(\"DJANGO_ENV\", \"\") in {\"dev\", \"test\"}\n"
+        '    """True em dev/teste, onde falha de contexto de rede deve ser visivel."""\n'
+        '    return os.environ.get("DJANGO_ENV", "") in {"dev", "test"}\n'
     )
     if "def ambiente_de_desenvolvimento" not in texto:
         texto = texto.rstrip("\n") + "\n" + definicao
@@ -268,10 +273,10 @@ def patch_settings_teste() -> None:
     """Marca DJANGO_ENV=test nas configuracoes de teste."""
     caminho = RAIZ / "app" / "settings_env" / "test.py"
     texto = caminho.read_text(encoding="utf-8")
-    if 'DJANGO_ENV' in texto:
+    if "DJANGO_ENV" in texto:
         print("settings de teste: ja marcado")
         return
-    texto = "import os\n\nos.environ.setdefault(\"DJANGO_ENV\", \"test\")\n\n" + texto
+    texto = 'import os\n\nos.environ.setdefault("DJANGO_ENV", "test")\n\n' + texto
     caminho.write_text(texto, encoding="utf-8")
     print("settings de teste: DJANGO_ENV=test marcado")
 
@@ -287,7 +292,7 @@ def patch_pyproject() -> None:
         print("pyproject: gestao ja citado")
         return
     novo, trocas = re.subn(
-        r'(testpaths\s*=\s*\[)([^\]]*)(\])',
+        r"(testpaths\s*=\s*\[)([^\]]*)(\])",
         lambda m: f'{m.group(1)}{m.group(2)}, "gestao"{m.group(3)}',
         texto,
         count=1,

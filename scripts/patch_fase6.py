@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fase 6: liga o app rede (settings, rotas do painel, testpaths). Idempotente."""
+
 from __future__ import annotations
 
 import re
@@ -29,8 +30,12 @@ def patch_pyproject():
     if '"rede"' in texto:
         print("pyproject: rede ja citado")
         return
-    novo, trocas = re.subn(r'(testpaths\s*=\s*\[)([^\]]*)(\])',
-                           lambda m: m.group(1) + m.group(2) + ', "rede"' + m.group(3), texto, count=1)
+    novo, trocas = re.subn(
+        r"(testpaths\s*=\s*\[)([^\]]*)(\])",
+        lambda m: m.group(1) + m.group(2) + ', "rede"' + m.group(3),
+        texto,
+        count=1,
+    )
     if trocas:
         caminho.write_text(novo, encoding="utf-8")
         print("pyproject: rede nos testpaths")
@@ -47,7 +52,9 @@ def patch_apoio():
     if '"rede"' in texto:
         print("apoio: rede ja ignorado")
         return
-    novo, trocas = re.subn(r'(\n\s*"governanca",)(\n\s*"plataforma",)', r'\1"rede",\2', texto, count=1)
+    novo, trocas = re.subn(
+        r'(\n\s*"governanca",)(\n\s*"plataforma",)', r'\1"rede",\2', texto, count=1
+    )
     if trocas == 0:
         novo, trocas = re.subn(r'("governanca",)', r'"governanca", "rede",', texto, count=1)
     if trocas:
