@@ -1,0 +1,71 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-4xl space-y-4">
+  {% if apuracao %}
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="text-lg font-semibold">{{ apuracao.professor }}</h2>
+        <p class="text-sm text-slate-500">{{ apuracao.unidade|default:"Rede" }} ·
+           {{ apuracao.inicio|date:"d/m/Y" }} a {{ apuracao.fim|date:"d/m/Y" }} ·
+           {{ apuracao.get_situacao_display }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-slate-500">Valor devido</p>
+        <p class="text-2xl font-semibold">R$ {{ apuracao.valor_devido }}</p>
+        {% if apuracao.saldo %}<p class="text-xs text-amber-600">Saldo R$ {{ apuracao.saldo }}</p>{% endif %}
+      </div>
+    </div>
+    <p class="mt-3 text-xs text-slate-400">Assinatura do calculo: {{ apuracao.hash_do_calculo|slice:":16" }}…</p>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+        <tr><th class="px-4 py-2 text-left">#</th><th class="px-4 py-2 text-left">Linha</th>
+            <th class="px-4 py-2 text-right">Base</th><th class="px-4 py-2 text-right">%</th>
+            <th class="px-4 py-2 text-right">Valor</th></tr>
+      </thead>
+      <tbody>
+        {% for item in itens %}
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-2 text-slate-400">{{ item.ordem }}</td>
+          <td class="px-4 py-2">{{ item.descricao }}</td>
+          <td class="px-4 py-2 text-right">R$ {{ item.base }}</td>
+          <td class="px-4 py-2 text-right">{{ item.percentual }}%</td>
+          <td class="px-4 py-2 text-right font-medium">R$ {{ item.valor }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="5" class="px-4 py-6 text-center text-slate-500">Sem itens.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rounded-xl bg-white p-5 shadow">
+    <p class="text-sm">
+      Conferencia por recalculo:
+      {% if conferencia.ok %}<span class="font-medium text-emerald-600">confere, zero divergencia</span>
+      {% else %}<span class="font-medium text-rose-600">{{ conferencia.divergencias|length }} divergencia(s)</span>{% endif %}
+      · mesmo numero: {{ conferencia.mesmo_numero|yesno:"sim,nao" }}
+    </p>
+    {% if not conferencia.ok %}
+    <ul class="mt-2 text-xs text-rose-600">
+      {% for divergencia in conferencia.divergencias %}
+      <li>{{ divergencia.campo }}: gravado {{ divergencia.gravado }} · recalculado {{ divergencia.recalculado }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if apuracao.situacao != "pago" %}
+    <form method="post" action="{% url 'remuneracao:apuracao_baixar' apuracao.pk %}" class="mt-4 flex gap-2">
+      {% csrf_token %}
+      <input name="valor" value="{{ apuracao.saldo }}"
+             class="w-40 rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">Registrar pagamento</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="text-slate-500">Comissao nao encontrada.</p>
+  {% endif %}
+</div>
+{% endblock %}

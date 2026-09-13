@@ -49,6 +49,10 @@ TERCEIROS = [
 LOCAIS = [
     "core",
     "rede",
+    "remuneracao",
+    "gamificacao",
+    "nps",
+    "area_do_aluno",
     "governanca",
     "vitrine",
     "plataforma",

@@ -1,0 +1,32 @@
+{% extends "area_do_aluno/base.html" %}
+{% block conteudo %}
+<section class="rounded-2xl bg-white p-4 shadow">
+  <h1 class="text-lg font-semibold">{{ pesquisa.titulo }}</h1>
+  <p class="mt-1 text-sm text-slate-600">{{ pesquisa.pergunta }}</p>
+  <form method="post" class="mt-4 space-y-4">
+    {% csrf_token %}
+    {% if pesquisa.tipo == "nps" %}
+    <fieldset>
+      <legend class="text-xs text-slate-500">De 0 a 10, quanto voce recomendaria a academia?</legend>
+      <div class="mt-2 grid grid-cols-6 gap-2">
+        {% for nota in "012345678910"|make_list %}{% endfor %}
+        {% for nota in notas_possiveis %}
+        <label class="flex flex-col items-center rounded-lg border border-slate-300 py-2 text-sm">
+          <input type="radio" name="nota" value="{{ nota }}" class="sr-only" required>
+          <span>{{ nota }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+    {% else %}
+    <label for="nota" class="block text-xs text-slate-500">Sua nota</label>
+    <input id="nota" name="nota" type="number" min="1" max="5" required
+           class="w-full rounded-lg border border-slate-300 px-3 py-3 text-sm">
+    {% endif %}
+    <label for="comentario" class="block text-xs text-slate-500">Comentario (opcional)</label>
+    <textarea id="comentario" name="comentario" rows="3"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+    <button class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">Enviar resposta</button>
+  </form>
+</section>
+{% endblock %}

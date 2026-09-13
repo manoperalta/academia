@@ -21,6 +21,10 @@ from django.conf.urls.static import static
 from academia import views as academia_views
 
 urlpatterns = [
+    path("gestao/remuneracao/", include("remuneracao.urls")),
+    path("gestao/gamificacao/", include("gamificacao.urls")),
+    path("gestao/nps/", include("nps.urls")),
+    path("aluno/", include("area_do_aluno.urls")),
     path("admin/", admin.site.urls),
     path("plataforma/", include("plataforma.urls")),
     path("gestao/rede/", include("rede.urls")),

@@ -1,0 +1,28 @@
+{% extends "area_do_aluno/base.html" %}
+{% block conteudo %}
+<section class="rounded-2xl bg-white p-4 shadow" aria-labelledby="saldo">
+  <h1 id="saldo" class="text-lg font-semibold">{{ saldo.pontos }} pontos · nivel {{ saldo.nivel }}</h1>
+  <p class="text-xs text-slate-500">{{ saldo.para_o_proximo_nivel }} pontos para o proximo nivel</p>
+</section>
+<section aria-labelledby="ranking" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="ranking" class="text-sm font-semibold">Ranking do mes na sua unidade</h2>
+  <ol class="mt-2 space-y-1 text-sm">
+    {% for linha in ranking %}
+    <li class="flex justify-between {% if linha.aluno == aluno.pk %}font-semibold text-sky-700{% endif %}">
+      <span>{{ linha.posicao }}. {{ linha.nome }}</span><span>{{ linha.pontos }}</span>
+    </li>
+    {% empty %}<li class="text-slate-500">Ranking comeca quando o primeiro aluno pontuar.</li>
+    {% endfor %}
+  </ol>
+</section>
+<section aria-labelledby="extrato" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="extrato" class="text-sm font-semibold">Ultimos lancamentos</h2>
+  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+    {% for lancamento in saldo.lancamentos %}
+    <li>{{ lancamento.criado_em|date:"d/m" }} · {{ lancamento.get_evento_display }} ·
+        <span class="font-medium">{{ lancamento.pontos|stringformat:"+d" }}</span></li>
+    {% empty %}<li>Nada lancado ainda.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

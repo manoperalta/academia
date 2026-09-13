@@ -1,0 +1,80 @@
+{% extends "area_do_aluno/base.html" %}
+{% block conteudo %}
+{% if aluno %}
+<section class="rounded-2xl bg-white p-4 shadow" aria-labelledby="ola">
+  <h1 id="ola" class="text-lg font-semibold">Ola, {{ aluno.nome }}</h1>
+  <p class="text-xs text-slate-500">
+    {{ resumo.unidade_de_origem|default:"Sem unidade" }} · nivel {{ resumo.gamificacao.nivel }} ·
+    {{ resumo.gamificacao.pontos }} pontos
+  </p>
+  <form method="post" action="{% url 'aluno:checkin' %}" class="mt-3 space-y-2">
+    {% csrf_token %}
+    <label for="unidade" class="block text-xs text-slate-500">Onde voce vai treinar hoje?</label>
+    <select id="unidade" name="unidade" class="w-full rounded-lg border border-slate-300 px-3 py-3 text-sm">
+      {% for unidade in unidades %}
+      <option value="{{ unidade.pk }}" {% if unidade.pk == aluno.unidade_id %}selected{% endif %}>{{ unidade.nome }}</option>
+      {% endfor %}
+    </select>
+    <button class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">
+      Fazer check-in
+    </button>
+  </form>
+  <p class="mt-2 text-xs text-slate-400">
+    Check-ins no mes: {{ resumo.checkins_no_mes }} · {% if resumo.gamificacao.para_o_proximo_nivel %}faltam
+    {{ resumo.gamificacao.para_o_proximo_nivel }} pontos para o nivel {{ resumo.gamificacao.nivel|add:1 }}{% endif %}
+  </p>
+</section>
+
+{% if resumo.gamificacao.conquistas %}
+<section aria-labelledby="selos" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="selos" class="text-sm font-semibold">Suas conquistas</h2>
+  <ul class="mt-2 flex flex-wrap gap-2">
+    {% for ganha in resumo.gamificacao.conquistas %}
+    <li class="rounded-full bg-amber-50 px-3 py-1 text-xs text-amber-700">
+      <span aria-hidden="true">{{ ganha.conquista.icone|default:"🏅" }}</span> {{ ganha.conquista.nome }}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if resumo.pesquisas_abertas %}
+<section aria-labelledby="pesquisas" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="pesquisas" class="text-sm font-semibold">Sua opiniao vale pontos</h2>
+  <ul class="mt-2 space-y-2">
+    {% for pesquisa in resumo.pesquisas_abertas %}
+    <li><a class="text-sm text-sky-700 underline" href="{% url 'aluno:pesquisa' pesquisa.pk %}">{{ pesquisa.titulo }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if resumo.comunicados %}
+<section aria-labelledby="avisos" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="avisos" class="text-sm font-semibold">Avisos da academia</h2>
+  <ul class="mt-2 space-y-2 text-sm">
+    {% for aviso in resumo.comunicados %}
+    <li><span class="font-medium">{{ aviso.titulo }}</span> — {{ aviso.mensagem|truncatechars:120 }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section aria-labelledby="ultimos" class="rounded-2xl bg-white p-4 shadow">
+  <h2 id="ultimos" class="text-sm font-semibold">Ultimos check-ins</h2>
+  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+    {% for checkin in resumo.checkins_recentes %}
+    <li>{{ checkin.criado_em|date:"d/m/Y H:i" }} · {{ checkin.unidade.nome }}</li>
+    {% empty %}<li>Nenhum check-in ainda.</li>
+    {% endfor %}
+  </ul>
+</section>
+{% else %}
+<section class="rounded-2xl bg-white p-6 text-center shadow">
+  <h1 class="text-lg font-semibold">Bem-vindo</h1>
+  <p class="mt-2 text-sm text-slate-600">
+    Seu usuario ainda nao esta vinculado a uma academia. Procure a recepcao para ativar sua matricula.
+  </p>
+</section>
+{% endif %}
+{% endblock %}

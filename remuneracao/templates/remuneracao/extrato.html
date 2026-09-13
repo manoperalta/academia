@@ -1,0 +1,37 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <h2 class="text-lg font-semibold">Meu extrato de comissoes</h2>
+  {% if extrato %}
+  <div class="grid grid-cols-3 gap-3">
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Devido</p>
+      <p class="text-xl font-semibold">R$ {{ extrato.total_devido }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Recebido</p>
+      <p class="text-xl font-semibold">R$ {{ extrato.total_pago }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Saldo</p>
+      <p class="text-xl font-semibold">R$ {{ extrato.saldo }}</p></div>
+  </div>
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+        <tr><th class="px-4 py-2 text-left">Periodo</th><th class="px-4 py-2 text-left">Unidade</th>
+            <th class="px-4 py-2 text-right">Devido</th><th class="px-4 py-2 text-left">Situacao</th></tr>
+      </thead>
+      <tbody>
+        {% for apuracao in extrato.apuracoes %}
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-2">{{ apuracao.inicio|date:"m/Y" }}</td>
+          <td class="px-4 py-2">{{ apuracao.unidade|default:"—" }}</td>
+          <td class="px-4 py-2 text-right">R$ {{ apuracao.valor_devido }}</td>
+          <td class="px-4 py-2">{{ apuracao.get_situacao_display }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Nada apurado ainda.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-slate-500">Sem vinculo de professor nesta rede.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-4xl space-y-4">
+  <div class="grid grid-cols-4 gap-3">
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">NPS</p>
+      <p class="text-2xl font-semibold">{{ resultado.nps|default_if_none:"—" }}</p>
+      <p class="text-xs text-slate-400">{{ resultado.classificacao }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Respostas</p>
+      <p class="text-2xl font-semibold">{{ resultado.respostas }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Promotores</p>
+      <p class="text-2xl font-semibold text-emerald-600">{{ resultado.percentual_promotores }}%</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Detratores</p>
+      <p class="text-2xl font-semibold text-rose-600">{{ resultado.percentual_detratores }}%</p></div>
+  </div>
+
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <p class="border-b border-slate-100 px-4 py-3 text-sm font-medium">NPS por unidade</p>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+        <tr><th class="px-4 py-2 text-left">Unidade</th><th class="px-4 py-2 text-right">NPS</th>
+            <th class="px-4 py-2 text-right">Respostas</th><th class="px-4 py-2 text-left">Situacao</th></tr>
+      </thead>
+      <tbody>
+        {% for linha in por_unidade %}
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-2">{{ linha.unidade.nome }}</td>
+          <td class="px-4 py-2 text-right font-medium">{{ linha.nps|default_if_none:"—" }}</td>
+          <td class="px-4 py-2 text-right">{{ linha.respostas }}</td>
+          <td class="px-4 py-2 text-slate-500">{{ linha.classificacao }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Sem unidades.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rounded-xl bg-white p-4 shadow">
+    <p class="mb-2 text-sm font-medium">Detratores para tratar ({{ detratores|length }})</p>
+    <ul class="space-y-2">
+      {% for resposta in detratores %}
+      <li class="rounded-lg border border-slate-200 p-3">
+        <p class="text-sm"><span class="font-medium">{{ resposta.aluno|default:"Anonimo" }}</span>
+          · nota {{ resposta.nota }} · {{ resposta.unidade|default:"—" }} · {{ resposta.criado_em|date:"d/m/Y" }}</p>
+        {% if resposta.comentario %}<p class="mt-1 text-xs text-slate-600">{{ resposta.comentario }}</p>{% endif %}
+        <form method="post" action="{% url 'nps:tratar' resposta.pk %}" class="mt-2 flex gap-2">
+          {% csrf_token %}
+          <input name="observacao" placeholder="o que foi feito"
+                 class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs">
+          <button class="rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-white">Marcar tratado</button>
+        </form>
+      </li>
+      {% empty %}<li class="text-sm text-slate-500">Nenhum detrator pendente.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

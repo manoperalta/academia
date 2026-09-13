@@ -111,6 +111,10 @@ def modelos_sem_rede_em_modelos():
     from core.models import TenantModel
 
     ignorados = {
+        "remuneracao.itemdecomissao",
+        "gamificacao.lancamentodepontos",
+        "gamificacao.conquistadoaluno",
+        "nps.resposta",
         "accounts.customuser",
         "api.apitoken",
         "api.registroauditoria",

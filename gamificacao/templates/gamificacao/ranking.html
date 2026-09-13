@@ -1,0 +1,31 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="grid grid-cols-3 gap-3">
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Alunos pontuando</p>
+      <p class="text-xl font-semibold">{{ engajamento.alunos_pontuando }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Pontos no mes</p>
+      <p class="text-xl font-semibold">{{ engajamento.pontos_distribuidos }}</p></div>
+    <div class="rounded-xl bg-white p-4 shadow"><p class="text-xs text-slate-500">Media por aluno</p>
+      <p class="text-xl font-semibold">{{ engajamento.media_por_aluno }}</p></div>
+  </div>
+  <div class="overflow-hidden rounded-xl bg-white shadow">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+        <tr><th class="px-4 py-2 text-left">#</th><th class="px-4 py-2 text-left">Aluno</th>
+            <th class="px-4 py-2 text-right">Pontos no mes</th></tr>
+      </thead>
+      <tbody>
+        {% for linha in ranking %}
+        <tr class="border-t border-slate-100">
+          <td class="px-4 py-2 text-slate-400">{{ linha.posicao }}</td>
+          <td class="px-4 py-2">{{ linha.nome }}</td>
+          <td class="px-4 py-2 text-right font-medium">{{ linha.pontos }}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3" class="px-4 py-6 text-center text-slate-500">Ninguem pontuou neste mes.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
