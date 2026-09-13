@@ -39,10 +39,8 @@ services:
       - "4"
       - --harakiri
       - "60"
+      # o --mount tira o /demo do caminho e avisa o Django pelo SCRIPT_NAME. Os estaticos ficam
+      # por conta da URLconf da demonstracao (app/urls_demo.py), que serve /static e /media.
       - --mount
       - /demo=app.wsgi:application
       - --manage-script-name
-      - --static-map
-      - /demo/static=/app/staticfiles
-      - --static-map
-      - /demo/media=/app/media

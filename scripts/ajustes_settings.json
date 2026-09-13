@@ -1,0 +1,15 @@
+{
+ "todos": true,
+ "ajustes": [
+  [
+   "app/settings.py",
+   "if AMBIENTE == \"dev\":  # pragma: no cover - selecao de ambiente\n    from app.settings_env.dev import *  # noqa: F403",
+   "if AMBIENTE == \"demo\":  # pragma: no cover - selecao de ambiente\n    from app.settings_env.demo import *  # noqa: F403\nelif AMBIENTE == \"dev\":  # pragma: no cover - selecao de ambiente\n    from app.settings_env.dev import *  # noqa: F403"
+  ],
+  [
+   "app/settings.py",
+   "    DJANGO_ENV=dev   -> desenvolvimento\n    DJANGO_ENV=test  -> testes automatizados",
+   "    DJANGO_ENV=demo  -> demonstracao publicada em /demo (banco e cookie separados)\n    DJANGO_ENV=dev   -> desenvolvimento\n    DJANGO_ENV=test  -> testes automatizados"
+  ]
+ ]
+}

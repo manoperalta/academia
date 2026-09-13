@@ -8,10 +8,13 @@ nao ha nenhum patch de template ou de view apontando para o demo.
 """
 
 from app.settings_env.base import *  # noqa: F403
-from app.settings_env.base import env
+from app.settings_env.base import env  # noqa: E402
 
 # Prefixo do demonstracao: tudo que o Django gerar sai com /demo na frente.
 FORCE_SCRIPT_NAME = "/demo"
+
+# URLconf da demonstracao: rotas do projeto + estaticos servidos pelo Django.
+ROOT_URLCONF = "app.urls_demo"
 
 DEBUG = env.bool("DJANGO_DEBUG", default=True)
 
