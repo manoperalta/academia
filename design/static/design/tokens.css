@@ -1,0 +1,56 @@
+/* Tokens do painel: uma fonte de verdade para cor, espaco, raio e sombra.
+   Regra do projeto: painel claro (uso longo durante o dia), area do aluno e materiais do canal
+   seguem a marca do cliente. */
+
+:root {
+  /* cor */
+  --cor-texto: #0f172a;
+  --cor-texto-suave: #64748b;
+  --cor-superficie: #ffffff;
+  --cor-fundo: #f8fafc;
+  --cor-borda: #e2e8f0;
+  --cor-marca: #0f172a;
+  --cor-sucesso: #047857;
+  --cor-sucesso-fundo: #ecfdf5;
+  --cor-atencao: #b45309;
+  --cor-atencao-fundo: #fffbeb;
+  --cor-erro: #be123c;
+  --cor-erro-fundo: #fff1f2;
+  --cor-info: #0369a1;
+  --cor-info-fundo: #f0f9ff;
+
+  /* espaco e forma */
+  --espaco-1: 0.25rem;
+  --espaco-2: 0.5rem;
+  --espaco-3: 0.75rem;
+  --espaco-4: 1rem;
+  --espaco-5: 1.5rem;
+  --raio: 0.75rem;
+  --raio-pequeno: 0.375rem;
+  --sombra: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.08);
+  --altura-linha: 1.5;
+}
+
+/* componentes */
+.ds-cartao { background: var(--cor-superficie); border-radius: var(--raio); box-shadow: var(--sombra); padding: var(--espaco-5); }
+.ds-cartao-titulo { font-weight: 600; color: var(--cor-texto); font-size: 0.875rem; }
+.ds-cartao-subtitulo { color: var(--cor-texto-suave); font-size: 0.75rem; }
+.ds-kpi { display: flex; flex-direction: column; gap: var(--espaco-1); }
+.ds-kpi-valor { font-size: 1.5rem; font-weight: 600; color: var(--cor-texto); }
+.ds-selo { display: inline-block; border-radius: var(--raio-pequeno); padding: 0.125rem 0.5rem; font-size: 0.75rem; }
+.ds-selo-neutro { background: #f1f5f9; color: #334155; }
+.ds-selo-sucesso { background: var(--cor-sucesso-fundo); color: var(--cor-sucesso); }
+.ds-selo-atencao { background: var(--cor-atencao-fundo); color: var(--cor-atencao); }
+.ds-selo-erro { background: var(--cor-erro-fundo); color: var(--cor-erro); }
+.ds-selo-info { background: var(--cor-info-fundo); color: var(--cor-info); }
+.ds-alerta { border-radius: var(--raio); padding: var(--espaco-3) var(--espaco-4); font-size: 0.875rem; }
+.ds-tabela { width: 100%; font-size: 0.875rem; }
+.ds-tabela thead th { background: var(--cor-fundo); color: var(--cor-texto-suave); text-align: left; font-size: 0.75rem; padding: var(--espaco-3); }
+.ds-tabela tbody td { border-top: 1px solid var(--cor-borda); padding: var(--espaco-3); }
+.ds-campo { display: block; }
+.ds-campo-rotulo { font-size: 0.75rem; color: var(--cor-texto-suave); }
+.ds-campo-entrada { margin-top: var(--espaco-1); width: 100%; border: 1px solid var(--cor-borda); border-radius: var(--raio-pequeno); padding: var(--espaco-2) var(--espaco-3); font-size: 0.875rem; }
+.ds-vazio { text-align: center; color: var(--cor-texto-suave); padding: var(--espaco-5); font-size: 0.875rem; }
+.ds-progresso { height: 0.5rem; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+.ds-progresso span { display: block; height: 100%; background: var(--cor-sucesso); }
+.ds-paginacao { display: flex; align-items: center; gap: var(--espaco-2); font-size: 0.875rem; }

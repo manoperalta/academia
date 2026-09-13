@@ -70,6 +70,7 @@ LOCAIS = [
     "relatorios",
     "notificacoes",
     "documentos",
+    "design",
     "pdv",
     "fiscal",
     "cobranca",

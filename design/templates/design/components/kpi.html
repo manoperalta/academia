@@ -1,0 +1,6 @@
+{# Indicador: rotulo, valor e detalhe opcional. #}
+<div class="ds-kpi">
+  <span class="ds-cartao-subtitulo">{{ rotulo }}</span>
+  <span class="ds-kpi-valor">{{ valor }}</span>
+  {% if detalhe %}<span class="ds-cartao-subtitulo">{{ detalhe }}</span>{% endif %}
+</div>

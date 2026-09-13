@@ -1,0 +1,8 @@
+{# Lista vazia com acao opcional. Espera titulo, descricao, acao_url, acao_texto. #}
+<div class="ds-vazio">
+  <p class="font-medium text-slate-700">{{ titulo|default:"Nada por aqui ainda" }}</p>
+  {% if descricao %}<p>{{ descricao }}</p>{% endif %}
+  {% if acao_url and acao_texto %}
+    <p class="mt-2"><a class="text-sky-700 underline" href="{{ acao_url }}">{{ acao_texto }}</a></p>
+  {% endif %}
+</div>

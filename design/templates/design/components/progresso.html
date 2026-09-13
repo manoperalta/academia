@@ -1,0 +1,5 @@
+{# Barra de progresso. Espera valor (0-100) e rotulo opcional. #}
+<div>
+  <div class="ds-progresso"><span style="width: {{ valor|default:0 }}%"></span></div>
+  {% if rotulo %}<p class="ds-cartao-subtitulo mt-1">{{ rotulo }}</p>{% endif %}
+</div>

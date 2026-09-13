@@ -1,0 +1,9 @@
+{# Campo de formulario com rotulo e erro. Espera campo (um campo de form). #}
+<label class="ds-campo">
+  <span class="ds-campo-rotulo">{{ campo.label }}</span>
+  <input type="{{ campo.field.widget.input_type|default:"text" }}" name="{{ campo.name }}"
+         {% if campo.value %}value="{{ campo.value }}"{% endif %}
+         {% if campo.field.required %}required{% endif %} class="ds-campo-entrada">
+  {% if campo.errors %}<span class="text-xs text-rose-600">{{ campo.errors|join:", " }}</span>{% endif %}
+  {% if campo.help_text %}<span class="ds-campo-subtitulo">{{ campo.help_text }}</span>{% endif %}
+</label>

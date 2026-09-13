@@ -1,0 +1,90 @@
+{% extends "gestao/base.html" %}
+{% load static %}
+{% block conteudo %}
+<link rel="stylesheet" href="{% static 'design/tokens.css' %}">
+
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Design system</h2>
+  <p class="text-xs text-slate-500">
+    Componentes e tokens do painel. Tela nova se monta com isto: menos copia, mais consistência.
+  </p>
+</div>
+
+<div class="mb-4 ds-cartao">
+  <h3 class="ds-cartao-titulo">Tokens</h3>
+  <p class="ds-cartao-subtitulo">Cor, espaço, raio e sombra em <code>design/tokens.css</code>. Painel claro (uso longo no dia); a área do aluno segue a marca da rede.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-xs">
+    <span class="ds-selo ds-selo-neutro">--cor-superficie</span>
+    <span class="ds-selo ds-selo-sucesso">--cor-sucesso</span>
+    <span class="ds-selo ds-selo-atencao">--cor-atencao</span>
+    <span class="ds-selo ds-selo-erro">--cor-erro</span>
+    <span class="ds-selo ds-selo-info">--cor-info</span>
+  </div>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Indicadores (kpi.html)</h3>
+    <div class="mt-3 grid gap-3">
+      {% include "design/components/kpi.html" with rotulo="Vendas no mês" valor="R$ 4.380,00" detalhe="ticket médio R$ 121,67" %}
+      {% include "design/components/kpi.html" with rotulo="Fila de retenção" valor="12" detalhe="3 críticos" %}
+    </div>
+  </div>
+
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Selos (selo.html)</h3>
+    <div class="mt-3 flex flex-wrap gap-2">
+      {% for variacao in variacoes %}
+        {% include "design/components/selo.html" with texto=variacao.texto tom=variacao.tom %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Alertas (alerta.html)</h3>
+    <div class="mt-3 space-y-2">
+      {% include "design/components/alerta.html" with tom="atencao" texto="7 cobranças sem acesso correspondente no extrato do parceiro." %}
+      {% include "design/components/alerta.html" with tom="sucesso" texto="Conferência linha a linha: o recálculo reproduz o valor emitido." %}
+      {% include "design/components/alerta.html" with tom="erro" texto="Divergência: corrente de assinatura quebrada." %}
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 ds-cartao">
+  <h3 class="ds-cartao-titulo">Tabela (ds-tabela)</h3>
+  <table class="ds-tabela mt-3">
+    <thead><tr><th>Aluno</th><th>Situação</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Maria Souza</td><td>{% include "design/components/selo.html" with texto="liberado" tom="sucesso" %}</td><td>R$ 199,00</td></tr>
+      <tr><td>João Conceição</td><td>{% include "design/components/selo.html" with texto="mensalidade vencida" tom="erro" %}</td><td>R$ 189,05</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-3">
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Progresso (progresso.html)</h3>
+    <div class="mt-3">{% include "design/components/progresso.html" with valor=64 rotulo="parte 2 de 3 · 64%" %}</div>
+  </div>
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Vazio (estado_vazio.html)</h3>
+    {% include "design/components/estado_vazio.html" with titulo="Nenhum lead ainda" descricao="Registre o primeiro interessado para ver o funil." acao_url="/gestao/crm/leads/" acao_texto="Ver leads" %}
+  </div>
+  <div class="ds-cartao">
+    <h3 class="ds-cartao-titulo">Campo (campo.html)</h3>
+    <div class="mt-3">
+      {% include "design/components/campo.html" with campo=form.nome %}
+    </div>
+  </div>
+</div>
+
+<div class="mt-4 ds-cartao">
+  <h3 class="ds-cartao-titulo">Como usar</h3>
+  <ul class="mt-2 space-y-1 text-sm text-slate-700">
+    <li>· Nas telas novas, importe as peças assim: <code>{% templatetag openblock %} include "design/components/selo.html" with texto="ok" tom="sucesso" {% templatetag closeblock %}</code></li>
+    <li>· Cartão: inclua <code>cartao_abre.html</code>, escreva o conteúdo e feche com <code>cartao_fecha.html</code>.</li>
+    <li>· Lista: use <code>ds-tabela</code> + <code>paginacao.html</code> (que já aceita o <code>page_obj</code> do ListView).</li>
+    <li>· As telas das fases 8 (mídia, CRM, retenção, acesso, parceiros, cobrança, fiscal, PDV, assinatura) já seguem estes componentes.</li>
+  </ul>
+</div>
+{% endblock %}

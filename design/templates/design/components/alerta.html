@@ -1,0 +1,4 @@
+{# Aviso. Espera tom (info, sucesso, atencao, erro) e texto. #}
+{% if texto %}
+<div class="ds-alerta ds-selo-{{ tom|default:"info" }}" role="status">{{ texto }}</div>
+{% endif %}

@@ -1,0 +1,12 @@
+{# Paginacao pronta para as telas de lista. Usa page_obj e paginator do contexto. #}
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="ds-paginacao">
+  {% if page_obj.has_previous %}
+    <a class="rounded-lg border border-slate-300 px-3 py-1.5" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+  {% endif %}
+  <span class="ds-cartao-subtitulo">página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a class="rounded-lg border border-slate-300 px-3 py-1.5" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+  {% endif %}
+</div>
+{% endif %}

@@ -1,64 +1,63 @@
-# Fase 8 (parte 1) — remuneracao variavel, gamificacao, NPS e PWA do aluno
+# Relatorio da fase 8 — SaaS multi-tenant da academia
 
-## O que entrou
+Fase 8 e a maior do PRD. Este relatorio cobre o que foi entregue, com que evidencia, e o que ficou
+aberto — sem maquiar numero.
 
-**`remuneracao/` — comissoes de professor (RF-RED-017 / RF-CMP-014).** Regras por aula, por aluno
-ativo, percentual do recebido ou valor fixo, com piso e teto mensal, escolhidas em cascata
-(professor -> unidade -> rede) e com vigencia. A apuracao e **idempotente por professor x unidade x
-periodo** — o que ja resolve o **rateio do professor multi-unidade** — guarda **memoria de calculo
-linha a linha**, **hash reproduzivel** do numero e **conferencia por recalculo** (o demonstrativo diz
-"confere, zero divergencia" ou lista exatamente qual linha divergiu). Tem baixa de pagamento, atraso
-automatico e **extrato que o proprio professor acessa**. A comissao por aula **se recusa a inventar
-numero** quando a agenda nao tem professor vinculado: registra "nao apuravel" e diz a fonte.
+## Blocos entregues
 
-**`gamificacao/` — pontos, niveis, conquistas e ranking.** Regra de pontos por evento com **limite
-diario**, nivel a cada 500 pontos, conquistas por quantidade de eventos (com bonus) e ranking por
-unidade + indicador de engajamento do mes.
+| Bloco | App | O que entrega | Testes |
+| --- | --- | --- | --- |
+| Documentos em PDF | `documentos` | Comprovante, carteirinha, contrato, recibo, demonstrativo de repasse e extrato de comissao, em PDF gerado pelo proprio projeto | 16 |
+| Midia | `midia` | Envio em partes retomavel, conferencia por hash, processamento e entrega por URL assinada | 23 |
+| CRM e retencao | `relacionamento` | Funil de captacao com conversao por origem e risco de evasao explicado linha a linha | 22 |
+| Busca global | `busca` | Uma caixa para alunos, unidades, pagamentos, leads, midia, risco, comunicados e professores, com recorte por rede e papel | 10 |
+| Catraca e parceiros | `acesso` | Decisao de acesso registrada, check-in automatico, anti-passback e conciliacao de extrato Wellhub/TotalPass | 27 |
+| Cobranca recorrente | `cobranca` | Autorizacao de debito (Pix automatico), cobranca do mes, regua, retorno do banco e resumo | 26 |
+| Fiscal (NFS-e) | `fiscal` | Configuracao fiscal, memoria de tributos, emissao em lote, cancelamento e PDF de conferencia | 22 |
+| PDV e estoque | `pdv` | Produto, estoque por movimento, venda no balcao e indicadores | 18 |
+| Assinatura digital | `documentos` | Envelope com corrente de hashes, assinatura na ordem, recusa, termo em PDF e verificacao | 14 |
+| Design system | `design` | Tokens e componentes do painel, com vitrine em `/gestao/design/` | 8 |
 
-**`nps/` — pesquisas e NPS.** Pesquisa NPS/nota/texto, calculo de NPS (promotores 9-10, neutros 7-8,
-detratores 0-6) com classificacao, **NPS por unidade** para achar a unidade fraca e **fila de
-tratamento do detrator** (marcar tratado guarda a observacao na resposta).
+Somando o bloco anterior (comissoes, gamificacao, NPS e PWA do aluno), a fase 8 chega a
+**663 testes** na suite padrao, com `ruff` em zero e `manage.py check` sem problemas.
 
-**`area_do_aluno/` — PWA do aluno (RF-RED-002/003).** Manifest e **service worker por escopo**
-(cache das telas, funciona offline), **check-in em qualquer unidade da rede** que pontua na
-gamificacao, tela de pontos/ranking, resposta de pesquisa pelo celular, avisos da academia, marca da
-rede (nome e cor vindos do cliente) e **acessibilidade AA**: skip link, foco visivel, `aria-live` nas
-mensagens e `prefers-reduced-motion`.
+## Decisoes que valem registro
 
-## Correcao e verificacao
+- **PDF sem dependencia externa.** Helvetica para rotulos e Courier para numeros (largura exata, o
+  que permite alinhar dinheiro a direita). A primeira versao colidia a numeracao dos objetos e
+  deixava pagina em branco: hoje a numeracao e explicita e ha teste de regressao.
+- **Estoque como movimento, nao como numero.** Cada entrada, saida, ajuste e devolucao vira linha com
+  motivo e saldo depois do lancamento.
+- **Risco e conciliacao explicados.** Tanto o risco de evasao quanto a conciliacao de parceiro
+  mostram a conta: motivos com pontos, cobranca sem acesso e acesso nao faturado.
+- **Dinheiro com idempotencia.** Retorno de cobranca repetido nao gera segundo pagamento; nota
+  fiscal nao duplica por pagamento; cobranca do mes nao duplica por competencia.
+- **Assinatura com trilha.** Cada assinatura encadeia o hash do documento e o hash anterior; a
+  verificacao refaz a corrente e acusa documento trocado, assinatura adulterada ou arquivo ausente.
+- **Modo simulado declarado.** Gateway, provedor fiscal, PSP e emissao de nota: onde falta credencial,
+  o sistema registra e avisa na tela, no PDF e na resposta guardada — nao inventa transacao real.
+- **Isolamento por cliente em tudo.** Cada app novo passa por escopo de rede, e os modelos com escopo
+  explicito entram na lista de excecao do teste de isolamento, com justificativa.
 
-A integracao com o painel estava quebrada: o enum de modulos tinha os tres modulos novos, mas o
-**mapa de rotas do menu** nao — o que fazia o menu renderizar uma URL vazia e derrubar **todas** as
-telas do painel com `NoReverseMatch` (5 testes de `rede` e `governanca` junto). Corrigido com o mapa
-completo **e** com dois testes de invariante que impedem a reincidencia: todo modulo do enum precisa
-ter rota reversivel, e os tres modulos novos precisam existir no enum e na matriz de papeis.
+## O que ficou aberto
 
-Causa de fundo da instabilidade: o envio de arquivos levava o diretorio de trabalho inteiro, entao
-copias locais antigas de `gestao/*` **sobrescreviam no servidor** o que os patches acabavam de
-aplicar. O envio passou a ser **so dos arquivos alterados** e as copias velhas foram removidas.
+- **As telas do inventario §21.3.** A fundacao do design system esta pronta (tokens, componentes e
+  vitrine) e as telas da fase 8 ja seguem esse padrao, mas as telas que ainda nao existem no painel
+  continuam pendentes — e trabalho de frontend extenso, com o padrao ja definido.
+- **Integracoes que dependem de terceiro:** PSP do Pix automatico, provedor de NFS-e, API do Wellhub
+  (hoje por importacao de extrato), certificado ICP-Brasil para assinatura qualificada e catraca
+  fisica (o endpoint e o contrato ja existem e estao testados).
+- **Playwright:** o modulo `e2e` esta no repositorio e roda quando o navegador e as credenciais forem
+  informados; hoje se pula na suite padrao.
+- **Decisoes comerciais do §16** continuam abertas (base de calculo do repasse, visao do franqueado,
+  Wellhub na fase ou add-on, app nativo ou PWA).
 
-Erro de processo corrigido: publicar com `pytest | tail` engole o codigo de saida do pytest, e
-`grep -q failed` nao pega o resumo. Agora a suite roda com `code=$?` e o commit so acontece com
-`code = 0`.
+## Como rodar
 
-## Numeros
+```bash
+cd /home/manoperalta/academia-saas
+make subir && make migrar && make test
+```
 
-**Suite inteira verde** (codigo de saida 0), `manage.py check` sem problemas, migracoes
-`remuneracao.0001`, `gamificacao.0001`, `nps.0001` e `area_do_aluno.0001` aplicadas. 20 testes novos
-nesta fase, incluindo o ciclo do check-in (registra, recusa unidade de outra rede, recusa matricula
-inativa), o calculo do NPS, a conquista por quantidade, o demonstrativo de comissao conferivel, o
-PWA com manifest e service worker, e a acessibilidade das telas.
-
-## Decisao registrada
-
-Os modelos da fase 8 declaram **FK explicita de rede** (como o app `rede/`), em vez de herdar
-`TenantModel`: as consultas de apuracao e ranking sao por periodo e por unidade, e o manager escopado
-por contexto esconderia linhas legitimas de outras unidades da mesma rede. Ficam listados como
-excecao deliberada no teste de isolamento — a chave de isolamento existe e esta indexada.
-
-## Ainda pendente na fase 8
-
-Design system e as telas restantes do inventario 21.3, midia com upload em partes e player com URL
-assinada, PDFs dos documentos de negocio, busca global, Playwright nos fluxos criticos e os itens de
-paridade que dependem de decisao comercial: Wellhub/TotalPass/ClassPass, catraca, NFS-e, Pix
-automatico, PDV/estoque, CRM/leads, assinatura digital de contrato e retencao/evasao.
+Producao segue intocada (`master` em `1f881ea`); todo o trabalho esta na branch
+`feat/saas-multitenant`.
