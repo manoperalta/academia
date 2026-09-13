@@ -1,0 +1,48 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <div class="flex items-start justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-slate-900">Venda {{ venda.pk }}</h2>
+        <p class="text-xs text-slate-500">{{ venda.criada_em|date:"d/m/Y H:i" }} · {{ venda.get_situacao_display }}
+          {% if venda.forma_de_pagamento %}· {{ venda.get_forma_de_pagamento_display }}{% endif %}
+          {% if venda.unidade %}· {{ venda.unidade.nome }}{% endif %}</p>
+        <p class="text-xs text-slate-500">Cliente: {{ venda.aluno.nome|default:"balcão" }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-lg font-semibold text-slate-900">R$ {{ venda.total }}</p>
+        {% if venda.desconto %}<p class="text-xs text-slate-500">desconto R$ {{ venda.desconto }}</p>{% endif %}
+      </div>
+    </div>
+    <table class="mt-4 min-w-full text-sm">
+      <tbody>
+        {% for item in itens %}
+        <tr class="border-t border-slate-100">
+          <td class="px-2 py-2 text-slate-800">{{ item.produto.nome }}</td>
+          <td class="px-2 py-2 text-slate-600">{{ item.quantidade }} × R$ {{ item.preco_unitario }}</td>
+          <td class="px-2 py-2 text-slate-600">R$ {{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if venda.situacao != "cancelada" %}
+    <form method="post" action="{% url 'pdv:cancelar_venda' venda.pk %}" class="mt-4 flex items-end gap-2">
+      {% csrf_token %}
+      <input name="motivo" placeholder="Motivo do cancelamento" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">
+      <button class="rounded-lg border border-rose-300 px-4 py-2 text-sm text-rose-700">Cancelar venda</button>
+    </form>
+    <p class="mt-2 text-xs text-slate-500">Cancelar devolve os itens ao estoque, com movimento registrado.</p>
+    {% endif %}
+  </div>
+
+  {% if movimentos %}
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Movimentos de estoque desta venda</h3>
+    <ul class="mt-2 space-y-1 text-xs text-slate-600">
+      {% for movimento in movimentos %}<li>{{ movimento.get_tipo_display }} · {{ movimento.produto.nome }} · {{ movimento.quantidade }} (saldo {{ movimento.saldo_apos }})</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

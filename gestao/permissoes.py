@@ -38,6 +38,7 @@ class Modulo(models.TextChoices):
     ACESSO = "acesso", "Controle de acesso"
     COBRANCA = "cobranca", "Cobranca recorrente"
     FISCAL = "fiscal", "Fiscal (NFS-e)"
+    PDV = "pdv", "PDV e estoque"
     PARCEIROS = "parceiros", "Parceiros e conciliacao"
     COMISSOES = "comissoes", "Comissoes e remuneracao"
     GAMIFICACAO = "gamificacao", "Gamificacao"
@@ -71,6 +72,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.ACESSO: "editar",
         Modulo.COBRANCA: "editar",
         Modulo.FISCAL: "editar",
+        Modulo.PDV: "editar",
         Modulo.PARCEIROS: "editar",
         Modulo.RETENCAO: "editar",
         Modulo.COMISSOES: "ver",

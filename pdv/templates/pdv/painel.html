@@ -1,0 +1,56 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">PDV e estoque</h2>
+  <p class="text-xs text-slate-500">
+    Últimos {{ resumo.dias }} dias: {{ resumo.vendas }} venda(s) · faturamento R$ {{ resumo.faturamento }} ·
+    ticket médio R$ {{ resumo.ticket_medio }} · {{ resumo.itens_vendidos }} item(ns) ·
+    {{ resumo.em_aberto }} venda(s) aberta(s)
+  </p>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <a href="{% url 'pdv:balcao' %}" class="rounded-xl bg-slate-900 p-5 text-white shadow">
+    <h3 class="text-sm font-semibold">Abrir o balcão</h3>
+    <p class="mt-1 text-xs text-slate-300">Lançar itens, aplicar desconto e finalizar a venda.</p>
+  </a>
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Mais vendidos</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for linha in resumo.mais_vendidos %}
+      <li>{{ linha.produto }} — {{ linha.quantidade }} un · R$ {{ linha.valor }}</li>
+      {% empty %}
+      <li class="text-slate-500">Nenhuma venda no período.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Estoque baixo ({{ resumo.abaixo_do_minimo }})</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for produto in alertas %}
+      <li>{{ produto.nome }} — saldo {{ produto.estoque_atual }} (mínimo {{ produto.estoque_minimo }})</li>
+      {% empty %}
+      <li class="text-slate-500">Nenhum produto abaixo do mínimo.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<div class="mt-4 grid gap-4 lg:grid-cols-2">
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Por forma de pagamento</h3>
+    <ul class="mt-2 space-y-1 text-sm text-slate-700">
+      {% for forma, valor in resumo.por_forma_de_pagamento.items %}<li>{{ forma }}: R$ {{ valor }}</li>
+      {% empty %}<li class="text-slate-500">Sem vendas no período.</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="rounded-xl bg-white p-5 shadow">
+    <h3 class="text-sm font-semibold text-slate-900">Atalhos</h3>
+    <p class="mt-2 space-y-1 text-sm">
+      <a class="text-sky-700 underline" href="{% url 'pdv:produtos' %}">Produtos e estoque</a> ·
+      <a class="text-sky-700 underline" href="{% url 'pdv:vendas' %}">Vendas</a> ·
+      <a class="text-sky-700 underline" href="{% url 'pdv:movimentos' %}">Movimentos de estoque</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
