@@ -29,9 +29,10 @@ def test_turmas_disponiveis_mostram_vagas(aluno, turma):
     assert linha["vagas"] == 2 and linha["cheia"] is False and linha["ja_agendei"] is False
 
 
-def test_agendar_cria_agendamento_pendente(aluno, turma):
+def test_agendar_cria_agendamento_agendado(aluno, turma):
+    """O status gravado precisa ser um dos validos do modelo ("pendente" nao era opcao)."""
     agendamento = servicos.agendar(aluno=aluno, turma=turma)
-    assert agendamento.status == "pendente"
+    assert agendamento.status == "Agendado"
     assert agendamento.aluno_id == aluno.user_id
     assert servicos.turmas_disponiveis(aluno)[0]["ja_agendei"] is True
 
@@ -220,7 +221,7 @@ def test_agendar_e_cancelar_pelas_telas(cliente_aluno, aluno, turma):
     corpo = cliente_aluno.get(resposta["Location"]).content.decode()
     agendamento = Agendamento.objects.filter(aluno=aluno.user, painel=turma).first()
     assert agendamento is not None, corpo[-900:]
-    assert agendamento.status == "pendente"
+    assert agendamento.status == "Agendado"
     assert (
         cliente_aluno.post(
             reverse("portal:cancelar_agendamento", args=[agendamento.pk])

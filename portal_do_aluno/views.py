@@ -43,6 +43,32 @@ class AgendaDoAlunoView(PortalDoAlunoMixin, TemplateView):
         return contexto
 
 
+class BuscarHorariosView(PortalDoAlunoMixin, TemplateView):
+    """Busca de horarios por unidade, professor e tipo de atividade (com os filtros da rede)."""
+
+    template_name = "portal/buscar_horarios.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        aluno = contexto["aluno"]
+        filtros = servicos.filtros_da_busca(aluno)
+        unidade_id = self.request.GET.get("unidade") or ""
+        professor_id = self.request.GET.get("professor") or ""
+        atividade = self.request.GET.get("atividade") or ""
+        unidade = next((u for u in filtros["unidades"] if str(u.pk) == unidade_id), None)
+        professor = next((p for p in filtros["professores"] if str(p.pk) == professor_id), None)
+        contexto.update(filtros)
+        contexto["filtro"] = {
+            "unidade": unidade_id,
+            "professor": professor_id,
+            "atividade": atividade,
+        }
+        contexto["horarios"] = servicos.buscar_horarios(
+            aluno, unidade=unidade, professor=professor, atividade=atividade
+        )
+        return contexto
+
+
 class AgendarView(PortalDoAlunoMixin, View):
     def post(self, request, pk: int, *args, **kwargs):
         aluno = self.aluno(request)

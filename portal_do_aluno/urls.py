@@ -8,6 +8,7 @@ app_name = "portal"
 
 urlpatterns = [
     path("aluno/agenda/", views.AgendaDoAlunoView.as_view(), name="agenda"),
+    path("aluno/horarios/", views.BuscarHorariosView.as_view(), name="buscar_horarios"),
     path("aluno/agenda/turma/<int:pk>/agendar/", views.AgendarView.as_view(), name="agendar"),
     path("aluno/agenda/turma/<int:pk>/espera/", views.ListaDeEsperaView.as_view(), name="espera"),
     path(

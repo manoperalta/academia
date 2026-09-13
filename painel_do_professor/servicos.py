@@ -69,7 +69,7 @@ def agenda_do_dia(professor, dia: date | None = None) -> dict:
         "turmas": [
             {
                 "turma": turma,
-                "aulas": [item.aula for item in turma.itens.select_related("aula")],
+                "aulas": aulas_da_turma(turma),
                 "agendamentos": por_turma.get(turma.pk, []),
                 "ocupacao": len(por_turma.get(turma.pk, [])),
                 "capacidade": turma.numero_de_user,
@@ -299,9 +299,32 @@ def aviso_de_composicao(disponibilidade) -> str:
     return ""
 
 
+def aulas_da_turma(turma):
+    """Aulas do compromisso, na ordem do PainelItem -- pelo **manager global**.
+
+    O relacionamento reverso de um ``TenantModel`` usa o manager com escopo: fora do painel da
+    rede (portal do aluno, tela de agenda de outra unidade) ele esconderia as linhas e o
+    compromisso apareceria sem atividade. Aqui a chave e a propria turma, entao o filtro explicito
+    e correto e mais barato de entender.
+    """
+    return [
+        item.aula
+        for item in PainelItem.todos.filter(painel=turma).select_related("aula").order_by("ordem")
+    ]
+
+
+def agendados_da_turma(turma) -> int:
+    """Quantos alunos estao na turma (cancelamento nao ocupa vaga)."""
+    return (
+        Agendamento.todos.filter(painel=turma, arquivado_em__isnull=True)
+        .exclude(status="Cancelado")
+        .count()
+    )
+
+
 def tipos_de_atividade(turma) -> dict:
     """Tipo do compromisso para o aluno: categorias das aulas, restricoes e a lista de videos."""
-    aulas = [item.aula for item in turma.itens.select_related("aula").order_by("ordem")]
+    aulas = aulas_da_turma(turma)
     categorias = []
     for aula in aulas:
         rotulo = aula.get_categorias_exercicios_display()
@@ -313,17 +336,25 @@ def tipos_de_atividade(turma) -> dict:
             rotulo = aula.get_restricao_display()
             if rotulo not in restricoes:
                 restricoes.append(rotulo)
+    codigos = []
+    for aula in aulas:
+        if aula.categorias_exercicios and aula.categorias_exercicios not in codigos:
+            codigos.append(aula.categorias_exercicios)
     return {
         "aulas": aulas,
         "categorias": categorias,
+        "codigos": codigos,
         "restricoes": restricoes,
+        "descricoes": [f"{aula.nome}: {aula.descricao}" for aula in aulas if aula.descricao],
         "total_de_aulas": len(aulas),
     }
 
 
 def _sincronizar_aulas_da_turma(turma, aulas) -> int:
     """Deixa os itens da turma iguais as aulas do bloco, preservando o que ja existe."""
-    existentes = {item.aula_id: item for item in turma.itens.all()}
+    existentes = {
+        item.aula_id: item for item in PainelItem.todos.filter(painel=turma)
+    }
     alterados = 0
     for ordem, aula in enumerate(aulas, start=1):
         item = existentes.pop(aula.pk, None)

@@ -47,10 +47,10 @@
     <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 class="mb-3 text-sm font-semibold text-slate-900">Horários publicados</h2>
       <ul class="space-y-1 text-sm">
-        {% for turma in turmas_futuras %}
+        {% for item in turmas_futuras %}
           <li class="flex items-center justify-between border-b border-slate-100 py-1">
-            <span>{{ turma.data|date:"d/m (D)" }} · {{ turma.hora_inicio|time:"H:i" }}–{{ turma.hora_fim|time:"H:i" }}</span>
-            <span class="text-xs text-slate-500">{{ turma.agendamentos.count }} agendado(s) de {{ turma.numero_de_user|default:"∞" }}</span>
+            <span>{{ item.turma.data|date:"d/m (D)" }} · {{ item.turma.hora_inicio|time:"H:i" }}–{{ item.turma.hora_fim|time:"H:i" }}</span>
+            <span class="text-xs text-slate-500">{{ item.agendados }} agendado(s) de {{ item.turma.numero_de_user|default:"∞" }}</span>
           </li>
         {% empty %}
           <li class="py-2 text-slate-500">Nada publicado ainda — abra um horário ao lado.</li>

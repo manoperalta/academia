@@ -105,17 +105,42 @@ def _valor_do_aluno(aluno) -> Decimal:
     return Decimal("0.00")
 
 
+def usuarios_isentos(rede, usuarios=None) -> set[int]:
+    """Usuarios da **equipe do tenant** (professor, gestor da unidade, admin da rede, etc.).
+
+    Requisito de produto: professor vinculado ao tenant e isento de pagamento -- e quem e da
+    equipe nao entra em cobranca, regua nem inadimplencia. A isencao vale para a rede inteira do
+    vinculo, nao para uma unidade so.
+    """
+    from core.models import VinculoUsuario
+    from core.papeis import Papel
+
+    papeis = [papel.value for papel in Papel if papel != Papel.ALUNO]
+    consulta = VinculoUsuario.objects.filter(rede=rede, ativo=True, papel__in=papeis)
+    if usuarios is not None:
+        consulta = consulta.filter(usuario__in=usuarios)
+    return set(consulta.values_list("usuario_id", flat=True))
+
+
 def gerar_cobrancas_do_mes(
     rede, competencia: date, dia_do_vencimento: int = 10, dry_run: bool = False
 ) -> dict:
-    """Cria a cobranca da competencia para quem tem autorizacao ativa (idempotente)."""
+    """Cria a cobranca da competencia para quem tem autorizacao ativa (idempotente).
+
+    Equipe (professor e demais papeis vinculados) fica de fora: sao isentos.
+    """
     from usuarios.models import Usuario
 
     competencia = competencia.replace(day=1)
     vencimento = competencia + timedelta(days=max(0, min(27, dia_do_vencimento - 1)))
     alunos = Usuario.todos.filter(rede=rede, status_user="Ativo").select_related("unidade")
-    criadas, puladas, sem_autorizacao = [], [], []
+    # a isencao e do usuario de acesso (VinculoUsuario.usuario), nao do perfil de aluno
+    isentos = usuarios_isentos(rede, usuarios=alunos.values("user_id"))
+    criadas, puladas, sem_autorizacao, isentos_pulados = [], [], [], []
     for aluno in alunos:
+        if aluno.user_id in isentos:
+            isentos_pulados.append(aluno.nome)
+            continue
         autorizacao = AutorizacaoDeDebito.objects.filter(
             aluno=aluno, situacao=AutorizacaoDeDebito.Situacao.ATIVA
         ).first()
@@ -149,6 +174,7 @@ def gerar_cobrancas_do_mes(
         "criadas": criadas,
         "ja_existiam": puladas,
         "sem_autorizacao": sem_autorizacao,
+        "isentos": isentos_pulados,
         "total_de_alunos": alunos.count(),
     }
 
@@ -385,6 +411,7 @@ def lista_de_inadimplentes(rede, faixa: str = "", limite: int = 200) -> list[dic
             ],
             vencimento__lt=hoje,
         )
+        .exclude(aluno__user_id__in=usuarios_isentos(rede))
         .select_related("aluno", "unidade")
         .order_by("vencimento")[:limite]
     )
@@ -422,7 +449,7 @@ def resumo_da_inadimplencia(rede) -> dict:
             CobrancaRecorrente.Situacao.RECUSADA,
         ],
         vencimento__lt=hoje,
-    )
+    ).exclude(aluno__user_id__in=usuarios_isentos(rede))
     por_faixa = {
         chave: {"quantidade": 0, "valor": Decimal("0")} for chave, _rotulo in FAIXAS_DE_ATRASO
     }

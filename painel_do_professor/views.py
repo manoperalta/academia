@@ -79,7 +79,7 @@ class MinhaTurmaView(ContextoDoProfessorMixin, DetailView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         turma = self.object
-        contexto["aulas"] = [item.aula for item in turma.itens.select_related("aula")]
+        contexto["aulas"] = servicos.aulas_da_turma(turma)
         contexto["agendamentos"] = Agendamento.todos.filter(
             painel=turma, arquivado_em__isnull=True
         ).select_related("aluno")
@@ -392,7 +392,10 @@ def _contexto_da_agenda(professor, *, form=None, em_edicao=None):
         "form": form or DisponibilidadeForm(professor=professor, instance=em_edicao),
         "disponibilidade_em_edicao": em_edicao,
         "semanas": servicos.SEMANAS_PADRAO,
-        "turmas_futuras": list(servicos.agenda_aberta_do_professor(professor))[:60],
+        "turmas_futuras": [
+            {"turma": turma, "agendados": servicos.agendados_da_turma(turma)}
+            for turma in servicos.agenda_aberta_do_professor(professor)
+        ][:60],
         "aulas_disponiveis": aulas,
     }
 

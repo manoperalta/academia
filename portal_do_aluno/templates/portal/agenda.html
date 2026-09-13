@@ -1,6 +1,9 @@
 {% extends "treinos/base_aluno.html" %}
 {% block conteudo %}
-<h1 class="mb-3 text-lg font-semibold">Minha agenda</h1>
+<div class="mb-3 flex items-center justify-between">
+  <h1 class="text-lg font-semibold">Minha agenda</h1>
+  <a href="{% url 'portal:buscar_horarios' %}" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs text-white">Buscar horários</a>
+</div>
 
 <div class="mb-4 rounded-xl bg-white p-4 shadow">
   <h2 class="text-sm font-semibold">Meus agendamentos</h2>
@@ -12,7 +15,7 @@
         {{ agendamento.painel.hora_inicio|time:"H:i" }}
         <span class="rounded bg-slate-100 px-2 py-0.5 text-xs">{{ agendamento.status }}</span>
       </span>
-      {% if agendamento.status != "cancelado" %}
+      {% if agendamento.status != "Cancelado" %}
       <form method="post" action="{% url 'portal:cancelar_agendamento' agendamento.pk %}">{% csrf_token %}
         <button class="text-xs text-rose-700 underline">Cancelar</button>
       </form>
@@ -33,6 +36,12 @@
         <p class="text-xs text-slate-500">{{ linha.turma.data|date:"d/m/Y" }} ·
           {{ linha.turma.hora_inicio|time:"H:i" }}–{{ linha.turma.hora_fim|time:"H:i" }} ·
           {{ linha.turma.unidade.nome|default:"rede" }}</p>
+        {% if linha.tipos.categorias %}
+        <p class="text-xs text-slate-700">Tipo de atividade: {{ linha.tipos.categorias|join:" + " }}</p>
+        {% endif %}
+        {% if linha.tipos.restricoes %}
+        <p class="text-xs text-amber-700">Atenção às restrições de saúde: {{ linha.tipos.restricoes|join:", " }}</p>
+        {% endif %}
         <p class="text-xs {% if linha.cheia %}text-amber-700{% else %}text-emerald-700{% endif %}">
           {% if linha.cheia %}turma cheia{% else %}{{ linha.vagas }} vaga(s){% endif %}
         </p>
