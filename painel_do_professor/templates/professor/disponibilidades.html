@@ -1,0 +1,93 @@
+{% extends "professor/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-900">Minha agenda aberta</h2>
+      <p class="mt-1 text-xs text-slate-500">
+        Estes são os horários que você disponibilizou. O aluno agenda em cima deles; cada horário
+        vale pelo tempo do compromisso que você definiu.
+      </p>
+      <table class="mt-4 min-w-full text-sm">
+        <thead class="text-left text-xs uppercase text-slate-500">
+          <tr><th class="py-2">Dia</th><th>Janela</th><th>Tempo</th><th>Vagas</th><th>Aulas</th><th>Situação</th><th></th></tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for bloco in disponibilidades %}
+            <tr>
+              <td class="py-2">{{ bloco.get_dia_da_semana_display }}</td>
+              <td class="text-xs">{{ bloco.hora_inicio|time:"H:i" }}–{{ bloco.hora_fim|time:"H:i" }}</td>
+              <td class="text-xs">{{ bloco.duracao_minutos }} min{% if bloco.sobra_minutos %} <span class="text-amber-600">(sobra {{ bloco.sobra_minutos }} min)</span>{% endif %}</td>
+              <td class="text-xs">{{ bloco.vagas_por_horario }}</td>
+              <td class="text-xs">{{ bloco.composicao.count }} vídeo(s)</td>
+              <td class="text-xs">{% if bloco.ativo %}<span class="text-emerald-700">aberta</span>{% else %}<span class="text-slate-400">encerrada</span>{% endif %}</td>
+              <td class="text-right">
+                {% if bloco.ativo %}
+                  <a class="text-xs text-emerald-700 hover:underline" href="{% url 'professor:editar_disponibilidade' bloco.pk %}">Editar</a>
+                  <form method="post" action="{% url 'professor:encerrar_disponibilidade' bloco.pk %}" class="inline">
+                    {% csrf_token %}
+                    <button class="ml-2 text-xs text-red-600 hover:underline">Encerrar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="py-4 text-slate-500">Nenhum horário aberto ainda.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <form method="post" action="{% url 'professor:atualizar_agenda' %}" class="mt-3">
+        {% csrf_token %}
+        <button class="rounded-lg border border-emerald-300 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50">
+          Republicar agenda ({{ semanas }} semanas à frente)
+        </button>
+      </form>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-3 text-sm font-semibold text-slate-900">Horários publicados</h2>
+      <ul class="space-y-1 text-sm">
+        {% for turma in turmas_futuras %}
+          <li class="flex items-center justify-between border-b border-slate-100 py-1">
+            <span>{{ turma.data|date:"d/m (D)" }} · {{ turma.hora_inicio|time:"H:i" }}–{{ turma.hora_fim|time:"H:i" }}</span>
+            <span class="text-xs text-slate-500">{{ turma.agendamentos.count }} agendado(s) de {{ turma.numero_de_user|default:"∞" }}</span>
+          </li>
+        {% empty %}
+          <li class="py-2 text-slate-500">Nada publicado ainda — abra um horário ao lado.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <form method="post" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+          action="{% if disponibilidade_em_edicao %}{% url 'professor:editar_disponibilidade' disponibilidade_em_edicao.pk %}{% else %}{% url 'professor:abrir_agenda' %}{% endif %}">
+      {% csrf_token %}
+      <h2 class="text-sm font-semibold text-slate-900">
+        {% if disponibilidade_em_edicao %}Editar horário{% else %}Abrir horário{% endif %}
+      </h2>
+      <p class="mb-3 mt-1 text-xs text-slate-500">
+        Você define o dia, a janela e o tempo do compromisso. Depois escolhe as aulas (vídeos) que
+        compõem cada atendimento.
+      </p>
+      {% for campo in form %}
+        <div class="mb-3">
+          <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>{{ campo }}
+          {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
+          {% for erro in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+      {% for erro in form.non_field_errors %}<p class="mb-2 text-xs text-red-600">{{ erro }}</p>{% endfor %}
+      <div class="flex items-center gap-3">
+        <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700">
+          {% if disponibilidade_em_edicao %}Salvar e republicar{% else %}Abrir agenda{% endif %}
+        </button>
+        <a href="{% url 'professor:disponibilidades' %}" class="text-sm text-slate-600 hover:underline">Cancelar</a>
+      </div>
+    </form>
+    <a href="{% url 'professor:agenda' %}" class="block text-sm text-slate-600 hover:underline">
+      ← Voltar para a agenda do dia
+    </a>
+  </div>
+</div>
+{% endblock %}

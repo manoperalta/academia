@@ -8,6 +8,27 @@ app_name = "professor"
 
 urlpatterns = [
     path("professor/", views.MinhaAgendaView.as_view(), name="agenda"),
+    path(
+        "professor/agenda/",
+        views.MinhasDisponibilidadesView.as_view(),
+        name="disponibilidades",
+    ),
+    path("professor/agenda/abrir/", views.AbrirAgendaView.as_view(), name="abrir_agenda"),
+    path(
+        "professor/agenda/<int:pk>/editar/",
+        views.EditarDisponibilidadeView.as_view(),
+        name="editar_disponibilidade",
+    ),
+    path(
+        "professor/agenda/<int:pk>/encerrar/",
+        views.EncerrarDisponibilidadeView.as_view(),
+        name="encerrar_disponibilidade",
+    ),
+    path(
+        "professor/agenda/republicar/",
+        views.AtualizarAgendaView.as_view(),
+        name="atualizar_agenda",
+    ),
     path("professor/turma/<int:pk>/", views.MinhaTurmaView.as_view(), name="turma"),
     path("professor/turma/<int:pk>/chamada/", views.ChamadaView.as_view(), name="chamada"),
     path("professor/turma/<int:pk>/ocorrencia/", views.OcorrenciaView.as_view(), name="ocorrencia"),

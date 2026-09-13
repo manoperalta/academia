@@ -64,6 +64,24 @@ class Aulas(TenantModel):
     def __str__(self):
         return self.nome
 
+    @property
+    def duracao_em_minutos(self) -> int | None:
+        """Duracao conhecida do video em minutos (``None`` quando o arquivo nao foi processado).
+
+        O requisito pede que a soma dos videos feche o tempo do compromisso. Sem ffmpeg a duracao so
+        existe quando o arquivo foi enviado pelo envio em partes (que grava a informacao do
+        container); nesse caso a conta e mostrada, no outro a tela nao inventa numero.
+        """
+        for arquivo in self.midias_enviadas.all():
+            if arquivo.duracao_segundos:
+                return max(1, round(arquivo.duracao_segundos / 60))
+        return None
+
+    @property
+    def capa(self):
+        """Primeira capa cadastrada (o que o aluno ve antes de agendar)."""
+        return self.imagens.order_by("pk").first()
+
     class Meta:
         verbose_name = "Aula"
         verbose_name_plural = "Aulas"

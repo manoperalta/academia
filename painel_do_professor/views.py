@@ -10,7 +10,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
@@ -18,7 +18,8 @@ from django.views.generic import DetailView, ListView, TemplateView
 from agendamento.models import Agendamento
 from painel.models import Painel
 from painel_do_professor import servicos
-from painel_do_professor.models import OcorrenciaDaTurma
+from painel_do_professor.forms import DisponibilidadeForm
+from painel_do_professor.models import DisponibilidadeDoProfessor, OcorrenciaDaTurma
 from painel_do_professor.servicos import ErroDoProfessor
 from professores.models import Professor
 from treinos import servicos as servicos_de_treino
@@ -369,3 +370,131 @@ class MinhasComissoesView(ContextoDoProfessorMixin, TemplateView):
         contexto = super().get_context_data(**kwargs)
         contexto["comissoes"] = servicos.minhas_comissoes(self.professor)
         return contexto
+
+
+# ==================================================================== MINHA AGENDA
+def _contexto_da_agenda(professor, *, form=None, em_edicao=None):
+    """Contexto da tela de agenda aberta (lista + formulario + o que ja foi materializado)."""
+    from aulas.models import Aulas
+
+    aulas = (
+        Aulas.todos.filter(rede=professor.rede, arquivado_em__isnull=True)
+        .order_by("categorias_exercicios", "nome")[:200]
+        if professor.rede_id
+        else Aulas.objects.none()
+    )
+    return {
+        "professor": professor,
+        "disponibilidades": list(
+            servicos.disponibilidades_do_professor(professor, incluir_encerradas=True)
+        ),
+        "form": form or DisponibilidadeForm(professor=professor, instance=em_edicao),
+        "disponibilidade_em_edicao": em_edicao,
+        "semanas": servicos.SEMANAS_PADRAO,
+        "turmas_futuras": list(servicos.agenda_aberta_do_professor(professor))[:60],
+        "aulas_disponiveis": aulas,
+    }
+
+
+class MinhasDisponibilidadesView(ContextoDoProfessorMixin, TemplateView):
+    """Onde o professor abre o proprio horario: dia, janela, tempo do compromisso e aulas."""
+
+    template_name = "professor/disponibilidades.html"
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto.update(_contexto_da_agenda(self.professor))
+        return contexto
+
+
+class AbrirAgendaView(ContextoDoProfessorMixin, View):
+    """Abre o bloco de agenda e materializa as turmas das proximas semanas."""
+
+    def post(self, request, *args, **kwargs):
+        form = DisponibilidadeForm(request.POST, professor=self.professor)
+        if not form.is_valid():
+            return render(
+                request,
+                "professor/disponibilidades.html",
+                _contexto_da_agenda(self.professor, form=form),
+            )
+        disponibilidade = form.save(commit=False)
+        disponibilidade.professor = self.professor
+        disponibilidade.rede = self.professor.rede
+        disponibilidade.unidade = self.professor.unidade
+        disponibilidade.save()
+        servicos.compor_compromisso(disponibilidade, form.cleaned_data["aulas"])
+        self._avisar(servicos.materializar_disponibilidade(disponibilidade))
+        messages.success(request, "Agenda aberta e horarios publicados.")
+        return redirect("professor:disponibilidades")
+
+    def _avisar(self, resultado):
+        for aviso in resultado.get("avisos", [])[:3]:
+            messages.info(self.request, aviso)
+
+
+class EditarDisponibilidadeView(ContextoDoProfessorMixin, View):
+    """Ajusta o bloco (horario, tempo ou aulas) e republica os horarios futuros."""
+
+    def _bloco(self, pk):
+        return get_object_or_404(
+            DisponibilidadeDoProfessor.todos, pk=pk, professor=self.professor
+        )
+
+    def get(self, request, pk, *args, **kwargs):
+        bloco = self._bloco(pk)
+        return render(
+            request,
+            "professor/disponibilidades.html",
+            _contexto_da_agenda(self.professor, em_edicao=bloco),
+        )
+
+    def post(self, request, pk, *args, **kwargs):
+        bloco = self._bloco(pk)
+        form = DisponibilidadeForm(request.POST, professor=self.professor, instance=bloco)
+        if not form.is_valid():
+            return render(
+                request,
+                "professor/disponibilidades.html",
+                _contexto_da_agenda(self.professor, form=form, em_edicao=bloco),
+            )
+        bloco = form.save(commit=False)
+        bloco.ativo = True
+        bloco.save()
+        servicos.compor_compromisso(bloco, form.cleaned_data["aulas"])
+        resultado = servicos.materializar_disponibilidade(bloco)
+        for aviso in resultado.get("avisos", [])[:3]:
+            messages.info(request, aviso)
+        messages.success(request, "Agenda atualizada -- os horarios futuros foram republicados.")
+        return redirect("professor:disponibilidades")
+
+
+class EncerrarDisponibilidadeView(ContextoDoProfessorMixin, View):
+    """Fecha o bloco: tira do ar o que ninguem agendou e preserva o que ja tem aluno."""
+
+    def post(self, request, pk, *args, **kwargs):
+        bloco = get_object_or_404(
+            DisponibilidadeDoProfessor.todos, pk=pk, professor=self.professor
+        )
+        resultado = servicos.encerrar_disponibilidade(bloco)
+        messages.success(
+            request,
+            f"Bloco encerrado. {resultado['arquivadas']} horario(s) sem agendamento foram retirados; "
+            f"{resultado['preservadas']} com aluno ficaram.",
+        )
+        return redirect("professor:disponibilidades")
+
+
+class AtualizarAgendaView(ContextoDoProfessorMixin, View):
+    """Republica a agenda (materializa de novo) -- util depois de cadastrar aula nova."""
+
+    def post(self, request, *args, **kwargs):
+        resultado = servicos.materializar_agenda(self.professor)
+        messages.success(
+            request,
+            f"Agenda republicada: {resultado['criadas']} horario(s) novo(s), "
+            f"{resultado['atualizadas']} atualizado(s).",
+        )
+        for aviso in resultado.get("avisos", [])[:3]:
+            messages.info(request, aviso)
+        return redirect("professor:disponibilidades")

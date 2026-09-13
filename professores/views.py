@@ -57,7 +57,7 @@ def complete_profile_professor(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Perfil atualizado com sucesso.")
-            return redirect("painel_do_professor:agenda")
+            return redirect("professor:agenda")
     else:
         form = ProfessorDoPainelForm(instance=professor)
 

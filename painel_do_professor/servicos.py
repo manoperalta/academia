@@ -13,11 +13,20 @@ from django.db import transaction
 from django.utils import timezone
 
 from agendamento.models import Agendamento
-from painel.models import Painel
-from painel_do_professor.models import OcorrenciaDaTurma, SubstituicaoDeTurma
+from painel.models import Painel, PainelItem
+from painel_do_professor.models import (
+    AulaDaDisponibilidade,
+    DisponibilidadeDoProfessor,
+    OcorrenciaDaTurma,
+    SubstituicaoDeTurma,
+    TurmaMaterializada,
+)
 from professores.models import Professor
 from treinos.models import AvaliacaoFisica, Treino
 from usuarios.models import Usuario
+
+#: Quantas semanas de agenda a materializacao cobre a frente (decisao do dono do produto).
+SEMANAS_PADRAO = 8
 
 SITUACOES_DE_PRESENCA = {"presente": "Concluido", "falta": "Faltou", "cancelado": "Cancelado"}
 
@@ -199,3 +208,276 @@ def minhas_comissoes(professor, limite: int = 24) -> dict:
         "total_pago": pago,
         "a_receber": total - pago,
     }
+
+
+# =============================================================== AGENDA DO PROFESSOR
+def disponibilidades_do_professor(professor, incluir_encerradas: bool = False):
+    """Blocos de agenda do professor (por dia da semana, na ordem de exibicao)."""
+    consulta = DisponibilidadeDoProfessor.todos.filter(professor=professor)
+    if not incluir_encerradas:
+        consulta = consulta.filter(ativo=True)
+    return consulta.order_by("dia_da_semana", "hora_inicio")
+
+
+def datas_do_bloco(
+    disponibilidade, *, hoje: date | None = None, semanas: int = SEMANAS_PADRAO
+) -> list[date]:
+    """Datas em que o bloco cai dentro da janela de materializacao."""
+    hoje = hoje or timezone.localdate()
+    if semanas < 1:
+        return []
+    fim = hoje + timedelta(days=semanas * 7 - 1)
+    datas = []
+    for deslocamento in range((fim - hoje).days + 1):
+        dia = hoje + timedelta(days=deslocamento)
+        if dia.weekday() != disponibilidade.dia_da_semana:
+            continue
+        if disponibilidade.alcanca(dia):
+            datas.append(dia)
+    return datas
+
+
+def compor_compromisso(disponibilidade, aulas) -> list[AulaDaDisponibilidade]:
+    """Define (substituindo) as aulas que compoem o compromisso, na ordem informada."""
+    if not aulas:
+        raise ErroDoProfessor("Escolha pelo menos uma aula para compor o compromisso.")
+    disponibilidade.composicao.all().delete()
+    return [
+        AulaDaDisponibilidade.objects.create(
+            disponibilidade=disponibilidade, aula=aula, ordem=ordem
+        )
+        for ordem, aula in enumerate(aulas, start=1)
+    ]
+
+
+def aviso_de_composicao(disponibilidade) -> str:
+    """Aviso (nunca bloqueio) quando os videos somam menos que o tempo do compromisso.
+
+    Os videos so tem duracao quando o arquivo foi processado; sem esse dado, a conta nao e
+    inventada -- e a tela simplesmente nao avisa.
+    """
+    minutos = disponibilidade.minutos_de_video()
+    if not minutos or not disponibilidade.duracao_minutos:
+        return ""
+    if minutos < disponibilidade.duracao_minutos:
+        return (
+            f"Os videos deste compromisso somam {minutos} min e o compromisso dura "
+            f"{disponibilidade.duracao_minutos} min. Confira se a composicao fecha o tempo."
+        )
+    return ""
+
+
+def tipos_de_atividade(turma) -> dict:
+    """Tipo do compromisso para o aluno: categorias das aulas, restricoes e a lista de videos."""
+    aulas = [item.aula for item in turma.itens.select_related("aula").order_by("ordem")]
+    categorias = []
+    for aula in aulas:
+        rotulo = aula.get_categorias_exercicios_display()
+        if rotulo not in categorias:
+            categorias.append(rotulo)
+    restricoes = []
+    for aula in aulas:
+        if aula.restricao and aula.restricao != "nenhuma":
+            rotulo = aula.get_restricao_display()
+            if rotulo not in restricoes:
+                restricoes.append(rotulo)
+    return {
+        "aulas": aulas,
+        "categorias": categorias,
+        "restricoes": restricoes,
+        "total_de_aulas": len(aulas),
+    }
+
+
+def _sincronizar_aulas_da_turma(turma, aulas) -> int:
+    """Deixa os itens da turma iguais as aulas do bloco, preservando o que ja existe."""
+    existentes = {item.aula_id: item for item in turma.itens.all()}
+    alterados = 0
+    for ordem, aula in enumerate(aulas, start=1):
+        item = existentes.pop(aula.pk, None)
+        if item is None:
+            PainelItem.todos.create(
+                painel=turma, aula=aula, ordem=ordem, rede=turma.rede, unidade=turma.unidade
+            )
+            alterados += 1
+        elif item.ordem != ordem:
+            item.ordem = ordem
+            item.save(update_fields=["ordem"])
+            alterados += 1
+    for sobrando in existentes.values():
+        sobrando.delete()
+        alterados += 1
+    return alterados
+
+
+def _turmas_com_agendamento(turma) -> bool:
+    return Agendamento.todos.filter(painel=turma, arquivado_em__isnull=True).exists()
+
+
+def materializar_disponibilidade(
+    disponibilidade,
+    *,
+    semanas: int = SEMANAS_PADRAO,
+    hoje: date | None = None,
+    dry_run: bool = False,
+) -> dict:
+    """Cria/atualiza as turmas que o bloco gera na janela de semanas.
+
+    Idempotente pela chave natural (rede, responsavel, data, hora de inicio) e seguro com dado
+    vivo: turma que ja tem aluno agendado **nunca** e apagada -- ela fica e o motivo entra em
+    ``avisos``. ``dry_run`` conta o que faria, sem gravar.
+    """
+    from django.db import transaction
+
+    resultado = {"criadas": 0, "atualizadas": 0, "arquivadas": 0, "preservadas": 0, "avisos": []}
+    hoje = hoje or timezone.localdate()
+    if disponibilidade.professor is None or disponibilidade.professor.user_id is None:
+        raise ErroDoProfessor("O professor deste bloco nao tem acesso de login vinculado.")
+
+    aulas = disponibilidade.aulas_compostas()
+    aviso = aviso_de_composicao(disponibilidade)
+    if aviso:
+        resultado["avisos"].append(aviso)
+
+    desejadas = {
+        (data, inicio): fim
+        for data in datas_do_bloco(disponibilidade, hoje=hoje, semanas=semanas)
+        for inicio, fim in disponibilidade.horarios()
+    }
+
+    rastros = {
+        (rastro.turma.data, rastro.turma.hora_inicio): rastro
+        for rastro in TurmaMaterializada.objects.filter(disponibilidade=disponibilidade).select_related(
+            "turma"
+        )
+    }
+
+    with transaction.atomic():
+        for (data, inicio), fim in sorted(desejadas.items()):
+            rastro = rastros.get((data, inicio))
+            turma = rastro.turma if rastro else None
+            if turma is None:
+                turma = Painel.todos.filter(
+                    rede=disponibilidade.rede,
+                    responsavel=disponibilidade.professor.user,
+                    data=data,
+                    hora_inicio=inicio,
+                    arquivado_em__isnull=True,
+                ).first()
+            if turma is None:
+                resultado["criadas"] += 1
+                if dry_run:
+                    continue
+                turma = Painel.todos.create(
+                    rede=disponibilidade.rede,
+                    unidade=disponibilidade.unidade,
+                    nome=disponibilidade.nome,
+                    data=data,
+                    hora_inicio=inicio,
+                    hora_fim=fim,
+                    responsavel=disponibilidade.professor.user,
+                    numero_de_user=disponibilidade.vagas_por_horario,
+                )
+                TurmaMaterializada.objects.create(disponibilidade=disponibilidade, turma=turma)
+            else:
+                if rastro is None:
+                    TurmaMaterializada.objects.create(disponibilidade=disponibilidade, turma=turma)
+                conflito = rastro and rastro.disponibilidade_id != disponibilidade.pk
+                if conflito:
+                    resultado["preservadas"] += 1
+                    resultado["avisos"].append(
+                        f"{turma.data:%d/%m} {inicio:%H:%M}: ja e de outro bloco de agenda; nao mexi."
+                    )
+                    continue
+                if _turmas_com_agendamento(turma):
+                    resultado["preservadas"] += 1
+                    resultado["avisos"].append(
+                        f"{turma.data:%d/%m} {inicio:%H:%M}: tem aluno agendado; "
+                        f"so as aulas foram sincronizadas."
+                    )
+                else:
+                    turma.hora_fim = fim
+                    turma.nome = disponibilidade.nome
+                    turma.numero_de_user = disponibilidade.vagas_por_horario
+                    turma.unidade = turma.unidade or disponibilidade.unidade
+                    turma.arquivado_em = None
+                    turma.save(
+                        update_fields=[
+                            "hora_fim",
+                            "nome",
+                            "numero_de_user",
+                            "unidade",
+                            "arquivado_em",
+                        ]
+                    )
+                    resultado["atualizadas"] += 1
+            if not dry_run and aulas:
+                _sincronizar_aulas_da_turma(turma, aulas)
+
+        # o que a recorrencia nao gera mais: arquiva o que ninguem agendou
+        for chave, rastro in rastros.items():
+            if chave in desejadas:
+                continue
+            turma = rastro.turma
+            if _turmas_com_agendamento(turma):
+                resultado["preservadas"] += 1
+                resultado["avisos"].append(
+                    f"{turma.data:%d/%m} {turma.hora_inicio:%H:%M}: fora da nova agenda, "
+                    f"mas tem aluno agendado; mantida."
+                )
+                continue
+            resultado["arquivadas"] += 1
+            if dry_run:
+                continue
+            turma.arquivar()
+            rastro.delete()
+    return resultado
+
+
+def materializar_agenda(
+    professor, *, semanas: int = SEMANAS_PADRAO, dry_run: bool = False
+) -> dict:
+    """Materializa todos os blocos abertos do professor e resume o que mudou."""
+    total = {"criadas": 0, "atualizadas": 0, "arquivadas": 0, "preservadas": 0, "avisos": []}
+    for disponibilidade in disponibilidades_do_professor(professor):
+        parcial = materializar_disponibilidade(disponibilidade, semanas=semanas, dry_run=dry_run)
+        for chave in ("criadas", "atualizadas", "arquivadas", "preservadas"):
+            total[chave] += parcial[chave]
+        total["avisos"].extend(parcial["avisos"])
+    return total
+
+
+def encerrar_disponibilidade(disponibilidade, *, arquivar_futuras: bool = True) -> dict:
+    """Fecha o bloco e tira do ar as turmas futuras que ele gerou e ninguem agendou."""
+    disponibilidade.ativo = False
+    disponibilidade.save(update_fields=["ativo", "atualizado_em"])
+    resultado = {"arquivadas": 0, "preservadas": 0}
+    if not arquivar_futuras:
+        return resultado
+    hoje = timezone.localdate()
+    for rastro in TurmaMaterializada.objects.filter(
+        disponibilidade=disponibilidade
+    ).select_related("turma"):
+        turma = rastro.turma
+        if turma.data < hoje or _turmas_com_agendamento(turma):
+            resultado["preservadas"] += 1
+            continue
+        turma.arquivar()
+        rastro.delete()
+        resultado["arquivadas"] += 1
+    return resultado
+
+
+def agenda_aberta_do_professor(professor, *, semanas: int = SEMANAS_PADRAO, hoje: date | None = None):
+    """Horarios futuros que o professor tem abertos (o que o aluno pode reservar)."""
+    hoje = hoje or timezone.localdate()
+    return (
+        Painel.todos.filter(
+            responsavel=professor.user,
+            data__gte=hoje,
+            data__lte=hoje + timedelta(days=semanas * 7 - 1),
+            arquivado_em__isnull=True,
+        )
+        .select_related("unidade")
+        .order_by("data", "hora_inicio")
+    )
