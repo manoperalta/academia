@@ -43,7 +43,7 @@ from gestao.forms import (
     criar_ou_vincular_usuario,
 )
 from gestao.mixins import EdicaoMixin, PainelMixin
-from gestao.permissoes import Modulo, pode
+from gestao.permissoes import Modulo, nivel, pode
 from notificacoes.models import ConfiguracaoEmail, ConfiguracaoWhatsapp
 from painel.models import Painel
 from plataforma.mixins import ModuloDePacoteMixin
@@ -590,14 +590,23 @@ class AlunoDetalheView(PainelMixin, DetailView):
                 else Agendamento.objects.none(),
                 self.request,
             ).order_by("-data_agendamento")[:10],
+            pode_anonimizar=nivel(
+                self.request.user, Modulo.PRIVACIDADE.value, rede=self.request.rede
+            )
+            >= 3,
         )
         return contexto
 
     def ficha_form(self, ficha):
+        from core.seguranca import registrar_acesso_sensivel
         from plataforma.servicos import impersonacao_ativa
 
         if impersonacao_ativa(self.request) is not None:
             return None  # suporte nao acessa ficha de saude (PRD 11.4)
+        # LGPD art. 11: toda leitura de ficha de saude fica registrada (RNF-006e)
+        registrar_acesso_sensivel(
+            self.request.rede, self.request.user, self.object, origem="painel", acao="leitura"
+        )
         return FichaSaudeForm(instance=ficha)
 
     def post(self, request, *args, **kwargs):
@@ -1366,6 +1375,216 @@ class VinculoAlternar(EdicaoMixin, View):
             request, f"Acesso de {vinculo.usuario} {'ativado' if vinculo.ativo else 'desativado'}."
         )
         return redirect("gestao:equipe")
+
+
+class SegurancaView(PainelMixin, TemplateView):
+    """Seguranca da propria conta: 2FA e historico de acessos (RNF-009)."""
+
+    template_name = "gestao/seguranca.html"
+    titulo = "Segurança"
+    subtitulo = "Proteção da sua conta e histórico de acessos"
+
+    def get_context_data(self, **kwargs):
+        from core.seguranca import dispositivo_do, dois_fatores_ativo
+        from governanca.models import CodigoRecuperacao, TentativaDeLogin
+
+        contexto = super().get_context_data(**kwargs)
+        dispositivo = dispositivo_do(self.request.user)
+        identificadores = [self.request.user.username, self.request.user.email or "-"]
+        contexto.update(
+            dois_fatores=dois_fatores_ativo(self.request.user),
+            confirmado_em=getattr(dispositivo, "confirmado_em", None),
+            ultimo_uso=getattr(dispositivo, "ultimo_uso_em", None),
+            codigos_disponiveis=CodigoRecuperacao.objects.filter(
+                usuario=self.request.user, usado_em__isnull=True
+            ).count(),
+            tentativas=TentativaDeLogin.objects.filter(identificador__in=identificadores)[:15],
+            recentes=TentativaDeLogin.objects.all()[:10],
+        )
+        return contexto
+
+
+class PrivacidadeView(PainelMixin, TemplateView):
+    """LGPD: pedidos do titular, retencao e acessos a dado sensivel."""
+
+    template_name = "gestao/privacidade.html"
+    modulo = Modulo.PRIVACIDADE
+    titulo = "Privacidade e LGPD"
+    subtitulo = "Pedidos, retenção de dados e acesso a dado sensível"
+
+    def get_context_data(self, **kwargs):
+        from governanca.models import AcessoDadoSensivel, RegraRetencao, SolicitacaoTitular
+
+        contexto = super().get_context_data(**kwargs)
+        abertas = SolicitacaoTitular.objects.filter(
+            rede=self.request.rede, situacao=SolicitacaoTitular.Situacao.ABERTA
+        )
+        contexto.update(
+            solicitacoes=SolicitacaoTitular.objects.filter(rede=self.request.rede)[:25],
+            abertas=abertas.count(),
+            atrasadas=[pedido for pedido in abertas if pedido.atrasada],
+            regras=RegraRetencao.objects.filter(ativo=True),
+            acessos=AcessoDadoSensivel.objects.filter(rede=self.request.rede)[:25],
+            tipos=SolicitacaoTitular.Tipo.choices,
+        )
+        return contexto
+
+
+class SolicitacaoTitularView(PainelMixin, View):
+    """Registra um pedido de titular (acesso, exportacao, correcao, eliminacao)."""
+
+    modulo = Modulo.PRIVACIDADE
+    nivel_minimo = "editar"
+
+    def post(self, request):
+        from governanca.models import SolicitacaoTitular
+        from governanca.servicos import prazo_do_pedido
+
+        nome = (request.POST.get("titular_nome") or "").strip()
+        tipo = request.POST.get("tipo") or SolicitacaoTitular.Tipo.ACESSO
+        if not nome:
+            messages.error(request, "Informe o nome do titular.")
+            return redirect("gestao:privacidade")
+        pedido = SolicitacaoTitular.objects.create(
+            rede=request.rede,
+            titular_nome=nome,
+            titular_email=(request.POST.get("titular_email") or "").strip(),
+            tipo=tipo,
+            descricao=(request.POST.get("descricao") or "").strip(),
+            prazo_em=prazo_do_pedido(),
+        )
+        registrar(
+            "criar",
+            "solicitacao_titular",
+            entidade_id=pedido.pk,
+            descricao=f"Pedido de {pedido.get_tipo_display()} do titular {nome}",
+            request=request,
+        )
+        messages.success(request, f"Pedido registrado. Prazo legal até {pedido.prazo_em:%d/%m/%Y}.")
+        return redirect("gestao:privacidade")
+
+
+class ConcluirSolicitacaoView(PainelMixin, View):
+    modulo = Modulo.PRIVACIDADE
+    nivel_minimo = "editar"
+
+    def post(self, request, pk):
+        from governanca.models import SolicitacaoTitular
+
+        pedido = get_object_or_404(SolicitacaoTitular, pk=pk, rede=request.rede)
+        pedido.situacao = request.POST.get("situacao") or SolicitacaoTitular.Situacao.CONCLUIDA
+        pedido.resposta = (request.POST.get("resposta") or "").strip()
+        pedido.concluida_em = timezone.now()
+        pedido.save(update_fields=["situacao", "resposta", "concluida_em", "atualizado_em"])
+        registrar(
+            "alterar",
+            "solicitacao_titular",
+            entidade_id=pedido.pk,
+            descricao=f"Pedido de {pedido.get_tipo_display()} -> {pedido.get_situacao_display()}",
+            request=request,
+        )
+        messages.success(request, "Pedido atualizado.")
+        return redirect("gestao:privacidade")
+
+
+class ExportarTitularView(PainelMixin, View):
+    """Entrega tudo que guardamos sobre o titular (LGPD art. 18)."""
+
+    modulo = Modulo.PRIVACIDADE
+    nivel_minimo = "ver"
+
+    def get(self, request, pk):
+        from governanca.servicos import exportar_titular_zip
+
+        aluno = get_object_or_404(Usuario.todos, pk=pk, rede=request.rede)
+        conteudo = exportar_titular_zip(request.rede, aluno)
+        registrar(
+            "exportar",
+            "titular",
+            entidade_id=aluno.pk,
+            descricao=f"Dados do titular {aluno.nome} exportados (LGPD)",
+            request=request,
+        )
+        resposta = HttpResponse(conteudo, content_type="application/zip")
+        resposta["Content-Disposition"] = f'attachment; filename="dados-titular-{aluno.pk}.zip"'
+        return resposta
+
+
+class AnonimizarTitularView(PainelMixin, View):
+    """Anonimiza o titular preservando o que a lei manda guardar (RF-TEN-021)."""
+
+    modulo = Modulo.PRIVACIDADE
+    nivel_minimo = "admin"
+
+    def post(self, request, pk):
+        from governanca.servicos import anonimizar_titular
+
+        aluno = get_object_or_404(Usuario.todos, pk=pk, rede=request.rede)
+        if (request.POST.get("confirmacao") or "").strip().upper() != "ANONIMIZAR":
+            messages.error(request, "Para confirmar, digite ANONIMIZAR no campo de confirmação.")
+            return redirect("gestao:aluno_detalhe", pk=aluno.pk)
+        resultado = anonimizar_titular(
+            request.rede,
+            aluno,
+            usuario=request.user,
+            motivo=(request.POST.get("motivo") or "").strip(),
+        )
+        messages.success(
+            request,
+            f"Titular anonimizado ({resultado['marcador']}). Os pagamentos foram preservados por "
+            "obrigação fiscal e o pedido ficou registrado na auditoria.",
+        )
+        return redirect("gestao:privacidade")
+
+
+class DominioView(PainelMixin, TemplateView):
+    """Endereco da academia: subdominio, dominio proprio e certificado (RF-PLT-050..052)."""
+
+    template_name = "gestao/dominio.html"
+    modulo = Modulo.DOMINIO
+    titulo = "Domínio e endereço"
+    subtitulo = "Onde a sua academia é atendida"
+
+    def get_context_data(self, **kwargs):
+        from governanca.servicos import estado_do_provisionamento, instrucoes_de_dns, subdominio_da
+
+        contexto = super().get_context_data(**kwargs)
+        rede = self.request.rede
+        contexto.update(
+            estado=estado_do_provisionamento(rede),
+            instrucoes=instrucoes_de_dns(rede) if rede.dominio else None,
+            subdominio=subdominio_da(rede),
+            dominio=getattr(rede, "dominio", ""),
+        )
+        return contexto
+
+
+class VerificarDominioView(PainelMixin, View):
+    modulo = Modulo.DOMINIO
+    nivel_minimo = "admin"
+
+    def post(self, request):
+        from governanca.servicos import verificar_dominio
+
+        rede = request.rede
+        novo_dominio = (request.POST.get("dominio") or "").strip().lower()
+        if novo_dominio and novo_dominio != rede.dominio:
+            rede.dominio = novo_dominio
+            rede.dominio_status = "pendente_dns"
+            rede.save(update_fields=["dominio", "dominio_status", "atualizado_em"])
+        resultado = verificar_dominio(rede, forcar=True)
+        registrar(
+            "alterar",
+            "dominio",
+            entidade_id=rede.pk,
+            descricao=f"Verificacao de dominio {rede.dominio}: {resultado['mensagem'][:120]}",
+            request=request,
+        )
+        if resultado["ok"]:
+            messages.success(request, "Domínio confirmado! Agora vamos emitir o certificado.")
+        else:
+            messages.warning(request, resultado["mensagem"])
+        return redirect("gestao:dominio")
 
 
 class ConviteAceitarView(View):

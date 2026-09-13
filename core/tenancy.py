@@ -100,6 +100,17 @@ def _do_dominio(request):
 
 def resolver_rede(request):
     """Devolve ``(rede, unidade)`` para a requisicao (rede nunca None em uso normal)."""
+    # Subdominio do cliente ou dominio proprio (RF-PLT-050)
+    try:
+        from governanca.servicos import rede_por_host
+
+        host = request.get_host()
+    except Exception:
+        host = ""
+    if host:
+        rede_do_host = rede_por_host(host)
+        if rede_do_host is not None:
+            return rede_do_host
     rede, unidade = _do_parametro(request)
     if rede:
         return rede, unidade

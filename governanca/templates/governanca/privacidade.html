@@ -1,0 +1,36 @@
+{% extends "governanca/base_segura.html" %}
+{% block titulo %}Privacidade{% endblock %}
+{% block conteudo %}
+  <h1 class="text-xl font-semibold text-slate-900">Privacidade e proteção de dados</h1>
+  <p class="mt-2 text-sm text-slate-600">
+    Nesta plataforma, quem decide sobre os dados dos alunos é a <strong>academia</strong> (controladora).
+    A {{ operadora|default:"SafeStack" }} atua como <strong>operadora</strong>: trata os dados apenas para
+    prestar o serviço, sob instrução da academia.
+  </p>
+  <h2 class="mt-6 text-sm font-semibold text-slate-900">O que a academia pode fazer pelo titular</h2>
+  <ul class="mt-2 space-y-1 text-sm text-slate-600">
+    <li>• Exportar todos os dados de um aluno (cadastro, pagamentos, agendamentos e ficha de saúde).</li>
+    <li>• Anonimizar o titular quando solicitado, preservando o que a lei obriga a guardar (registros fiscais de pagamento).</li>
+    <li>• Registrar o pedido com prazo e resposta.</li>
+  </ul>
+  <h2 class="mt-6 text-sm font-semibold text-slate-900">Dado sensível (ficha de saúde)</h2>
+  <p class="mt-2 text-sm text-slate-600">
+    A ficha de saúde tem acesso restrito por papel, <strong>toda leitura é registrada</strong> e a equipe da
+    SafeStack não vê esse conteúdo no acesso de suporte.
+  </p>
+  <h2 class="mt-6 text-sm font-semibold text-slate-900">Por quanto tempo guardamos</h2>
+  <table class="mt-2 min-w-full text-sm">
+    <thead class="text-left text-xs uppercase text-slate-500"><tr><th class="py-2">Registro</th><th>Prazo</th><th>O que acontece</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for regra in regras %}
+        <tr><td class="py-2">{{ regra.entidade }}</td><td>{{ regra.prazo_dias }} dias</td><td>{{ regra.get_acao_display }}</td></tr>
+      {% empty %}
+        <tr><td colspan="3" class="py-2 text-slate-500">Retenção padrão da plataforma.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="mt-6 text-sm text-slate-600">
+    Para exercer um direito, fale com a sua academia. Se precisar falar com a SafeStack,
+    use a <a class="text-emerald-700 underline" href="{% url 'vitrine:contato' %}">página de contato</a>.
+  </p>
+{% endblock %}

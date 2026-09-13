@@ -1,0 +1,17 @@
+{% extends "governanca/base_segura.html" %}
+{% block titulo %}Desativar 2FA{% endblock %}
+{% block conteudo %}
+  <h1 class="text-xl font-semibold text-slate-900">Desativar a proteção em duas etapas</h1>
+  <p class="mt-1 text-sm text-slate-500">Confirme com a sua senha e um código atual do app.</p>
+  <form method="post" class="mt-5 space-y-4">
+    {% csrf_token %}
+    {% for campo in form %}
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>
+        {{ campo }}
+        {% for erro_campo in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro_campo }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="w-full rounded-xl bg-red-600 px-5 py-3 font-medium text-white hover:bg-red-700">Desativar</button>
+  </form>
+{% endblock %}

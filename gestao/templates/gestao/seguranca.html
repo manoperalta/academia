@@ -1,0 +1,64 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">Proteção em duas etapas (2FA)</h2>
+      {% if dois_fatores %}
+        <p class="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          Ativo desde {{ confirmado_em|date:"d/m/Y" }}{% if ultimo_uso %} · último uso em {{ ultimo_uso|date:"d/m/Y H:i" }}{% endif %}.
+          Códigos de recuperação disponíveis: {{ codigos_disponiveis }}.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <form method="post" action="{% url 'governanca:dois_fatores_codigos' %}">{% csrf_token %}
+            <button class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Gerar novos códigos de recuperação</button>
+          </form>
+          <a href="{% url 'governanca:dois_fatores_desativar' %}" class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700">Desativar</a>
+        </div>
+      {% else %}
+        <p class="mt-2 text-sm text-slate-600">
+          Ainda não está ativa. Com o segundo fator, um código do seu celular passa a ser exigido no acesso —
+          protege a academia mesmo se a senha vazar.
+        </p>
+        <a href="{% url 'governanca:dois_fatores_cadastrar' %}" class="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Ativar agora</a>
+      {% endif %}
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">Últimos acessos da sua conta</h2>
+      <table class="mt-3 min-w-full text-xs">
+        <thead class="bg-slate-50 text-left uppercase text-slate-500"><tr><th class="px-3 py-2">Quando</th><th>Identificador</th><th>IP</th><th>Resultado</th></tr></thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for tentativa in tentativas %}
+            <tr>
+              <td class="px-3 py-2">{{ tentativa.criado_em|date:"d/m H:i" }}</td>
+              <td>{{ tentativa.identificador }}</td>
+              <td>{{ tentativa.ip|default:"—" }}</td>
+              <td>{% if tentativa.sucesso %}<span class="text-emerald-700">ok</span>{% else %}<span class="text-red-700">falha</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="px-3 py-3 text-slate-500">Sem registro nesta academia.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="space-y-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">Boas práticas</h2>
+      <ul class="mt-3 space-y-2 text-xs text-slate-600">
+        <li>• Senha longa e única para o painel.</li>
+        <li>• Convide cada pessoa com o papel certo (recepção, professor, financeiro).</li>
+        <li>• Revise a equipe quando alguém sair.</li>
+        <li>• Guarde os códigos de recuperação fora do celular.</li>
+      </ul>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-900">Bloqueios recentes</h2>
+      <p class="mt-2 text-xs text-slate-500">Tentativas bloqueadas pelo limite de erros (qualquer conta):</p>
+      <p class="mt-1 text-lg font-semibold text-slate-800">{{ tentativas_bloqueadas|length }}</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}

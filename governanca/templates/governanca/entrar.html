@@ -1,0 +1,22 @@
+{% extends "governanca/base_segura.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block conteudo %}
+  <h1 class="text-xl font-semibold text-slate-900">Entrar no painel</h1>
+  <p class="mt-1 text-sm text-slate-500">Use o e-mail cadastrado na sua academia.</p>
+  {% if erro %}<p class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ erro }}</p>{% endif %}
+  <form method="post" class="mt-5 space-y-4">
+    {% csrf_token %}
+    <input type="hidden" name="proximo" value="{{ proximo }}">
+    {% for campo in form %}
+      <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">{{ campo.label }}</label>
+        {{ campo }}
+        {% for erro_campo in campo.errors %}<p class="mt-1 text-xs text-red-600">{{ erro_campo }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    <button class="w-full rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-700">Entrar</button>
+  </form>
+  <p class="mt-5 text-center text-xs text-slate-500">
+    Ainda não tem conta? <a class="text-emerald-700 underline" href="{% url 'vitrine:cadastro' %}">Criar academia</a>
+  </p>
+{% endblock %}

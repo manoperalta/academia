@@ -29,6 +29,8 @@ def menu_do_painel(request):
 
 #: Icones simples (emoji) para a barra lateral, sem dependencia de biblioteca externa.
 ICONES = {
+    "privacidade": "🛡️",
+    "dominio": "🌐",
     Modulo.VISAO_GERAL: "📊",
     Modulo.ALUNOS: "🙋",
     Modulo.PROFESSORES: "🧑‍🏫",

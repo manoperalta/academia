@@ -1,0 +1,63 @@
+{% extends "plataforma/base.html" %}
+{% block conteudo %}
+{% if alertas %}
+  <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4">
+    <p class="text-sm font-semibold text-amber-900">Alertas ({{ alertas|length }})</p>
+    <ul class="mt-2 space-y-1 text-sm text-amber-900">
+      {% for alerta in alertas %}<li>• {{ alerta }}</li>{% endfor %}
+    </ul>
+  </div>
+{% else %}
+  <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+    Nenhum alerta pendente. Requisições e erros sendo monitorados (janela de {{ saude.horas }}h).
+  </div>
+{% endif %}
+
+<div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+  <h2 class="text-sm font-semibold text-slate-900">Por cliente</h2>
+  {% if saude.sem_metricas %}
+    <p class="mt-2 text-xs text-slate-500">Ainda sem métricas agregadas — rode <code>agregar_metricas</code> (cron de hora em hora).</p>
+  {% endif %}
+  <div class="mt-3 overflow-x-auto">
+    <table class="min-w-full text-xs">
+      <thead class="bg-slate-50 text-left uppercase text-slate-500">
+        <tr><th class="px-3 py-2">Cliente</th><th>Requisições</th><th>5xx</th><th>Tempo médio</th><th>Último erro</th><th></th></tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for linha in saude.linhas %}
+          <tr class="{% if linha.alerta %}bg-red-50/40{% endif %}">
+            <td class="px-3 py-2 font-medium text-slate-800">{{ linha.rede.nome }}</td>
+            <td>{{ linha.requisicoes }}</td>
+            <td class="{% if linha.erros_5xx %}text-red-700{% endif %}">{{ linha.erros_5xx }}</td>
+            <td>{{ linha.tempo_medio_ms }} ms</td>
+            <td class="text-slate-500">{% if linha.ultimo_erro %}{{ linha.ultimo_erro.criado_em|date:"d/m H:i" }} {{ linha.ultimo_erro.rota|truncatechars:28 }}{% else %}—{% endif %}</td>
+            <td class="text-right"><a class="text-emerald-700 underline" href="{% url 'plataforma:tenant_ficha' linha.rede.pk %}">ficha</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="px-3 py-3 text-slate-500">Nenhum cliente cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+  <h2 class="text-sm font-semibold text-slate-900">Erros recentes (5xx)</h2>
+  <table class="mt-3 min-w-full text-xs">
+    <thead class="bg-slate-50 text-left uppercase text-slate-500"><tr><th class="px-3 py-2">Quando</th><th>Cliente</th><th>Rota</th><th>Tipo</th><th>Usuário</th></tr></thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for erro in erros %}
+        <tr>
+          <td class="px-3 py-2">{{ erro.criado_em|date:"d/m H:i" }}</td>
+          <td>{{ erro.rede.nome|default:"—" }}</td>
+          <td class="break-all">{{ erro.metodo }} {{ erro.rota|truncatechars:40 }}</td>
+          <td>{{ erro.tipo }}</td>
+          <td>{{ erro.usuario|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="px-3 py-3 text-slate-500">Nenhum erro registrado. </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

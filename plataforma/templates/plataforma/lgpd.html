@@ -1,0 +1,43 @@
+{% extends "plataforma/base.html" %}
+{% block conteudo %}
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+  <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Pedidos de titulares</h2>
+    <p class="mt-1 text-xs text-slate-500">
+      A academia é a controladora; nós somos operadora. Aqui acompanhamos volume e prazos.
+      {% if atrasados %}<strong class="text-red-700">{{ atrasados|length }} com prazo vencido.</strong>{% endif %}
+    </p>
+    <table class="mt-3 min-w-full text-xs">
+      <thead class="bg-slate-50 text-left uppercase text-slate-500"><tr><th class="px-3 py-2">Cliente</th><th>Titular</th><th>Tipo</th><th>Prazo</th><th>Situação</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for pedido in pedidos %}
+          <tr class="{% if pedido.atrasada %}bg-red-50/40{% endif %}">
+            <td class="px-3 py-2">{{ pedido.rede.nome }}</td>
+            <td>{{ pedido.titular_nome }}</td>
+            <td>{{ pedido.get_tipo_display }}</td>
+            <td class="{% if pedido.atrasada %}text-red-700{% endif %}">{{ pedido.prazo_em|date:"d/m/Y" }}</td>
+            <td>{{ pedido.get_situacao_display }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="px-3 py-3 text-slate-500">Nenhum pedido registrado.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <h2 class="text-sm font-semibold text-slate-900">Retenção</h2>
+    <table class="mt-3 min-w-full text-xs">
+      <tbody class="divide-y divide-slate-100">
+        {% for regra in regras %}
+          <tr>
+            <td class="py-2">{{ regra.entidade }}<br><span class="text-slate-400">{{ regra.base_legal_efetiva|truncatechars:48 }}</span></td>
+            <td class="py-2 text-right">{{ regra.prazo_dias }}d<br><span class="text-slate-400">{{ regra.get_acao_display }}</span></td>
+          </tr>
+        {% empty %}
+          <tr><td class="py-2 text-slate-500">Rode <code>seed_governanca</code> para carregar as regras padrão.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </aside>
+</div>
+{% endblock %}

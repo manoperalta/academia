@@ -94,6 +94,22 @@ def suporte(db):
 
 @pytest.fixture
 def cliente_plataforma(db, suporte):
+    """Cliente autenticado como equipe da SafeStack, com o 2FA ja confirmado.
+
+    A equipe da plataforma e obrigada a usar 2FA (RNF-009); nos testes o dispositivo
+    ja vem confirmado e a sessao marcada, para exercitar o restante do painel.
+    """
+    from django.utils import timezone
+
+    from governanca.models import Dispositivo2FA
+
+    Dispositivo2FA.objects.update_or_create(
+        usuario=suporte,
+        defaults={"segredo": "JBSWY3DPEHPK3PXP", "confirmado_em": timezone.now()},
+    )
     cliente = Client()
     cliente.force_login(suporte)
+    sessao = cliente.session
+    sessao["dois_fatores_ok"] = timezone.now().timestamp()
+    sessao.save()
     return cliente

@@ -48,6 +48,7 @@ TERCEIROS = [
 
 LOCAIS = [
     "core",
+    "governanca",
     "vitrine",
     "plataforma",
     "gestao",
@@ -78,6 +79,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.RedeMiddleware",
     "app.middleware_debug.DebugLocalAutorizadoMiddleware",
+    "governanca.middleware.DoisFatoresMiddleware",
+    "governanca.middleware.MetricasMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"
@@ -134,7 +137,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
-MEDIA_URL = "/media/"
+MEDIA_URL = "/midia/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -197,18 +200,19 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "padrao": {
-            "format": "[{asctime}] {levelname} {name} rede={rede_id} {message}",
+            "format": "[{asctime}] {levelname} {name} rede={rede_id} user={usuario} {message}",
             "style": "{",
         },
     },
     "filters": {
         "rede": {"()": "core.logging_filters.FiltroRede"},
+        "contexto": {"()": "governanca.middleware.FiltroDeContextoDeLog"},
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "padrao",
-            "filters": ["rede"],
+            "filters": ["rede", "contexto"],
         },
     },
     "root": {"handlers": ["console"], "level": "INFO"},
@@ -218,3 +222,6 @@ LOGGING = {
         "core": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# Pasta dos backups do banco e das exportacoes por cliente (RNF-005)
+BACKUP_DIR = BASE_DIR / "backups"

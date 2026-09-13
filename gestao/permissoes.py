@@ -23,6 +23,8 @@ class Modulo(models.TextChoices):
     IDENTIDADE = "identidade", "Identidade e dados fiscais"
     EQUIPE = "equipe", "Equipe e acessos"
     PLANO = "plano", "Meu plano"
+    PRIVACIDADE = "privacidade", "Privacidade e LGPD"
+    DOMINIO = "dominio", "Domínio e endereço"
     AUDITORIA = "auditoria", "Auditoria"
 
 
@@ -48,6 +50,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.EQUIPE: "editar",
         Modulo.PLANO: "admin",
         Modulo.AUDITORIA: "ver",
+        Modulo.PRIVACIDADE: "ver",
     },
     Papel.RECEPCAO: {
         Modulo.VISAO_GERAL: "ver",

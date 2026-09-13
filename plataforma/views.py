@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import uuid
+from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -764,3 +765,160 @@ class ConfiguracaoView(PlataformaMixin, View):
         )
         messages.success(request, "Configuracao salva.")
         return redirect("plataforma:config")
+
+
+class SaudeView(PlataformaMixin, TemplateView):
+    """Observabilidade por cliente: requisicoes, erros 5xx e alertas (RNF-008)."""
+
+    template_name = "plataforma/saude.html"
+    titulo = "Saúde dos clientes"
+    subtitulo = "Requisições, erros e alertas das últimas 24 horas"
+
+    def get_context_data(self, **kwargs):
+        from governanca.models import ErroTenant
+        from governanca.servicos import alertas_pendentes, resumo_de_saude
+
+        contexto = super().get_context_data(**kwargs)
+        contexto.update(
+            saude=resumo_de_saude(horas=24),
+            alertas=alertas_pendentes(),
+            erros=ErroTenant.objects.select_related("rede")[:25],
+        )
+        return contexto
+
+
+class BackupsView(PlataformaMixin, TemplateView):
+    """Backups, verificacao por restauracao de teste e exportacao por cliente (RNF-005)."""
+
+    template_name = "plataforma/backups.html"
+    titulo = "Backups"
+    subtitulo = "Registro, verificação e retenção"
+
+    def get_context_data(self, **kwargs):
+        from governanca.models import RegistroBackup
+
+        contexto = super().get_context_data(**kwargs)
+        contexto.update(
+            backups=RegistroBackup.objects.select_related("rede")[:40],
+            ultimo=RegistroBackup.objects.filter(tipo=RegistroBackup.Tipo.BANCO)
+            .order_by("-criado_em")
+            .first(),
+            clientes=Rede.todos.all()[:60],
+        )
+        return contexto
+
+
+class BackupAcaoView(PlataformaMixin, View):
+    """Roda um backup, verifica o ultimo, aplica retencao ou exporta um cliente."""
+
+    def post(self, request):
+        from governanca.models import RegistroBackup
+        from governanca.servicos import (
+            aplicar_retencao_de_backups,
+            executar_backup,
+            exportar_tenant,
+            verificar_backup,
+        )
+
+        acao = request.POST.get("acao", "executar")
+        if acao == "executar":
+            registro = executar_backup()
+            if registro.situacao == RegistroBackup.Situacao.OK:
+                messages.success(
+                    request,
+                    f"Backup concluído: {Path(registro.arquivo).name} "
+                    f"({registro.tamanho_mb} MB). Verificando…",
+                )
+                verificacao = verificar_backup(registro)
+                (messages.success if verificacao["ok"] else messages.warning)(
+                    request, f"Verificação: {verificacao['detalhe']}"
+                )
+            else:
+                messages.error(request, f"Backup falhou: {registro.erro[:200]}")
+        elif acao == "verificar":
+            verificacao = verificar_backup()
+            (messages.success if verificacao["ok"] else messages.warning)(
+                request, f"Verificação: {verificacao['detalhe']}"
+            )
+        elif acao == "retencao":
+            resultado = aplicar_retencao_de_backups(dry_run=False)
+            messages.success(
+                request,
+                f"Retenção aplicada: {resultado['mantidos']} mantidos, "
+                f"{resultado['apagados']} apagados.",
+            )
+        elif acao == "exportar" and request.POST.get("rede"):
+            rede = get_object_or_404(Rede.todos, pk=request.POST["rede"])
+            registro = exportar_tenant(rede)
+            messages.success(request, f"Exportação de {rede.nome}: {Path(registro.arquivo).name}")
+        registrar("backup", "plataforma", descricao=f"Ação de backup: {acao}", request=request)
+        return redirect("plataforma:backups")
+
+
+class DominiosView(PlataformaMixin, TemplateView):
+    """Estado de endereco/certificado por cliente (RF-PLT-050..052)."""
+
+    template_name = "plataforma/dominios.html"
+    titulo = "Domínios e certificados"
+    subtitulo = "Subdomínio, domínio próprio e certificado de cada cliente"
+
+    def get_context_data(self, **kwargs):
+        from governanca.servicos import estado_do_provisionamento, subdominio_da
+
+        contexto = super().get_context_data(**kwargs)
+        contexto["linhas"] = [
+            {
+                "rede": rede,
+                "subdominio": subdominio_da(rede),
+                "estado": estado_do_provisionamento(rede),
+            }
+            for rede in Rede.todos.all()
+        ]
+        return contexto
+
+
+class DominioAcaoView(PlataformaMixin, View):
+    """Verifica o dominio de um cliente ou marca o certificado para reemissao."""
+
+    def post(self, request, pk):
+        from governanca.servicos import reemitir_certificado, verificar_dominio
+
+        rede = get_object_or_404(Rede.todos, pk=pk)
+        acao = request.POST.get("acao", "verificar")
+        resultado = (
+            reemitir_certificado(rede)
+            if acao == "reemitir"
+            else verificar_dominio(rede, forcar=True)
+        )
+        (messages.success if resultado.get("ok") else messages.warning)(
+            request, resultado["mensagem"]
+        )
+        registrar(
+            "alterar",
+            "dominio",
+            entidade_id=rede.pk,
+            descricao=f"Ação de domínio ({acao}) em {rede.nome}",
+            request=request,
+        )
+        return redirect("plataforma:dominios")
+
+
+class LgpdView(PlataformaMixin, TemplateView):
+    """Visao da plataforma sobre pedidos de titulares e retencao (RNF-006)."""
+
+    template_name = "plataforma/lgpd.html"
+    titulo = "LGPD"
+    subtitulo = "Pedidos de titulares, prazos e retenção"
+
+    def get_context_data(self, **kwargs):
+        from governanca.models import RegraRetencao, SolicitacaoTitular
+
+        contexto = super().get_context_data(**kwargs)
+        pedidos = list(SolicitacaoTitular.objects.select_related("rede")[:40])
+        contexto.update(
+            pedidos=pedidos,
+            abertos=[pedido for pedido in pedidos if pedido.situacao == "aberta"],
+            atrasados=[pedido for pedido in pedidos if pedido.atrasada],
+            regras=RegraRetencao.objects.all(),
+        )
+        return contexto

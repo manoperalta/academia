@@ -1,0 +1,28 @@
+{% extends "governanca/base_segura.html" %}
+{% block titulo %}Status{% endblock %}
+{% block conteudo %}
+  <h1 class="text-xl font-semibold text-slate-900">Status do serviço</h1>
+  <p class="mt-1 text-sm text-slate-500">Atualizado em {{ agora|date:"d/m/Y H:i" }} · versão {{ versao }}</p>
+  <ul class="mt-5 space-y-3 text-sm">
+    <li class="flex items-center justify-between rounded-lg border px-4 py-3 {% if banco_ok %}border-emerald-200 bg-emerald-50{% else %}border-red-200 bg-red-50{% endif %}">
+      <span>Banco de dados</span>
+      <span class="font-medium">{% if banco_ok %}Operacional{% else %}Instável{% endif %}</span>
+    </li>
+    <li class="flex items-center justify-between rounded-lg border px-4 py-3 {% if ultimo_backup.situacao == 'ok' %}border-emerald-200 bg-emerald-50{% else %}border-amber-200 bg-amber-50{% endif %}">
+      <span>Backup do banco</span>
+      <span class="font-medium">
+        {% if ultimo_backup %}{{ ultimo_backup.criado_em|date:"d/m H:i" }}{% if ultimo_backup.verificado %} · verificado{% endif %}{% else %}sem registro{% endif %}
+      </span>
+    </li>
+    <li class="flex items-center justify-between rounded-lg border border-slate-200 px-4 py-3">
+      <span>Requisições (24h)</span>
+      <span class="font-medium">{{ saude.linhas|length }} academias monitoradas</span>
+    </li>
+  </ul>
+  {% if alertas %}
+    <p class="mt-5 text-xs text-slate-500">Pendências internas em tratamento: {{ alertas|length }}.</p>
+  {% endif %}
+  <p class="mt-6 text-center text-xs text-slate-400">
+    Precisa de ajuda? <a class="underline" href="{% url 'vitrine:contato' %}">Fale com o time</a>.
+  </p>
+{% endblock %}

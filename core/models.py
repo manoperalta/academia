@@ -12,6 +12,22 @@ from core.managers import SemEscopoManager, TenantManager
 from core.papeis import Papel, StatusRede, StatusUnidade, TipoUnidade
 
 
+# Estado do dominio proprio e do subdominio (RF-PLT-052)
+class StatusDominio(models.TextChoices):
+    NAO_CONFIGURADO = "nao_configurado", "Sem dominio proprio"
+    PENDENTE_DNS = "pendente_dns", "Aguardando DNS"
+    VERIFICANDO = "verificando", "Verificando"
+    PRONTO = "pronto", "Pronto"
+    ERRO = "erro", "Com erro"
+
+
+class StatusCertificado(models.TextChoices):
+    PENDENTE = "pendente", "Pendente"
+    EMITINDO = "emitindo", "Emitindo"
+    EMITIDO = "emitido", "Emitido"
+    ERRO = "erro", "Com erro"
+
+
 class Rede(models.Model):
     """A academia cliente: o tenant (dono dos dados, do contrato e do pagamento).
 
@@ -24,6 +40,30 @@ class Rede(models.Model):
     email_responsavel = models.EmailField("e-mail do responsavel", blank=True)
     telefone = models.CharField("telefone", max_length=20, blank=True)
     dominio = models.CharField("dominio proprio", max_length=253, blank=True)
+    dominio_status = models.CharField(
+        "status do dominio",
+        max_length=20,
+        choices=StatusDominio.choices,
+        default=StatusDominio.NAO_CONFIGURADO,
+    )
+    dominio_token = models.CharField("token de verificacao", max_length=64, blank=True)
+    dominio_verificado_em = models.DateTimeField("dominio verificado em", null=True, blank=True)
+    dominio_diagnostico = models.CharField("diagnostico do dominio", max_length=250, blank=True)
+    dominio_tentativas = models.PositiveIntegerField("tentativas de verificacao", default=0)
+    certificado_status = models.CharField(
+        "status do certificado",
+        max_length=20,
+        choices=StatusCertificado.choices,
+        default=StatusCertificado.PENDENTE,
+    )
+    certificado_emitido_em = models.DateTimeField("certificado emitido em", null=True, blank=True)
+    certificado_erro = models.TextField("erro do certificado", blank=True)
+    media_prefixo = models.CharField(
+        "prefixo da midia",
+        max_length=80,
+        blank=True,
+        help_text="Namespace dos arquivos deste cliente (padrao: o slug).",
+    )
     status = models.CharField(
         "status", max_length=20, choices=StatusRede.choices, default=StatusRede.ATIVO
     )

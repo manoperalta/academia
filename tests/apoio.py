@@ -124,6 +124,7 @@ def modelos_sem_rede_em_modelos():
             "sessions",
             "contenttypes",
             "core",
+            "governanca",
             "plataforma",
         }:
             continue

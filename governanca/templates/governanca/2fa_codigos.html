@@ -1,0 +1,16 @@
+{% extends "governanca/base_segura.html" %}
+{% block titulo %}Códigos de recuperação{% endblock %}
+{% block conteudo %}
+  <h1 class="text-xl font-semibold text-slate-900">Guarde seus códigos de recuperação</h1>
+  <p class="mt-1 text-sm text-slate-500">
+    Cada código funciona <strong>uma vez</strong> e serve para entrar se você perder o celular.
+    Esta é a única vez que mostramos os códigos.
+  </p>
+  <div class="mt-4 grid grid-cols-2 gap-2">
+    {% for codigo in codigos %}
+      <p class="rounded-lg bg-slate-50 px-3 py-2 text-center font-mono text-sm">{{ codigo }}</p>
+    {% endfor %}
+  </div>
+  <p class="mt-4 text-xs text-slate-500">Sugestão: imprima ou salve num gerenciador de senhas.</p>
+  <a href="{% url 'gestao:visao_geral' %}" class="mt-6 block rounded-xl bg-emerald-600 px-5 py-3 text-center font-medium text-white hover:bg-emerald-700">Já guardei, continuar</a>
+{% endblock %}
