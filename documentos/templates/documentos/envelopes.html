@@ -1,0 +1,56 @@
+{% extends "gestao/base.html" %}
+{% block conteudo %}
+<div class="mb-4 mr-auto">
+  <h2 class="text-lg font-semibold text-slate-900">Assinatura de documentos</h2>
+  <p class="text-xs text-slate-500">
+    {{ resumo.total }} documento(s) · {{ resumo.assinados }} assinado(s) ·
+    {{ resumo.aguardando }} aguardando · {{ resumo.recusados }} recusado(s) ·
+    {{ resumo.pendentes_de_assinatura }} assinatura(s) pendente(s)
+  </p>
+</div>
+
+<form method="post" action="{% url 'documentos:criar_envelope' %}" class="mb-4 rounded-xl bg-white p-5 shadow">
+  {% csrf_token %}
+  <h3 class="text-sm font-semibold text-slate-900">Enviar para assinatura</h3>
+  <div class="mt-3 grid gap-3 sm:grid-cols-3">
+    <label class="text-xs text-slate-600">Aluno
+      <select name="aluno" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for aluno in alunos %}<option value="{{ aluno.pk }}">{{ aluno.nome }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-xs text-slate-600">Tipo
+      <select name="tipo" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+        {% for valor, rotulo in tipos %}<option value="{{ valor }}">{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="text-xs text-slate-600">Título
+      <input name="titulo" class="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+    </label>
+  </div>
+  <button class="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Gerar e enviar</button>
+  <p class="mt-2 text-xs text-slate-500">O contrato é gerado pelo próprio sistema e guardado com o hash do documento.</p>
+</form>
+
+<div class="overflow-hidden rounded-xl bg-white shadow">
+  <table class="min-w-full text-sm">
+    <thead class="bg-slate-50 text-left text-xs text-slate-500">
+      <tr><th class="px-4 py-3">Título</th><th class="px-4 py-3">Tipo</th><th class="px-4 py-3">Aluno</th>
+          <th class="px-4 py-3">Assinaturas</th><th class="px-4 py-3">Situação</th><th class="px-4 py-3"></th></tr>
+    </thead>
+    <tbody>
+      {% for envelope in envelopes %}
+      <tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-slate-800">{{ envelope.titulo }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ envelope.get_tipo_display }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ envelope.aluno.nome|default:"—" }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ envelope.assinaturas_ok }}/{{ envelope.total_de_signatarios }}</td>
+        <td class="px-4 py-3 text-slate-600">{{ envelope.get_situacao_display }}</td>
+        <td class="px-4 py-3 text-right"><a class="text-xs text-sky-700 underline" href="{% url 'documentos:envelope' envelope.pk %}">Abrir</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500">Nenhum documento em assinatura.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -22,6 +22,7 @@ ISOLAMENTO: list[str] = [
     "cobranca.autorizacaodedebito", "cobranca.cobrancarecorrente", "cobranca.eventodacobranca",
     "fiscal.configuracaofiscal", "fiscal.notafiscal", "fiscal.eventofiscal",
     "pdv.produto", "pdv.venda", "pdv.itemdavenda", "pdv.movimentodeestoque",
+    "documentos.envelopedeassinatura", "documentos.signatario", "documentos.assinatura",
 ]
 
 
