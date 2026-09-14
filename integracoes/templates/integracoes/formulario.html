@@ -16,7 +16,13 @@
       <form method="post" enctype="multipart/form-data" class="mt-5">
         {% csrf_token %}
         <input type="hidden" name="provedor" value="{{ integracao.chave }}">
-        {% if form.non_field_errors %}
+        {% if token_gerado %}
+        <p class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-900">
+          Token gerado e já preenchido no campo abaixo: <code class="font-mono">{{ token_gerado }}</code>.
+          Guarde no equipamento — depois de salvar ele não aparece mais nesta tela.
+        </p>
+      {% endif %}
+      {% if form.non_field_errors %}
           <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ form.non_field_errors }}</div>
         {% endif %}
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">

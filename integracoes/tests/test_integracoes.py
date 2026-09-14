@@ -154,12 +154,18 @@ def test_certificado_guarda_arquivo_e_nao_os_bytes_no_json(cliente_logado, rede)
     assert "conteudo-do-certificado" not in str(registro.campos)
 
 
-def test_catraca_gera_token_sugerido(cliente_logado):
+def test_catraca_gera_token_sugerido_e_mostra_o_valor(cliente_logado):
     resposta = cliente_logado.get(
         reverse("integracoes:configurar", args=["catraca"]), {"gerar_token": "1"}
     )
     assert resposta.status_code == 200
-    assert len(resposta.context["form"].fields["token"].initial) >= 20
+    gerado = resposta.context["form"].fields["token"].initial
+    assert len(gerado) >= 20
+    # O campo e de segredo e nao devolve valor para a tela; o token recem-gerado tem de
+    # aparecer assim mesmo, senao o operador nao tem como leva-lo ate o equipamento.
+    html = resposta.content.decode()
+    assert gerado in html, "o token gerado precisa aparecer na tela"
+    assert "Guarde no equipamento" in html
 
 
 def test_integracao_de_uma_rede_nao_aparece_na_outra(cliente_logado, rede, outra_rede):

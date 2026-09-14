@@ -7,14 +7,16 @@ com os valores que o terceiro fornece (chave da API, token, usuario, certificado
 from __future__ import annotations
 
 from django.contrib import messages
+from django.forms import TextInput
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
 
 from api.auditoria import registrar
+from gestao.forms import CAMPO
 from gestao.mixins import EdicaoMixin, PainelMixin
-from gestao.permissoes import Modulo
+from gestao.permissoes import Modulo, pode_editar
 from integracoes import catalogo, servicos
 from integracoes.forms import EscolherProvedorForm, formulario_do_provedor
 
@@ -61,7 +63,7 @@ class ConfigurarIntegracaoView(EdicaoMixin, View):
     modulo = Modulo.INTEGRACOES
     titulo = "Configurar integracao"
 
-    def _contexto(self, request, integracao, formulario):
+    def _contexto(self, request, integracao, formulario, token_gerado=""):
         return {
             "integracao": integracao,
             "form": formulario,
@@ -72,7 +74,13 @@ class ConfigurarIntegracaoView(EdicaoMixin, View):
             "aviso": integracao.aviso,
             "docs": integracao.docs,
             "espelho": integracao.espelho,
-            "pode_editar": True,
+            "token_gerado": token_gerado,
+            "pode_editar": pode_editar(
+                request.user,
+                Modulo.INTEGRACOES,
+                rede=getattr(request, "rede", None),
+                unidade=getattr(request, "unidade", None),
+            ),
             "url_voltar": reverse("integracoes:painel"),
         }
 
@@ -85,9 +93,20 @@ class ConfigurarIntegracaoView(EdicaoMixin, View):
         formulario = formulario_do_provedor(
             chave, valores=servicos.valores_reais(request.rede, chave)
         )
+        token_gerado = ""
         if request.GET.get("gerar_token") == "1" and "token" in formulario.fields:
-            formulario.fields["token"].initial = servicos.token_sugerido()
-        return render(request, self.template_name, self._contexto(request, integracao, formulario))
+            # Campo de segredo nao devolve valor nenhum para a tela (PasswordInput). Para o
+            # operador conseguir levar o token ate o equipamento, este request unico mostra o
+            # campo como texto, com o valor gerado dentro.
+            token_gerado = servicos.token_sugerido()
+            campo = formulario.fields["token"]
+            campo.initial = token_gerado
+            campo.widget = TextInput(attrs={"class": CAMPO, "autocomplete": "off"})
+        return render(
+            request,
+            self.template_name,
+            self._contexto(request, integracao, formulario, token_gerado=token_gerado),
+        )
 
     def post(self, request, provedor=""):
         chave = (provedor or request.POST.get("provedor") or "").strip().lower()
