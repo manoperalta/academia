@@ -20,7 +20,7 @@ from academia.models import Configuracao, IdentidadeVisual
 from agendamento.models import Agendamento
 from api.auditoria import registrar
 from api.models import RegistroAuditoria
-from aulas.models import Aulas
+from aulas.models import Aulas, ImagemAula
 from core.models import ConviteEquipe, Unidade, VinculoUsuario
 from core.tenancy import unidades_do_usuario
 from financeiro.models import Despesa, Pagamento, Plano
@@ -714,7 +714,40 @@ class AulasView(ListaPainel):
         return qs.select_related("professor")
 
 
-class AulaNova(CriarPainel):
+class AulaComCapaMixin:
+    """Grava a capa enviada no formulario da aula (vira o primeiro ``ImagemAula``).
+
+    A capa e a imagem que o aluno ve antes de agendar. No painel ela e uma so por aula:
+    enviar outra substitui a anterior, para a tela nao virar um album sem controle.
+    """
+
+    def get_form(self, form_class=None):
+        formulario = super().get_form(form_class)
+        atual = getattr(getattr(self, "object", None), "capa", None)
+        if atual is not None and "capa" in formulario.fields:
+            nome = str(atual.imagem.name).split("/")[-1]
+            formulario.fields["capa"].help_text = (
+                f"Capa atual: {nome}. Envie outra imagem para substituir."
+            )
+        return formulario
+
+    def form_valid(self, form):
+        resposta = super().form_valid(form)
+        capa = form.cleaned_data.get("capa")
+        if capa is not None:
+            ImagemAula.todos.filter(aula=self.object).delete()
+            ImagemAula.objects.create(aula=self.object, imagem=capa)
+            registrar(
+                "alterar",
+                "aula",
+                entidade_id=self.object.pk,
+                descricao=f"Capa da aula {self.object} atualizada via painel",
+                request=self.request,
+            )
+        return resposta
+
+
+class AulaNova(AulaComCapaMixin, CriarPainel):
     model = Aulas
     form_class = AulaForm
     entidade = "aula"
@@ -727,7 +760,7 @@ class AulaNova(CriarPainel):
         return self.aviso_ok
 
 
-class AulaEditar(EditarPainel):
+class AulaEditar(AulaComCapaMixin, EditarPainel):
     model = Aulas
     form_class = AulaForm
     entidade = "aula"

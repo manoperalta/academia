@@ -13,6 +13,7 @@ from academia.models import Configuracao, IdentidadeVisual
 from aulas.models import Aulas
 from core.models import ConviteEquipe
 from core.papeis import Papel
+from core.validadores import validar_imagem_de_capa
 from financeiro.models import Despesa, Pagamento, Plano
 from notificacoes.models import ConfiguracaoEmail, ConfiguracaoWhatsapp
 from painel.models import Painel
@@ -199,6 +200,16 @@ class FichaSaudeForm(EstiloMixin, forms.ModelForm):
 
 
 class AulaForm(EstiloMixin, forms.ModelForm):
+    #: Capa da aula (o que o aluno ve antes de reservar). Uma por aula no painel: enviar
+    #: outra substitui a anterior. Limite e formatos vem do validador comum (5 MB, png/jpeg/webp).
+    capa = forms.ImageField(
+        label="Capa da aula",
+        required=False,
+        validators=[validar_imagem_de_capa],
+        widget=forms.ClearableFileInput(attrs={"accept": "image/png,image/jpeg,image/webp"}),
+        help_text="PNG, JPEG ou WEBP de ate 5 MB. Envie outra para substituir a capa atual.",
+    )
+
     class Meta:
         model = Aulas
         fields = [
