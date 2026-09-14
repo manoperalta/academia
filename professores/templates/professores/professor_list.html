@@ -8,22 +8,42 @@
         <h2 class="text-gradient mb-0">
             <i class="fas fa-chalkboard-teacher me-3"></i>Gerenciar Professores
         </h2>
-        <p class="text-dark mt-2 mb-0">Visualize e gerencie todos os professores cadastrados</p>
+        <p class="text-dark mt-2 mb-0">Visualize e gerencie todos os professores da academia</p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="{% url 'professor_create' %}" class="btn btn-success">
+        <a href="{% url 'professor_create' %}" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Novo Professor
         </a>
     </div>
 </div>
 
 <div class="card shadow-lg">
-    <div class="card-header bg-success">
+    <div class="card-header bg-primary">
         <h5 class="mb-0 text-white">
             <i class="fas fa-list me-2"></i>Lista de Professores
         </h5>
     </div>
     <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-6">
+                <input type="text" name="q" value="{{ q }}" class="form-control"
+                       placeholder="Buscar por nome, CPF/CNPJ ou e-mail">
+            </div>
+            <div class="col-md-4">
+                <select name="unidade" class="form-select">
+                    <option value="">Todas as unidades</option>
+                    {% for unidade in unidades %}
+                    <option value="{{ unidade.pk }}" {% if unidade_atual == unidade.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ unidade.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
@@ -32,6 +52,7 @@
                         <th><i class="fas fa-id-card me-2"></i>CPF/CNPJ</th>
                         <th><i class="fas fa-envelope me-2"></i>E-mail</th>
                         <th><i class="fas fa-phone me-2"></i>Telefone</th>
+                        <th><i class="fas fa-building me-2"></i>Unidades</th>
                         <th><i class="fas fa-toggle-on me-2"></i>Status</th>
                         <th class="text-center"><i class="fas fa-cog me-2"></i>Ações</th>
                     </tr>
@@ -42,7 +63,7 @@
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-circle me-3"
-                                    style="width: 40px; height: 40px; background: var(--gradient-success); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    style="width: 40px; height: 40px; background: var(--gradient-primary, var(--gradient-success)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                                     <i class="fas fa-chalkboard-teacher"></i>
                                 </div>
                                 <div>
@@ -51,8 +72,7 @@
                             </div>
                         </td>
                         <td>
-                            <code
-                                style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--text-secondary);">
+                            <code style="background: var(--bg-tertiary); padding: 4px 8px; border-radius: 4px; color: var(--text-secondary);">
                                 {{ professor.cpf_cnpj_prof|default:"-" }}
                             </code>
                         </td>
@@ -67,46 +87,43 @@
                             </span>
                         </td>
                         <td>
+                            {% for nome in professor.unidades_nomes %}
+                            <span class="badge bg-primary me-1">{{ nome }}</span>
+                            {% empty %}
+                            <span class="text-muted small">Toda a rede</span>
+                            {% endfor %}
+                        </td>
+                        <td>
                             {% if professor.status_prof == 'Ativo' %}
                             <span class="badge" style="background: var(--gradient-success); padding: 0.5rem 1rem;">
                                 <i class="fas fa-check-circle me-1"></i>Ativo
                             </span>
                             {% else %}
-                            <span class="badge" style="background: var(--gradient-danger); padding: 0.5rem 1rem;">
-                                <i class="fas fa-times-circle me-1"></i>Inativo
+                            <span class="badge" style="background: var(--gradient-warning); padding: 0.5rem 1rem;">
+                                <i class="fas fa-pause-circle me-1"></i>{{ professor.status_prof }}
                             </span>
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'professor_update' pk=professor.pk %}" class="btn btn-sm btn-warning"
-                                    title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'professor_delete' pk=professor.pk %}" class="btn btn-sm btn-danger"
-                                    title="Excluir">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </div>
+                            <a href="{% url 'professor_update' professor.pk %}" class="btn btn-sm btn-outline-primary"
+                               title="Editar"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'professor_delete' professor.pk %}" class="btn btn-sm btn-outline-danger"
+                               title="Arquivar"><i class="fas fa-archive"></i></a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div style="opacity: 0.5;">
-                                <i class="fas fa-chalkboard-teacher"
-                                    style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                                <p class="text-dark mb-0">Nenhum professor encontrado.</p>
-                                <a href="{% url 'professor_create' %}" class="btn btn-success mt-3">
-                                    <i class="fas fa-plus me-2"></i>Cadastrar Primeiro Professor
-                                </a>
-                            </div>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle me-2"></i>Nenhum professor cadastrado ainda.
+                            <a href="{% url 'professor_create' %}">Cadastrar o primeiro</a>.
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <p class="text-muted small mb-0">{{ total }} professor{{ total|pluralize:"es" }} listado{{ total|pluralize:"s" }}.</p>
     </div>
 </div>
 {% endblock %}

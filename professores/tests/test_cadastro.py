@@ -137,7 +137,8 @@ def test_arquivar_professor_tira_da_lista_e_preserva_historico(db, cliente_logad
     assert resposta.status_code == 302
     professor.refresh_from_db()
     assert professor.arquivado_em is not None
-    assert "Sai da Lista" not in cliente_logado.get(reverse("professor_list")).content.decode()
+    listagem = cliente_logado.get(reverse("professor_list"))
+    assert "Sai da Lista" not in [p.nome for p in listagem.context["professores"]]
 
 
 def test_edicao_abre_com_as_unidades_atuais(db, cliente_logado, rede, unidade, filial):

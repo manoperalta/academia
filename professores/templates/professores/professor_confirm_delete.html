@@ -1,23 +1,27 @@
 {% extends 'base.html' %}
 
-{% block title %}Excluir Professor - {{ block.super }}{% endblock %}
+{% block title %}Arquivar Professor - {{ block.super }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card shadow border-danger">
+        <div class="card shadow">
             <div class="card-header bg-danger text-white">
-                <h4 class="mb-0">Confirmar Exclusão</h4>
+                <h4 class="mb-0">Arquivar professor</h4>
             </div>
             <div class="card-body">
-                <p class="lead">Tem certeza que deseja excluir o professor <strong>{{ professor.nome }}</strong>?</p>
-                <p class="text-muted">Esta ação não pode ser desfeita.</p>
-
+                <p class="mb-3">
+                    Confirma arquivar <strong>{{ professor.nome }}</strong>?
+                </p>
+                <p class="text-muted small">
+                    O cadastro sai da lista, mas o historico de agenda, turmas e pagamentos continua
+                    guardado. Se precisar, o cadastro pode ser reativado no painel de gestao.
+                </p>
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{% url 'professor_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+                        <button type="submit" class="btn btn-danger">Arquivar</button>
                     </div>
                 </form>
             </div>

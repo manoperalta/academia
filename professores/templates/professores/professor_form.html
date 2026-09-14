@@ -6,12 +6,18 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card shadow">
-            <div class="card-header bg-success text-white">
+            <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">{{ title }}</h4>
             </div>
             <div class="card-body" style="color: var(--text-primary);">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <h6 class="text-uppercase text-muted mb-3">Dados do professor</h6>
 
                     <div class="row">
                         <div class="col-md-12 mb-3">
@@ -108,9 +114,71 @@
                         </div>
                     </div>
 
+                    {% if form.unidades %}
+                    <hr>
+                    <h6 class="text-uppercase text-muted mb-3">Atendimento</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label" for="{{ form.unidades.id_for_label }}">Unidades de atendimento</label>
+                            <div class="border rounded p-3" style="max-height: 220px; overflow-y: auto;">
+                                {{ form.unidades }}
+                            </div>
+                            {% if form.unidades.help_text %}
+                            <div class="form-text">{{ form.unidades.help_text }}</div>
+                            {% endif %}
+                            {% if form.unidades.errors %}
+                            <div class="text-danger small">{{ form.unidades.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.valor_por_hora.id_for_label }}" class="form-label">Valor por hora (R$)</label>
+                            {{ form.valor_por_hora }}
+                            {% if form.valor_por_hora.help_text %}
+                            <div class="form-text">{{ form.valor_por_hora.help_text }}</div>
+                            {% endif %}
+                            {% if form.valor_por_hora.errors %}
+                            <div class="text-danger small">{{ form.valor_por_hora.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if form.criar_login %}
+                    <hr>
+                    <h6 class="text-uppercase text-muted mb-3">Acesso ao sistema</h6>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.criar_login }}
+                                <label class="form-check-label" for="{{ form.criar_login.id_for_label }}">
+                                    {{ form.criar_login.label }}
+                                </label>
+                            </div>
+                            {% if form.criar_login.help_text %}
+                            <div class="form-text">{{ form.criar_login.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.senha.id_for_label }}" class="form-label">{{ form.senha.label }}</label>
+                            {{ form.senha }}
+                            {% if form.senha.help_text %}
+                            <div class="form-text">{{ form.senha.help_text }}</div>
+                            {% endif %}
+                            {% if form.senha.errors %}
+                            <div class="text-danger small">{{ form.senha.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{% url 'professor_list' %}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        <button type="submit" class="btn btn-success">Salvar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
             </div>
