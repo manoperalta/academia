@@ -82,6 +82,7 @@ LOCAIS = [
     "busca",
     "relacionamento",
     "midia",
+    "integracoes",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + TERCEIROS + LOCAIS

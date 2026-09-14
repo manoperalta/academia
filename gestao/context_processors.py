@@ -50,4 +50,5 @@ ICONES = {
     Modulo.EQUIPE: "👥",
     Modulo.PLANO: "💳",
     Modulo.AUDITORIA: "🔒",
+    Modulo.INTEGRACOES: "🔌",
 }

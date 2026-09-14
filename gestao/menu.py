@@ -35,4 +35,5 @@ ROTAS: dict[str, str] = {
     Modulo.COMISSOES: "remuneracao:regras",
     Modulo.GAMIFICACAO: "gamificacao:regras",
     Modulo.PESQUISAS: "nps:pesquisas",
+    Modulo.INTEGRACOES: "integracoes:painel",
 }

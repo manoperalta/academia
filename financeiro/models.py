@@ -12,6 +12,7 @@ class GatewayConfig(TenantModel):
     GATEWAY_CHOICES = [
         ("mercadopago", "Mercado Pago"),
         ("pagbank", "PagBank"),
+        ("asaas", "Asaas"),
     ]
     AMBIENTE_CHOICES = [
         ("sandbox", "Sandbox (Testes)"),

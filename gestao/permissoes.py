@@ -44,6 +44,7 @@ class Modulo(models.TextChoices):
     COMISSOES = "comissoes", "Comissoes e remuneracao"
     GAMIFICACAO = "gamificacao", "Gamificacao"
     PESQUISAS = "pesquisas", "Pesquisas e NPS"
+    INTEGRACOES = "integracoes", "Integrações"
 
 
 NIVEIS: dict[str | None, int] = {None: 0, "ver": 1, "editar": 2, "admin": 3}
@@ -86,6 +87,7 @@ MATRIZ: dict[str, dict[str, str]] = {
         Modulo.COMUNICADOS: "editar",
         Modulo.APROVACOES: "editar",
         Modulo.CATALOGO: "editar",
+        Modulo.INTEGRACOES: "ver",
     },
     Papel.RECEPCAO: {
         Modulo.VISAO_GERAL: "ver",

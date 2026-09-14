@@ -1,0 +1,9 @@
+"""Configuracao do app de integracoes."""
+
+from django.apps import AppConfig
+
+
+class IntegracoesConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "integracoes"
+    verbose_name = "Integracoes com terceiros"
