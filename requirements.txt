@@ -2,8 +2,15 @@ asgiref==3.11.0
 certifi==2025.11.12
 charset-normalizer==3.4.4
 Django==5.2.8
+django-environ==0.14.0
+django-filter==26.1
+djangorestframework==3.18.1
+djangorestframework_simplejwt==5.5.1
+drf-spectacular==0.30.0
 idna==3.11
 pillow==12.0.0
+psycopg[binary]==3.3.5
+PyJWT==2.14.0
 python-dateutil==2.9.0.post0
 requests==2.32.5
 six==1.17.0
