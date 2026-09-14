@@ -132,14 +132,20 @@ def test_arquivo_que_nao_e_imagem_e_recusado(cliente_logado):
     assert "imagem" in resposta.content.decode()
 
 
-def test_atalho_legado_nao_cria_professor(cliente_logado):
-    """O caminho antigo nao cria mais nada: manda para o painel."""
+def test_cadastro_de_professor_no_dashboard_respeita_a_matriz(
+    cliente_logado, cliente_recepcao, cliente_aluno
+):
+    """14/09/2026: a tela sai do painel e passa a ser a mesma casca do cadastro de aluno.
+
+    A protecao continua identica -- quem nao tem o modulo PROFESSORES em nivel de edicao
+    recebe 403 (antes, a tela so existia no painel de gestao).
+    """
     resposta = cliente_logado.get("/professores/novo/")
-    assert resposta.status_code == 302
-    assert resposta["Location"] == reverse("gestao:professor_novo")
-    resposta = cliente_logado.post("/professores/novo/", _payload())
-    assert resposta.status_code == 302
-    assert not Professor.todos.exists()
+    assert resposta.status_code == 200
+    assert reverse("professor_list") in resposta.content.decode()
+    assert "cdn.tailwindcss.com" not in resposta.content.decode()
+    assert cliente_recepcao.get("/professores/novo/").status_code == 403
+    assert cliente_aluno.get("/professores/novo/").status_code == 403
 
 
 def test_perfil_do_professor_nao_cria_cadastro_sozinho(db, client, usuario, vinculo_admin):
