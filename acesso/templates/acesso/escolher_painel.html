@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Por onde continuar - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h3 class="mb-1">Bem-vindo, {{ user.get_full_name|default:user.username }}.</h3>
+                <p class="text-muted mb-0">
+                    {% if rede %}Rede ativa: <strong>{{ rede.nome }}</strong>. {% endif %}Escolha por onde quer continuar.
+                </p>
+            </div>
+        </div>
+        <div class="row g-3">
+            {% for item in destinos %}
+            <div class="col-md-6">
+                <a href="{{ item.rota }}" class="card h-100 text-decoration-none shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary"><i class="{{ item.icone }} me-2"></i>{{ item.rotulo }}</h5>
+                        <p class="card-text text-muted mb-0">{{ item.descricao }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

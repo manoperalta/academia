@@ -2,11 +2,12 @@
 
 from django.urls import path
 
-from acesso import views
+from acesso import entrada, views
 
 app_name = "acesso"
 
 urlpatterns = [
+    path("entrada/", entrada.EscolherPainelView.as_view(), name="entrada"),
     path("gestao/acesso/", views.PainelDeAcessoView.as_view(), name="painel"),
     path("gestao/acesso/registros/", views.RegistrosDeAcessoView.as_view(), name="registros"),
     path("gestao/acesso/liberar/", views.LiberarManualView.as_view(), name="liberar"),
