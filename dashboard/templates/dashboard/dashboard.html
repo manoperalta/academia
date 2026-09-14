@@ -9,6 +9,11 @@
             <div class="card-body">
                 <h2 class="card-title">Bem-vindo, Administrador {{ user.username }}!</h2>
                 <p class="card-text">Painel de controle do sistema.</p>
+                {% if pode_painel_de_gestao %}
+                <a href="{% url 'gestao:visao_geral' %}" class="btn btn-light btn-sm mt-2">
+                    <i class="fas fa-sliders-h me-2"></i>Abrir painel de gestão da academia
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>

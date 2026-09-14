@@ -50,12 +50,38 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     {% if user.is_authenticated %}
+                    {% if unidades_disponiveis|length > 1 %}
+                    <li class="nav-item me-2">
+                        <form method="post" action="{% url 'gestao:selecionar_unidade' %}"
+                            class="d-flex align-items-center gap-2 mb-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="voltar" value="{{ request.path }}">
+                            <label class="form-label mb-0 small text-muted" for="troca-de-unidade">Unidade</label>
+                            <select id="troca-de-unidade" name="unidade" class="form-select form-select-sm w-auto"
+                                onchange="this.form.submit()">
+                                <option value="">Todas as unidades</option>
+                                {% for item in unidades_disponiveis %}
+                                <option value="{{ item.pk }}"{% if request.unidade and request.unidade.pk == item.pk %} selected{% endif %}>{{ item.nome }}</option>
+                                {% endfor %}
+                            </select>
+                            <noscript><button class="btn btn-sm btn-outline-secondary">Trocar</button></noscript>
+                        </form>
+                    </li>
+                    {% endif %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                             href="{% url 'dashboard' %}">
                             <i class="fas fa-chart-line me-2"></i>Dashboard
                         </a>
                     </li>
+                    {% if pode_painel_de_gestao %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/gestao/' in request.path %}active{% endif %}"
+                            href="{% url 'gestao:visao_geral' %}">
+                            <i class="fas fa-sliders-h me-2"></i>Painel de gestão
+                        </a>
+                    </li>
+                    {% endif %}
 
                     {% if user.is_staff or user.is_superuser %}
                     <li class="nav-item">

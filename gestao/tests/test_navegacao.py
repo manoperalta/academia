@@ -11,7 +11,12 @@ from pathlib import Path
 
 import pytest
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.test import Client
 from django.urls import reverse
+
+from core.models import Unidade, VinculoUsuario
+from core.papeis import Papel
 
 # Layouts que oferecem a saida: (rotulo, caminho relativo ao BASE_DIR)
 LAYOUTS = (
@@ -62,3 +67,77 @@ def test_painel_de_gestao_sai_por_formulario_post(cliente_logado):
     html = cliente_logado.get(reverse("gestao:visao_geral")).content.decode()
     assert 'action="/accounts/logout/"' in html
     assert 'href="/accounts/logout/"' not in html
+
+
+# ------------------------------------------------------- painel de gestao x dashboard
+
+
+def test_navegacao_mostra_o_painel_para_quem_tem_permissao(cliente_logado):
+    """Ate 14/09/2026 nao havia nenhum caminho de navegacao para /gestao/."""
+    html = cliente_logado.get(reverse("dashboard")).content.decode()
+    assert reverse("gestao:visao_geral") in html
+    assert "Painel de gestão" in html
+
+
+def test_dashboard_da_equipe_oferece_o_botao_do_painel():
+    """Alem do item da navbar, o card do dashboard da equipe traz o atalho.
+
+    Nao da para checar por requisicao: o superusuario sem 2FA e desviado pelo
+    ``DoisFatosMiddleware`` (a resposta vem vazia), entao o guarda e no template.
+    """
+    html = (Path(settings.BASE_DIR) / "dashboard/templates/dashboard/dashboard.html").read_text(
+        encoding="utf-8"
+    )
+    assert "Abrir painel de gestão da academia" in html
+    assert "{% url 'gestao:visao_geral' %}" in html
+
+
+def test_aluno_nao_ve_a_entrada_do_painel(db, rede, unidade):
+    aluno = get_user_model().objects.create_user(
+        username="aluno.painel", password="senha-de-teste-123", is_student=True
+    )
+    VinculoUsuario.todos.create(usuario=aluno, rede=rede, unidade=unidade, papel=Papel.ALUNO)
+    cliente = Client()
+    cliente.force_login(aluno)
+    resposta = cliente.get(reverse("dashboard"))
+    assert resposta.status_code == 200
+    assert reverse("gestao:visao_geral") not in resposta.content.decode()
+
+
+def test_painel_tem_atalho_de_volta_para_o_dashboard(cliente_logado):
+    html = cliente_logado.get(reverse("gestao:visao_geral")).content.decode()
+    assert reverse("dashboard") in html
+    assert "Dashboard da academia" in html
+
+
+def test_seletor_de_unidade_aparece_no_dashboard_com_duas_unidades(
+    db, cliente_logado, rede, unidade
+):
+    Unidade.todos.create(rede=rede, nome="Unidade Filial", codigo="filial")
+    html = cliente_logado.get(reverse("dashboard")).content.decode()
+    assert "Todas as unidades" in html
+    assert "Unidade Filial" in html
+
+
+def test_seletor_de_unidade_nao_aparece_com_uma_unidade(cliente_logado):
+    html = cliente_logado.get(reverse("dashboard")).content.decode()
+    assert "Todas as unidades" not in html
+
+
+def test_seletor_do_painel_lista_as_unidades(cliente_logado, unidade):
+    """O select existia mas iterava ``unidades_disponiveis`` que ninguem fornecia."""
+    html = cliente_logado.get(reverse("gestao:visao_geral")).content.decode()
+    assert "Todas as unidades" in html
+    assert unidade.nome in html
+
+
+def test_troca_de_unidade_grava_na_sessao_e_volta_para_o_dashboard(
+    db, cliente_logado, unidade
+):
+    resposta = cliente_logado.post(
+        reverse("gestao:selecionar_unidade"),
+        {"unidade": str(unidade.pk), "voltar": reverse("dashboard")},
+    )
+    assert resposta.status_code == 302
+    assert resposta["Location"] == reverse("dashboard")
+    assert cliente_logado.session["unidade_id"] == unidade.pk

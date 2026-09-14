@@ -52,13 +52,15 @@ def unidades_do_usuario(usuario):
     """Unidades que o usuario pode acessar (queryset, pode ser vazia)."""
     if not usuario or not usuario.is_authenticated:
         return Unidade.todos.none()
-    if usuario.is_superuser:
+    if usuario.is_superuser or usuario.is_staff:
         return Unidade.todos.all()
     vinculos = VinculoUsuario.todos.filter(usuario=usuario, ativo=True)
-    papeis_rede = vinculos.filter(unidade__isnull=True)
-    if papeis_rede.exists():
-        rede_ids = list(papeis_rede.values_list("rede_id", flat=True))
-        return Unidade.todos.filter(rede_id__in=rede_ids)
+    # Papel de rede alcanca todas as unidades das redes em que tem vinculo, mesmo quando o
+    # vinculo foi criado apontando para uma unidade (era o caso de admin da rede cadastrado
+    # pela matriz: ficava preso a uma unidade e o seletor do topo nao aparecia).
+    papeis_de_rede = vinculos.filter(papel__in=PAPEIS_DA_REDE).values_list("rede_id", flat=True)
+    if papeis_de_rede.exists():
+        return Unidade.todos.filter(rede_id__in=list(papeis_de_rede))
     return Unidade.todos.filter(vinculos__usuario=usuario, vinculos__ativo=True).distinct()
 
 
