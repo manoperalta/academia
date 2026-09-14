@@ -87,6 +87,9 @@ class DisponibilidadeDoProfessor(TenantModel):
 
     ``duracao_minutos`` e o **tempo do compromisso**: a janela e fatiada nesse tamanho e cada
     fatia vira um horario reservavel pelo aluno.
+
+    O bloco pertence a **uma unidade** de atendimento: o professor que atende duas unidades
+    abre a mesma janela em cada uma, e o aluno so encontra os horarios da unidade dele.
     """
 
     class DiaDaSemana(models.IntegerChoices):
@@ -136,7 +139,7 @@ class DisponibilidadeDoProfessor(TenantModel):
         ordering = ["dia_da_semana", "hora_inicio"]
         constraints = [
             models.UniqueConstraint(
-                fields=["professor", "dia_da_semana", "hora_inicio"],
+                fields=["professor", "dia_da_semana", "hora_inicio", "unidade"],
                 name="disponibilidade_unica_por_professor_dia_hora",
             )
         ]

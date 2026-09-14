@@ -12,8 +12,11 @@ Regras que vivem aqui:
 
 from __future__ import annotations
 
-from core.models import Unidade, VinculoUsuario
+from django.db.models import Q
+
+from core.models import Unidade
 from core.papeis import Papel
+from core.tenancy import VinculoUsuario
 
 
 class ErroDeProfessor(Exception):
@@ -88,3 +91,20 @@ def aplicar_valor_por_hora(professor, valor) -> None:
         return
     if valor != professor.valor_por_hora:
         professor.definir_valor_por_hora(valor)
+
+
+def unidades_do_atendimento(professor):
+    """Unidades em que este professor pode abrir agenda.
+
+    Junta os vinculos ativos do usuario com a unidade em que ele foi cadastrado: um
+    professor pode atender varias unidades (ou uma so) e a agenda e aberta por unidade.
+    """
+    if professor is None:
+        return Unidade.todos.none()
+    filtro = Q(pk__in=[])
+    usuario = getattr(professor, "user", None)
+    if usuario is not None and usuario.pk:
+        filtro |= Q(vinculos__usuario=usuario, vinculos__ativo=True)
+    if getattr(professor, "unidade_id", None):
+        filtro |= Q(pk=professor.unidade_id)
+    return Unidade.todos.filter(filtro).distinct().order_by("nome")

@@ -10,6 +10,8 @@ from __future__ import annotations
 from django import forms
 
 from aulas.models import Aulas
+from core.models import Unidade
+from professores.servicos import unidades_do_atendimento
 
 from .models import DisponibilidadeDoProfessor
 
@@ -42,9 +44,19 @@ class DisponibilidadeForm(EstiloDoProfessorMixin, forms.ModelForm):
         ),
     )
 
+    unidade = forms.ModelChoiceField(
+        label="Unidade de atendimento",
+        queryset=Unidade.todos.none(),
+        help_text=(
+            "Onde este horario fica disponivel. Para atender outra unidade no mesmo horario, "
+            "abra um bloco para cada uma."
+        ),
+    )
+
     class Meta:
         model = DisponibilidadeDoProfessor
         fields = [
+            "unidade",
             "nome",
             "dia_da_semana",
             "hora_inicio",
@@ -73,6 +85,7 @@ class DisponibilidadeForm(EstiloDoProfessorMixin, forms.ModelForm):
                 .order_by("categorias_exercicios", "nome")
             )
         self.fields["aulas"].queryset = consulta
+        self.fields["unidade"].queryset = unidades_do_atendimento(professor)
         if self.instance and self.instance.pk:
             self.fields["aulas"].initial = [aula.pk for aula in self.instance.aulas_compostas()]
 

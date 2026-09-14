@@ -426,7 +426,7 @@ class AbrirAgendaView(ContextoDoProfessorMixin, View):
         disponibilidade = form.save(commit=False)
         disponibilidade.professor = self.professor
         disponibilidade.rede = self.professor.rede
-        disponibilidade.unidade = self.professor.unidade
+        disponibilidade.unidade = form.cleaned_data["unidade"]
         disponibilidade.save()
         servicos.compor_compromisso(disponibilidade, form.cleaned_data["aulas"])
         self._avisar(servicos.materializar_disponibilidade(disponibilidade))

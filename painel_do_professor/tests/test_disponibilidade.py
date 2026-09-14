@@ -223,13 +223,15 @@ def test_aviso_quando_os_videos_nao_fecham_o_tempo(professor, aula):
 
 
 # ------------------------------------------------------------------ telas
-def test_professor_abre_horario_pela_tela(cliente_professor, aula):
+def test_professor_abre_horario_pela_tela(cliente_professor, aula, unidade):
     resposta = cliente_professor.get(reverse("professor:disponibilidades"))
     assert resposta.status_code == 200
     hoje = timezone.localdate()
     resposta = cliente_professor.post(
         reverse("professor:abrir_agenda"),
         {
+            # desde 14/09/2026 o bloco e aberto por unidade de atendimento
+            "unidade": unidade.pk,
             "nome": "Atendimento individual",
             "dia_da_semana": hoje.weekday(),
             "hora_inicio": "19:00",
@@ -245,11 +247,12 @@ def test_professor_abre_horario_pela_tela(cliente_professor, aula):
     assert Painel.todos.filter(responsavel=bloco.professor.user).count() >= 2
 
 
-def test_abrir_horario_sem_aula_e_recusado(cliente_professor):
+def test_abrir_horario_sem_aula_e_recusado(cliente_professor, unidade):
     hoje = timezone.localdate()
     resposta = cliente_professor.post(
         reverse("professor:abrir_agenda"),
         {
+            "unidade": unidade.pk,
             "nome": "Atendimento",
             "dia_da_semana": hoje.weekday(),
             "hora_inicio": "19:00",
