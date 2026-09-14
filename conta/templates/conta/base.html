@@ -15,7 +15,10 @@
         <a class="text-slate-600" href="{% url 'conta:senha' %}">Senha</a>
         <a class="text-slate-600" href="{% url 'conta:sessoes' %}">Sessões</a>
         <a class="text-slate-600" href="{% url 'conta:chamados' %}">Suporte</a>
-        <a class="text-slate-600" href="/accounts/logout/">Sair</a>
+        <form method="post" action="{% url 'logout' %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-slate-600">Sair</button>
+        </form>
       </nav>
     </div>
   </header>

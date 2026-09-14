@@ -20,6 +20,10 @@
         <a class="text-slate-600 hover:text-slate-900" href="{% url 'professor:comissoes' %}">Comissões</a>
       </nav>
       <span class="text-xs text-slate-500">{{ professor.nome|default:request.user }}</span>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="text-xs text-slate-500 hover:text-slate-900">Sair</button>
+      </form>
     </div>
   </header>
 

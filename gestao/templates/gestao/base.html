@@ -37,7 +37,10 @@
     </nav>
     <div class="border-t border-slate-800 px-5 py-4 text-xs text-slate-400">
       <p class="truncate">{{ request.user.get_full_name|default:request.user.username }}</p>
-      <a href="/accounts/logout/" class="mt-1 inline-block text-emerald-400 hover:underline">Sair</a>
+      <form method="post" action="{% url 'logout' %}" class="mt-1">
+        {% csrf_token %}
+        <button type="submit" class="text-emerald-400 hover:underline">Sair</button>
+      </form>
     </div>
   </aside>
 
