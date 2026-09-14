@@ -8,13 +8,22 @@ from .models import Aulas
 
 @login_required
 def aulas_list(request):
-    user = request.user
-    if user.is_superuser or user.is_staff:
-        aulas = Aulas.objects.all()
-    else:
-        aulas = Aulas.objects.filter(professor=user)
+    """Biblioteca da academia: as aulas da rede ficam disponiveis para todos.
 
-    return render(request, "aulas/aulas_list.html", {"aulas": aulas})
+    Ate 14/09/2026 a tela mostrava so as aulas do proprio professor ("Minhas Aulas"),
+    embora a composicao de treinos ja oferecesse as da rede: o professor nao conseguia
+    reaproveitar o material dos colegas. O filtro ?meus=1 preserva o recorte antigo.
+    """
+    aulas = Aulas.objects.filter(arquivado_em__isnull=True).select_related("professor")
+    somente_minhas = bool(request.GET.get("meus"))
+    if somente_minhas:
+        aulas = aulas.filter(professor=request.user)
+
+    return render(
+        request,
+        "aulas/aulas_list.html",
+        {"aulas": aulas, "somente_minhas": somente_minhas},
+    )
 
 
 @login_required

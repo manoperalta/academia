@@ -1,11 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Minhas Aulas - {{ block.super }}{% endblock %}
+{% block title %}Aulas da academia - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
+<div class="row mb-4 align-items-center">
     <div class="col-md-8">
-        <h2>Minhas Aulas</h2>
+        <h2 class="mb-0">Aulas da academia</h2>
+        <p class="text-muted mb-0 small">
+            Todo o material da rede fica disponível para reaproveitar em treinos e na agenda.
+            {% if somente_minhas %}Mostrando apenas as suas aulas.{% endif %}
+        </p>
     </div>
     <div class="col-md-4 text-end">
         <a href="{% url 'aulas_create' %}" class="btn btn-success">
@@ -14,16 +18,22 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-  <div class="mr-auto">
-    <h2 class="text-sm font-semibold text-slate-900">Vídeos e materiais</h2>
-    <p class="text-xs text-slate-500">Envie o vídeo da aula em partes, com conferência de integridade.</p>
-  </div>
-  <a href="{% url 'midia:lista' %}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">Mídia da rede</a>
-  <a href="{% url 'midia:enviar' %}" class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Enviar arquivo</a>
+<div class="row mb-3">
+    <div class="col-12 d-flex flex-wrap gap-2">
+        <a href="{% url 'aulas_list' %}"
+           class="btn btn-sm {% if not somente_minhas %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Todas as aulas da rede
+        </a>
+        <a href="{% url 'aulas_list' %}?meus=1"
+           class="btn btn-sm {% if somente_minhas %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            Só as minhas
+        </a>
+        <a href="{% url 'midia:lista' %}" class="btn btn-sm btn-outline-secondary ms-auto">Mídia da rede</a>
+        <a href="{% url 'midia:enviar' %}" class="btn btn-sm btn-outline-secondary">Enviar arquivo</a>
+    </div>
 </div>
 
+<div class="row">
 {% for aula in aulas %}
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow-sm">
@@ -42,6 +52,10 @@
 
             <div class="card-body">
                 <h5 class="card-title">{{ aula.nome }}</h5>
+                <p class="text-muted small mb-1">
+                    <i class="fas fa-user me-1"></i>{{ aula.professor.get_full_name|default:aula.professor.username|default:"Sem autor" }}
+                    {% if aula.professor_id == user.id %}<span class="badge bg-success ms-1">sua aula</span>{% endif %}
+                </p>
                 <span class="badge bg-info mb-2">{{ aula.get_categorias_exercicios_display }}</span>
                 {% if aula.restricao != 'nenhuma' %}
                 <span class="badge bg-warning text-dark mb-2" title="Restrição de Saúde">
@@ -53,6 +67,7 @@
                 </p>
             </div>
             <div class="card-footer bg-tertiary border-top-0">
+                {% if aula.professor_id == user.id or user.is_staff or user.is_superuser %}
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'aulas_update' pk=aula.pk %}" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-edit"></i> Editar
@@ -61,6 +76,9 @@
                         <i class="fas fa-trash"></i> Excluir
                     </a>
                 </div>
+                {% else %}
+                <span class="text-muted small"><i class="fas fa-lock me-1"></i>aula de outro professor da rede</span>
+                {% endif %}
             </div>
         </div>
     </div>

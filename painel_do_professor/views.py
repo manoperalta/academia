@@ -16,6 +16,7 @@ from django.views import View
 from django.views.generic import DetailView, ListView, TemplateView
 
 from agendamento.models import Agendamento
+from aulas.models import Aulas
 from painel.models import Painel
 from painel_do_professor import servicos
 from painel_do_professor.forms import DisponibilidadeForm
@@ -235,11 +236,11 @@ class TreinoDoProfessorView(ContextoDoProfessorMixin, DetailView):
     def get_context_data(self, **kwargs):
         contexto = super().get_context_data(**kwargs)
         contexto["exercicios"] = self.object.exercicios.select_related("aula")
-        contexto["aulas_disponiveis"] = (
-            self.object.rede.aulas_set.filter(arquivado_em__isnull=True)[:200]
-            if hasattr(self.object.rede, "aulas_set")
-            else []
-        )
+        # Ate 14/09/2026 isto usava ``rede.aulas_set``: o related_name do TenantModel e
+        # ``aulas_aulas_set``, entao o hasattr dava falso e a lista saia sempre vazia.
+        contexto["aulas_disponiveis"] = Aulas.objects.filter(
+            rede=self.object.rede, arquivado_em__isnull=True
+        ).select_related("professor")[:200]
         contexto["progressos"] = {
             exercicio.pk: servicos_de_treino.progresso_do_exercicio(exercicio)
             for exercicio in self.object.exercicios.all()
