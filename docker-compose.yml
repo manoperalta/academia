@@ -1,4 +1,20 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: academia_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: academia
+      POSTGRES_USER: academia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academia -d academia"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   web:
     build: .
     container_name: academia_web
@@ -7,6 +23,9 @@ services:
       - .:/app
     env_file:
       - .env
+    depends_on:
+      db:
+        condition: service_healthy
     expose:
       - "8000"
 
@@ -21,3 +40,7 @@ services:
     volumes:
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
+      - ./landing:/app/landing:ro
+
+volumes:
+  pgdata_prod:
